@@ -1,0 +1,13 @@
+from django.contrib.auth.models import AbstractUser
+from django.db import models
+from cloudinary.models import CloudinaryField
+
+
+class CustomUser(AbstractUser):
+    avatar = CloudinaryField('avatar', blank=True, null=True)
+    bio = models.TextField(blank=True)
+    is_online = models.BooleanField(default=False)
+    last_seen = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.username

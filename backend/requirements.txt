@@ -1,0 +1,10 @@
+django>=5.0
+djangorestframework
+django-cors-headers
+channels[daphne]
+channels-redis
+djangorestframework-simplejwt
+cloudinary
+django-cloudinary-storage
+psycopg2-binary
+python-decouple
