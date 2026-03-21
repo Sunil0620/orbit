@@ -44,6 +44,40 @@ It is built by a solo developer (Sunil) as a portfolio project over 1 month.
 
 ---
 
+## 📝 Commit Rules 
+
+- Use this only when **user** says to commit.
+- Before making any commit, please always use the REVIEW.md to verify the changes and make sure everything is correct before committing. and than read files/commit.md.
+- Use the exact roadmap day's commit subject from `files/commit.md`
+- Include the matching week heading and week goal from `files/commit.md` in the commit body
+- Use the roadmap day's `Changes:` list from `files/commit.md` as the commit body
+- Do not use generic messages like `feat: day 3`
+- The commit must match this format:
+  - Subject: exact `feat: ...` line from the roadmap day
+  - Body:
+    `Week: <matching week heading>`
+    `Goal: <matching week goal>`
+    blank line
+    `Changes:`
+    `<full Changes list for that roadmap day>`
+- Example for Day 3:
+  - Subject: `feat: add custom user model with cloudinary avatar`
+  - Body:
+    `Week: Week 1 — Foundation & Auth (Days 1–7)`
+    `Goal: Django backend running, JWT auth working, Docker up`
+    blank line
+    `Changes:`
+    `- Create apps/accounts/ with __init__.py, apps.py, models.py, migrations/`
+    `- Write CustomUser(AbstractUser) with avatar, bio, is_online, last_seen`
+    `- Add __str__ returning self.username`
+    `- Set AUTH_USER_MODEL = 'accounts.CustomUser' in base.py`
+    `- Register apps.accounts in INSTALLED_APPS`
+    `- Run makemigrations accounts and migrate`
+    `- Verify user creation works in Django admin`
+- If the implemented work does not match the roadmap day's commit entry, stop and ask before committing
+
+---
+
 ## 📁 Project Structure
 
 ```

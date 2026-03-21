@@ -32,6 +32,10 @@ When asked to "review", "audit", or "check" code in Orbit:
 
 ## 🐍 Django Backend Checklist
 
+### Changes
+- Make sure the all changes were made and verified that are working properly for that day before committing, Tell the user that the changes are working properly and give procedure to run it, so i can verify by runing them.
+
+
 ### Models
 - [ ] Every model has a `__str__` method
 - [ ] ForeignKey fields have explicit `on_delete` set

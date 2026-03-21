@@ -1,6 +1,7 @@
 from rest_framework import generics, permissions, status
+from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import LogoutSerializer, RegisterSerializer, UserSerializer
+from .serializers import LogoutSerializer, RegisterSerializer, UserProfileSerializer
 from .models import CustomUser
 
 
@@ -10,12 +11,22 @@ class RegisterView(generics.CreateAPIView):
     permission_classes = [permissions.AllowAny]
 
 
-class ProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = UserSerializer
+class ProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
-        return self.request.user
+    def get(self, request, *args, **kwargs):
+        serializer = UserProfileSerializer(request.user)
+        return Response(serializer.data)
+
+    def patch(self, request, *args, **kwargs):
+        serializer = UserProfileSerializer(
+            request.user,
+            data=request.data,
+            partial=True,
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
 
 class LogoutView(generics.GenericAPIView):

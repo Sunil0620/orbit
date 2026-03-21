@@ -32,11 +32,20 @@ class RegisterSerializer(serializers.ModelSerializer):
         return user
 
 
-class UserSerializer(serializers.ModelSerializer):
+class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'email', 'avatar', 'bio', 'is_online', 'last_seen')
         read_only_fields = ('id', 'is_online', 'last_seen')
+
+    def validate_email(self, value):
+        normalized_email = value.strip().lower()
+        queryset = CustomUser.objects.filter(email__iexact=normalized_email)
+        if self.instance is not None:
+            queryset = queryset.exclude(pk=self.instance.pk)
+        if queryset.exists():
+            raise serializers.ValidationError('A user with that email already exists.')
+        return normalized_email
 
 
 class LogoutSerializer(serializers.Serializer):
