@@ -51,9 +51,7 @@ services:
       redis:
         condition: service_healthy
     command: >
-      sh -c "python manage.py makemigrations accounts &&
-             python manage.py makemigrations &&
-             python manage.py migrate &&
+      sh -c "python manage.py migrate &&
              daphne -b 0.0.0.0 -p 8000 core.asgi:application"
   # React Frontend (Vite dev server)
   frontend:
