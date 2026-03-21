@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
+from rest_framework_simplejwt.tokens import RefreshToken
 from .models import CustomUser
 
 
@@ -36,3 +37,17 @@ class UserSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ('id', 'username', 'email', 'avatar', 'bio', 'is_online', 'last_seen')
         read_only_fields = ('id', 'is_online', 'last_seen')
+
+
+class LogoutSerializer(serializers.Serializer):
+    refresh = serializers.CharField()
+
+    def validate_refresh(self, value):
+        try:
+            self.token = RefreshToken(value)
+        except Exception as exc:
+            raise serializers.ValidationError('Invalid refresh token.') from exc
+        return value
+
+    def save(self, **kwargs):
+        self.token.blacklist()
