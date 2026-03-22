@@ -89,7 +89,7 @@ feat: add jwt auth endpoints (register, login, refresh, profile)
 ### Day 5
 
 ```
-feat: init react+vite frontend with tailwind, axios, zustand, react-router
+feat(day 5): init react+vite frontend with tailwind, axios, zustand, react-router
 ```
 
 **Changes:**
@@ -594,4 +594,5 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 2 — PostgreSQL + Redis + Docker Compose
 - ✅ Day 3 — CustomUser model, migrations
 - ⬜ Day 4 — JWT auth endpoints (register, login, refresh, profile)
-- ⬜ Day 5 — React + Vite frontend init ← **you are here**
+- ✅ Day 5 — React + Vite frontend init
+- ⬜ Day 6 — Login and register pages connected to backend auth API ← **you are here**
