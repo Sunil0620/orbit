@@ -112,7 +112,7 @@ feat(day 5): init react+vite frontend with tailwind, axios, zustand, react-route
 ### Day 6
 
 ```
-feat: add login and register pages connected to backend auth api
+feat(day 6): add login and register pages connected to backend auth api
 ```
 
 **Changes:**
@@ -593,6 +593,7 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 1 — Django project, settings, Docker stack
 - ✅ Day 2 — PostgreSQL + Redis + Docker Compose
 - ✅ Day 3 — CustomUser model, migrations
-- ⬜ Day 4 — JWT auth endpoints (register, login, refresh, profile)
+- ✅ Day 4 — JWT auth endpoints (register, login, refresh, profile)
 - ✅ Day 5 — React + Vite frontend init
-- ⬜ Day 6 — Login and register pages connected to backend auth API ← **you are here**
+- ✅ Day 6 — Login and register pages connected to backend auth API
+- ⬜ Day 7 — JWT persistence, axios interceptors, protected routes ← **you are here**
