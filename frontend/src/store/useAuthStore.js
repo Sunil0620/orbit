@@ -1,20 +1,89 @@
 import { create } from 'zustand'
 
+export const AUTH_STORAGE_KEY = 'orbit-auth'
+
 const initialState = {
   user: null,
   tokens: null,
   isAuthenticated: false,
 }
 
+function buildAuthState({ user = null, tokens = null } = {}) {
+  return {
+    user: user ?? null,
+    tokens: tokens ?? null,
+    isAuthenticated: Boolean(tokens?.access ?? tokens?.refresh),
+  }
+}
+
+function canUseStorage() {
+  return typeof window !== 'undefined' && Boolean(window.localStorage)
+}
+
+function persistAuthState(state) {
+  if (!canUseStorage()) {
+    return
+  }
+
+  if (!state?.tokens?.access && !state?.tokens?.refresh) {
+    window.localStorage.removeItem(AUTH_STORAGE_KEY)
+    return
+  }
+
+  window.localStorage.setItem(
+    AUTH_STORAGE_KEY,
+    JSON.stringify({
+      user: state.user ?? null,
+      tokens: state.tokens ?? null,
+    }),
+  )
+}
+
+export function readStoredAuth() {
+  if (!canUseStorage()) {
+    return null
+  }
+
+  const storedValue = window.localStorage.getItem(AUTH_STORAGE_KEY)
+
+  if (!storedValue) {
+    return null
+  }
+
+  try {
+    const parsedValue = JSON.parse(storedValue)
+    return buildAuthState(parsedValue)
+  } catch {
+    window.localStorage.removeItem(AUTH_STORAGE_KEY)
+    return null
+  }
+}
+
 const useAuthStore = create((set) => ({
   ...initialState,
   setAuth: ({ user, tokens }) =>
-    set({
-      user: user ?? null,
-      tokens: tokens ?? null,
-      isAuthenticated: Boolean(tokens?.access ?? tokens?.refresh),
+    set(() => {
+      const nextState = buildAuthState({ user, tokens })
+      persistAuthState(nextState)
+      return nextState
     }),
-  logout: () => set(initialState),
+  hydrateAuth: (authState) =>
+    set(() => {
+      const nextState = authState ? buildAuthState(authState) : initialState
+      persistAuthState(nextState)
+      return nextState
+    }),
+  updateTokens: (tokens) =>
+    set((state) => {
+      const nextState = buildAuthState({ user: state.user, tokens })
+      persistAuthState(nextState)
+      return nextState
+    }),
+  logout: () =>
+    set(() => {
+      persistAuthState(initialState)
+      return initialState
+    }),
 }))
 
 export default useAuthStore

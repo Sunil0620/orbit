@@ -1,18 +1,22 @@
+import { useEffect } from 'react'
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom'
+import ProtectedRoute from './components/ProtectedRoute'
+import AppHome from './pages/AppHome'
 import Login from './pages/Login'
 import Register from './pages/Register'
-import useAuthStore from './store/useAuthStore'
+import useAuthStore, { readStoredAuth } from './store/useAuthStore'
 
 const navItems = [
   { to: '/', label: 'Overview' },
   { to: '/login', label: 'Login' },
   { to: '/register', label: 'Register' },
+  { to: '/app', label: 'App' },
 ]
 
 const summaryCards = [
-  { label: 'Register', value: 'POST /api/auth/register/' },
-  { label: 'Login', value: 'POST /api/auth/token/' },
-  { label: 'State', value: 'Tokens stored in Zustand' },
+  { label: 'Persistence', value: 'localStorage rehydration' },
+  { label: 'Interceptors', value: 'Bearer + refresh flow' },
+  { label: 'Protected', value: '/app guarded by auth' },
 ]
 
 function Panel({ eyebrow, title, description, checklist }) {
@@ -57,18 +61,20 @@ function OverviewPanel() {
       title={isAuthenticated ? 'Session loaded into Zustand' : 'Auth pages are now wired'}
       description={
         isAuthenticated
-          ? 'The login flow is posting to the JWT endpoint and storing the returned token pair in the auth store.'
-          : 'Day 6 replaces the placeholders with live login and register pages connected to the backend auth API.'
+          ? 'The stored session has been rehydrated and protected routes are now unlocked.'
+          : 'Day 7 adds persistence, refresh logic, and guarded routes on top of the Day 6 auth forms.'
       }
       checklist={[
         'Register posts to /api/auth/register/.',
         'Login posts to /api/auth/token/.',
+        'Access tokens are attached through the Axios request interceptor.',
+        'A 401 triggers the refresh endpoint before retrying the original request.',
         isAuthenticated
           ? `Signed in as ${user?.username ?? 'current user'}.`
-          : 'Successful login stores access and refresh tokens in useAuthStore.',
+          : 'Successful login stores access and refresh tokens in localStorage.',
         tokens?.access
           ? 'Access token is present in the client store.'
-          : 'JWT persistence and refresh handling land on Day 7.',
+          : 'Visit /app to confirm the protected route redirect.',
       ]}
     />
   )
@@ -79,11 +85,11 @@ function NotFoundRoute() {
     <Panel
       eyebrow="Missing Route"
       title="This route is not wired yet"
-      description="The router only exposes the overview and Day 6 auth screens right now."
+      description="The router now exposes the overview, auth screens, and the protected app shell."
       checklist={[
         'Visit /login for the JWT token form.',
         'Visit /register for the account creation form.',
-        'Use the Overview route to inspect client auth state.',
+        'Visit /app to verify protected route enforcement.',
       ]}
     />
   )
@@ -92,6 +98,15 @@ function NotFoundRoute() {
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const logout = useAuthStore((state) => state.logout)
+  const hydrateAuth = useAuthStore((state) => state.hydrateAuth)
+
+  useEffect(() => {
+    const storedAuth = readStoredAuth()
+
+    if (storedAuth) {
+      hydrateAuth(storedAuth)
+    }
+  }, [hydrateAuth])
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-gray-900 text-gray-100">
@@ -108,10 +123,10 @@ function App() {
               Orbit
             </p>
             <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
-              Day 6 auth screens
+              Day 7 auth persistence
             </h1>
             <p className="text-sm text-gray-400">
-              React forms are now connected to the Django JWT auth endpoints.
+              Stored JWT state, refresh handling, and protected routes are now wired.
             </p>
           </div>
 
@@ -151,15 +166,15 @@ function App() {
           <section className="space-y-8">
             <div className="space-y-5">
               <span className="inline-flex rounded-full border border-indigo-300/20 bg-indigo-300/10 px-4 py-1 text-xs font-medium uppercase tracking-[0.3em] text-indigo-100">
-                Login + Register + JWT
+                Persistence + Interceptors + Guarded Routes
               </span>
               <h2 className="max-w-3xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">
-                The frontend now talks to the backend auth API instead of a placeholder shell.
+                Refreshes keep the client authenticated and `/app` now sits behind a route guard.
               </h2>
               <p className="max-w-2xl text-base leading-8 text-gray-300 sm:text-lg">
-                Day 6 adds real forms, field-level API error rendering, and the
-                first client-side auth state update so Day 7 can focus on
-                persistence, interceptors, and protected routes.
+                Day 7 persists the token pair in local storage, rehydrates on
+                reload, injects Bearer auth on API requests, and refreshes
+                expired access tokens before the user is forced back to login.
               </p>
             </div>
 
@@ -189,6 +204,9 @@ function App() {
               <Route path="/register" element={<Register />} />
               <Route path="/auth/login" element={<Navigate to="/login" replace />} />
               <Route path="/auth/register" element={<Navigate to="/register" replace />} />
+              <Route path="/app/*" element={<ProtectedRoute />}>
+                <Route index element={<AppHome />} />
+              </Route>
               <Route path="*" element={<NotFoundRoute />} />
             </Routes>
           </section>

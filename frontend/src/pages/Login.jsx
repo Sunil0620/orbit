@@ -27,6 +27,7 @@ function Login() {
   const location = useLocation()
   const navigate = useNavigate()
   const setAuth = useAuthStore((state) => state.setAuth)
+  const redirectPath = location.state?.from?.pathname ?? '/app'
   const [formData, setFormData] = useState({
     ...initialFormData,
     username: location.state?.username ?? '',
@@ -81,7 +82,7 @@ function Login() {
         tokens,
       })
 
-      navigate('/', { replace: true })
+      navigate(redirectPath, { replace: true })
     } catch (error) {
       setErrors(extractApiErrors(error))
     } finally {
