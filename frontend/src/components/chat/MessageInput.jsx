@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import FileUpload from './FileUpload'
 
 function MessageInput({
   channel,
@@ -87,7 +88,8 @@ function MessageInput({
         ) : null}
       </div>
 
-      <div className="mt-4 flex gap-3">
+      <div className="mt-4 grid grid-cols-[auto_minmax(0,1fr)_auto] gap-3">
+        <FileUpload channel={channel} />
         <input
           type="text"
           value={draft}
