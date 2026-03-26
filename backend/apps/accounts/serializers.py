@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from django.contrib.auth.password_validation import validate_password
 from rest_framework_simplejwt.tokens import RefreshToken
+
 from .models import CustomUser
+from apps.utils import CloudinaryImageField
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -33,6 +35,8 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
+    avatar = CloudinaryImageField(required=False, allow_null=True)
+
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'email', 'avatar', 'bio', 'is_online', 'last_seen')

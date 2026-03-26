@@ -1,11 +1,14 @@
 from rest_framework import serializers
 
 from apps.accounts.models import CustomUser
+from apps.utils import CloudinaryImageField
 
 from .models import Message
 
 
 class MessageSenderSerializer(serializers.ModelSerializer):
+    avatar = CloudinaryImageField(read_only=True)
+
     class Meta:
         model = CustomUser
         fields = ('id', 'username', 'avatar')

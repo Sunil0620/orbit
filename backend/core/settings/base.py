@@ -3,11 +3,17 @@ Base settings — shared across all environments.
 Dev and Prod settings import from here.
 """
 
+import re
 from decouple import config
 from datetime import timedelta
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+def read_env_text(name):
+    raw_value = config(name, default='')
+    return re.split(r'\s+#', raw_value, maxsplit=1)[0].strip()
 
 SECRET_KEY = config('SECRET_KEY')
 
@@ -125,16 +131,13 @@ SIMPLE_JWT = {
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-CLOUDINARY_CLOUD_NAME = config('CLOUDINARY_CLOUD_NAME', default='')
-CLOUDINARY_API_KEY = config('CLOUDINARY_API_KEY', default='')
-CLOUDINARY_API_SECRET = config('CLOUDINARY_API_SECRET', default='')
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': read_env_text('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': read_env_text('CLOUDINARY_API_KEY'),
+    'API_SECRET': read_env_text('CLOUDINARY_API_SECRET'),
+}
 
-if all([CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET]):
-    CLOUDINARY_STORAGE = {
-        'CLOUD_NAME': CLOUDINARY_CLOUD_NAME,
-        'API_KEY': CLOUDINARY_API_KEY,
-        'API_SECRET': CLOUDINARY_API_SECRET,
-    }
+if all(CLOUDINARY_STORAGE.values()):
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 # Channel layers (Redis) — overridden in dev/prod
