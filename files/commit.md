@@ -278,7 +278,7 @@ feat(day 14): add members list panel and server settings page
 ### Day 15
 
 ```
-feat: configure asgi, django channels routing and redis channel layer
+feat(day 15): configure asgi, django channels routing and redis channel layer
 ```
 
 **Changes:**
@@ -604,4 +604,5 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 12 — Wire server and channel data to frontend state
 - ✅ Day 13 — Add create server modal and join by invite code
 - ✅ Day 14 — Members list panel and server settings page
-- ⬜ Day 15 — Configure ASGI, Django Channels routing, and Redis channel layer ← **you are here**
+- ✅ Day 15 — Configure ASGI, Django Channels routing, and Redis channel layer
+- ⬜ Day 16 — Implement chat consumer (connect, auth, receive, broadcast) ← **you are here**
