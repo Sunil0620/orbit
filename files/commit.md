@@ -153,7 +153,7 @@ feat(day 7): add jwt persistence, axios interceptors, and protected routes
 ### Day 8
 
 ```
-feat: add server model with invite code and membership
+feat(day 8): add server model with invite code and membership
 ```
 
 **Changes:**
@@ -593,8 +593,9 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 1 — Django project, settings, Docker stack
 - ✅ Day 2 — PostgreSQL + Redis + Docker Compose
 - ✅ Day 3 — CustomUser model, migrations
-- ⬜ Day 4 — JWT auth endpoints (register, login, refresh, profile)
+- ✅ Day 4 — JWT auth endpoints (register, login, refresh, profile)
 - ✅ Day 5 — React + Vite frontend init
 - ✅ Day 6 — Login and register pages connected to backend auth API
 - ✅ Day 7 — JWT persistence, axios interceptors, protected routes
-- ⬜ Day 8 — Server model with invite code and membership ← **you are here**
+- ✅ Day 8 — Server model with invite code and membership
+- ⬜ Day 9 — Server CRUD endpoints (create, list, join, leave) ← **you are here**
