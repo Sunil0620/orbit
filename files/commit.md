@@ -368,7 +368,7 @@ feat(day 19): add useWebSocket hook with reconnect and jwt auth
 ### Day 20
 
 ```
-feat: render message history and live messages in chat window
+feat(day 20): render message history and live messages in chat window
 ```
 
 **Changes:**
@@ -609,4 +609,5 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 17 — Add message model and persist messages in consumer
 - ✅ Day 18 — Add message history REST endpoint with pagination
 - ✅ Day 19 — Add useWebSocket hook with reconnect and JWT auth
-- ⬜ Day 20 — Render message history and live messages in chat window ← **you are here**
+- ✅ Day 20 — Render message history and live messages in chat window
+- ⬜ Day 21 — Add typing indicators via websocket events ← **you are here**

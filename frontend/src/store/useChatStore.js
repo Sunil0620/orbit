@@ -8,8 +8,10 @@ const initialState = {
   messages: [],
   isServersLoading: false,
   isChannelsLoading: false,
+  isMessagesLoading: false,
   serversError: '',
   channelsError: '',
+  messagesError: '',
 }
 
 function resolveActiveId(items, currentId) {
@@ -45,8 +47,10 @@ const useChatStore = create((set) => ({
       channelsError: '',
     })),
   setActiveChannel: (channelId) =>
-    set(() => ({
+    set((state) => ({
       activeChannelId: channelId,
+      messages: state.activeChannelId === channelId ? state.messages : [],
+      messagesError: '',
     })),
   setServersLoading: (isServersLoading) =>
     set(() => ({
@@ -63,6 +67,14 @@ const useChatStore = create((set) => ({
   setChannelsError: (channelsError) =>
     set(() => ({
       channelsError,
+    })),
+  setMessagesLoading: (isMessagesLoading) =>
+    set(() => ({
+      isMessagesLoading,
+    })),
+  setMessagesError: (messagesError) =>
+    set(() => ({
+      messagesError,
     })),
   upsertServer: (server) =>
     set((state) => {
@@ -101,10 +113,13 @@ const useChatStore = create((set) => ({
   setMessages: (messages) =>
     set(() => ({
       messages,
+      messagesError: '',
     })),
   appendMessage: (message) =>
     set((state) => ({
-      messages: [...state.messages, message],
+      messages: state.messages.some((item) => item.id === message.id)
+        ? state.messages
+        : [...state.messages, message],
     })),
   resetChatState: () =>
     set(() => ({
