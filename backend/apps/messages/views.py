@@ -1,11 +1,14 @@
+import cloudinary.uploader
 from django.shortcuts import get_object_or_404
-from rest_framework import generics, permissions, serializers
+from rest_framework import generics, permissions, serializers, status
+from rest_framework.exceptions import APIException
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 
 from apps.channels_chat.models import Channel
 
 from .models import Message
-from .serializers import MessageSerializer
+from .serializers import FileUploadSerializer, MessageSerializer
 
 
 class MessageListView(generics.ListAPIView):
@@ -43,3 +46,33 @@ class MessageListView(generics.ListAPIView):
 
         serializer = self.get_serializer(list(reversed(queryset[:50])), many=True)
         return Response(serializer.data)
+
+
+class FileUploadView(generics.GenericAPIView):
+    serializer_class = FileUploadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        uploaded_file = serializer.validated_data['file']
+
+        try:
+            result = cloudinary.uploader.upload(
+                uploaded_file,
+                folder='orbit/message_uploads',
+                resource_type='auto',
+            )
+        except Exception as exc:
+            raise APIException('Unable to upload the selected file right now.') from exc
+
+        return Response(
+            {
+                'url': result['secure_url'],
+                'file_name': uploaded_file.name,
+                'file_type': serializer.validated_data['file_type'],
+            },
+            status=status.HTTP_201_CREATED,
+        )
