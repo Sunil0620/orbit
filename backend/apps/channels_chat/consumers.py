@@ -2,9 +2,9 @@ import json
 
 from channels.db import database_sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer
-from django.utils import timezone
 
 from .models import Channel
+from apps.messages.models import Message
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -40,16 +40,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not content:
             return
 
-        message = {
-            'type': 'chat_message',
-            'channel_id': int(self.channel_id),
-            'content': content,
-            'sender': {
-                'id': self.scope['user'].id,
-                'username': self.scope['user'].username,
-            },
-            'timestamp': timezone.now().isoformat(),
-        }
+        message = await self.create_message(content)
 
         await self.channel_layer.group_send(
             self.group_name,
@@ -65,3 +56,23 @@ class ChatConsumer(AsyncWebsocketConsumer):
             pk=self.channel_id,
             server__members=self.scope['user'],
         ).exists()
+
+    @database_sync_to_async
+    def create_message(self, content):
+        message = Message.objects.create(
+            channel_id=self.channel_id,
+            sender=self.scope['user'],
+            content=content,
+        )
+        return {
+            'type': 'chat_message',
+            'id': message.id,
+            'channel_id': int(self.channel_id),
+            'content': message.content,
+            'sender': {
+                'id': self.scope['user'].id,
+                'username': self.scope['user'].username,
+            },
+            'timestamp': message.created_at.isoformat(),
+            'file_url': message.file_url,
+        }

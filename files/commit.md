@@ -315,7 +315,7 @@ feat(day 16): implement chat consumer (connect, auth, receive, broadcast)
 ### Day 17
 
 ```
-feat: add message model and persist messages in consumer
+feat(day 17): add message model and persist messages in consumer
 ```
 
 **Changes:**
@@ -606,4 +606,5 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 14 — Members list panel and server settings page
 - ✅ Day 15 — Configure ASGI, Django Channels routing, and Redis channel layer
 - ✅ Day 16 — Implement chat consumer (connect, auth, receive, broadcast)
-- ⬜ Day 17 — Add message model and persist messages in consumer ← **you are here**
+- ✅ Day 17 — Add message model and persist messages in consumer
+- ⬜ Day 18 — Add message history REST endpoint with pagination ← **you are here**
