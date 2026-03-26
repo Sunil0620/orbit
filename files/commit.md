@@ -187,7 +187,7 @@ feat(day 9): add server crud endpoints (create, list, join, leave)
 ### Day 10
 
 ```
-feat: add channel model and crud endpoints
+feat(day 10): add channel model and crud endpoints
 ```
 
 **Changes:**
@@ -599,4 +599,5 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 7 — JWT persistence, axios interceptors, protected routes
 - ✅ Day 8 — Server model with invite code and membership
 - ✅ Day 9 — Server CRUD endpoints (create, list, join, leave)
-- ⬜ Day 10 — Channel model and CRUD endpoints ← **you are here**
+- ✅ Day 10 — Channel model and CRUD endpoints
+- ⬜ Day 11 — 3-panel Discord-like layout shell ← **you are here**
