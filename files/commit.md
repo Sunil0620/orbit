@@ -206,7 +206,7 @@ feat(day 10): add channel model and crud endpoints
 ### Day 11
 
 ```
-feat: build 3-panel discord-like layout shell
+feat(day 11): build 3-panel discord-like layout shell
 ```
 
 **Changes:**
@@ -600,4 +600,5 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 8 — Server model with invite code and membership
 - ✅ Day 9 — Server CRUD endpoints (create, list, join, leave)
 - ✅ Day 10 — Channel model and CRUD endpoints
-- ⬜ Day 11 — 3-panel Discord-like layout shell ← **you are here**
+- ✅ Day 11 — 3-panel Discord-like layout shell
+- ⬜ Day 12 — Wire server and channel data to frontend state ← **you are here**
