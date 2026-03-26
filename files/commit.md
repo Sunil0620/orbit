@@ -332,7 +332,7 @@ feat(day 17): add message model and persist messages in consumer
 ### Day 18
 
 ```
-feat: add message history rest endpoint with pagination
+feat(day 18): add message history rest endpoint with pagination
 ```
 
 **Changes:**
@@ -607,4 +607,5 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 15 — Configure ASGI, Django Channels routing, and Redis channel layer
 - ✅ Day 16 — Implement chat consumer (connect, auth, receive, broadcast)
 - ✅ Day 17 — Add message model and persist messages in consumer
-- ⬜ Day 18 — Add message history REST endpoint with pagination ← **you are here**
+- ✅ Day 18 — Add message history REST endpoint with pagination
+- ⬜ Day 19 — Add useWebSocket hook with reconnect and JWT auth ← **you are here**

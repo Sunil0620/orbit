@@ -1,2 +1,7 @@
 from django.urls import path
-urlpatterns = []
+
+from .views import MessageListView
+
+urlpatterns = [
+    path('', MessageListView.as_view(), name='message_list'),
+]
