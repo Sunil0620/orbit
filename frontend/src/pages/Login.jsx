@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import { loginUser } from '../api/auth'
+import { fetchProfile, loginUser } from '../api/auth'
 import useAuthStore from '../store/useAuthStore'
 import extractApiErrors from '../utils/extractApiErrors'
 
@@ -74,11 +74,10 @@ function Login() {
         username: formData.username.trim(),
         password: formData.password,
       })
+      const profile = await fetchProfile(tokens.access)
 
       setAuth({
-        user: {
-          username: formData.username.trim(),
-        },
+        user: profile,
         tokens,
       })
 

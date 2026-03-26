@@ -83,6 +83,21 @@ const useChatStore = create((set) => ({
         activeServerId: state.activeServerId ?? server.id,
       }
     }),
+  removeServer: (serverId) =>
+    set((state) => {
+      const nextServers = state.servers.filter((server) => server.id !== serverId)
+      const isRemovingActiveServer = state.activeServerId === serverId
+
+      return {
+        servers: nextServers,
+        activeServerId: isRemovingActiveServer
+          ? nextServers[0]?.id ?? null
+          : resolveActiveId(nextServers, state.activeServerId),
+        channels: isRemovingActiveServer ? [] : state.channels,
+        activeChannelId: isRemovingActiveServer ? null : state.activeChannelId,
+        messages: isRemovingActiveServer ? [] : state.messages,
+      }
+    }),
   setMessages: (messages) =>
     set(() => ({
       messages,

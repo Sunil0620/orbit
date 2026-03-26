@@ -1,9 +1,11 @@
 import { useEffect } from 'react'
 import { Navigate, NavLink, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
+import { fetchProfile } from './api/auth'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ChatPage from './pages/ChatPage'
+import ServerSettings from './pages/ServerSettings'
 import useAuthStore, { readStoredAuth } from './store/useAuthStore'
 
 const navItems = [
@@ -120,8 +122,10 @@ function NotFoundRoute() {
 
 function App() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const user = useAuthStore((state) => state.user)
   const logout = useAuthStore((state) => state.logout)
   const hydrateAuth = useAuthStore((state) => state.hydrateAuth)
+  const setUser = useAuthStore((state) => state.setUser)
 
   useEffect(() => {
     const storedAuth = readStoredAuth()
@@ -130,6 +134,32 @@ function App() {
       hydrateAuth(storedAuth)
     }
   }, [hydrateAuth])
+
+  useEffect(() => {
+    if (!isAuthenticated || user?.id) {
+      return
+    }
+
+    let ignore = false
+
+    async function loadProfile() {
+      try {
+        const profile = await fetchProfile()
+
+        if (!ignore) {
+          setUser(profile)
+        }
+      } catch {
+        // The auth interceptor handles logout/redirect if the token is invalid.
+      }
+    }
+
+    loadProfile()
+
+    return () => {
+      ignore = true
+    }
+  }, [isAuthenticated, setUser, user?.id])
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950 text-gray-100">
@@ -229,6 +259,7 @@ function App() {
               <Route path="/auth/register" element={<Navigate to="/register" replace />} />
               <Route path="/app/*" element={<ProtectedRoute />}>
                 <Route index element={<ChatPage />} />
+                <Route path="servers/:serverId/settings" element={<ServerSettings />} />
               </Route>
               <Route path="*" element={<NotFoundRoute />} />
             </Routes>

@@ -42,3 +42,21 @@ export async function listChannels(serverId) {
   })
   return unwrapCollection(response.data)
 }
+
+export async function getServer(serverId) {
+  const response = await axiosInstance.get(`/servers/${serverId}/`)
+  return response.data
+}
+
+export async function updateServer(serverId, data) {
+  const response = await axiosInstance.patch(`/servers/${serverId}/`, data)
+  return response.data
+}
+
+export async function deleteServer(serverId) {
+  await axiosInstance.delete(`/servers/${serverId}/`)
+}
+
+export async function leaveServer(serverId) {
+  await axiosInstance.post(`/servers/${serverId}/leave/`)
+}

@@ -79,6 +79,12 @@ const useAuthStore = create((set) => ({
       persistAuthState(nextState)
       return nextState
     }),
+  setUser: (user) =>
+    set((state) => {
+      const nextState = buildAuthState({ user, tokens: state.tokens })
+      persistAuthState(nextState)
+      return nextState
+    }),
   logout: () =>
     set(() => {
       persistAuthState(initialState)

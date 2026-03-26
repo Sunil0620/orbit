@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Sidebar from '../components/layout/Sidebar'
 import ChannelList from '../components/layout/ChannelList'
 import ChatWindow from '../components/chat/ChatWindow'
+import MemberList from '../components/layout/MemberList'
 import CreateServerModal from '../components/server/CreateServerModal'
 import JoinServerModal from '../components/server/JoinServerModal'
 import { listChannels, listServers } from '../api/servers'
@@ -166,7 +167,7 @@ function ChatPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-[84px_280px_minmax(0,1fr)]">
+      <div className="grid gap-4 xl:grid-cols-[84px_280px_minmax(0,1fr)_260px]">
         <Sidebar
           servers={servers}
           activeServerId={activeServerId}
@@ -181,10 +182,12 @@ function ChatPage() {
           channels={channels}
           activeChannelId={activeChannelId}
           onSelectChannel={setActiveChannel}
+          settingsHref={activeServer ? `/app/servers/${activeServer.id}/settings` : null}
           isLoading={isChannelsLoading}
           error={channelsError}
         />
         <ChatWindow server={activeServer} channel={activeChannel} />
+        <MemberList server={activeServer} />
       </div>
 
       <CreateServerModal
