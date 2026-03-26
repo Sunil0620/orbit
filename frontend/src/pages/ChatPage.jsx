@@ -15,43 +15,26 @@ function ChatPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
   const [actionNotice, setActionNotice] = useState('')
-  const {
-    servers,
-    activeServerId,
-    channels,
-    activeChannelId,
-    isServersLoading,
-    isChannelsLoading,
-    serversError,
-    channelsError,
-    setServers,
-    setActiveServer,
-    setChannels,
-    setActiveChannel,
-    setServersLoading,
-    setChannelsLoading,
-    setServersError,
-    setChannelsError,
-    upsertServer,
-  } = useChatStore((state) => ({
-    servers: state.servers,
-    activeServerId: state.activeServerId,
-    channels: state.channels,
-    activeChannelId: state.activeChannelId,
-    isServersLoading: state.isServersLoading,
-    isChannelsLoading: state.isChannelsLoading,
-    serversError: state.serversError,
-    channelsError: state.channelsError,
-    setServers: state.setServers,
-    setActiveServer: state.setActiveServer,
-    setChannels: state.setChannels,
-    setActiveChannel: state.setActiveChannel,
-    setServersLoading: state.setServersLoading,
-    setChannelsLoading: state.setChannelsLoading,
-    setServersError: state.setServersError,
-    setChannelsError: state.setChannelsError,
-    upsertServer: state.upsertServer,
-  }))
+  const servers = useChatStore((state) => state.servers)
+  const activeServerId = useChatStore((state) => state.activeServerId)
+  const channels = useChatStore((state) => state.channels)
+  const activeChannelId = useChatStore((state) => state.activeChannelId)
+  const isServersLoading = useChatStore((state) => state.isServersLoading)
+  const isChannelsLoading = useChatStore((state) => state.isChannelsLoading)
+  const serversError = useChatStore((state) => state.serversError)
+  const channelsError = useChatStore((state) => state.channelsError)
+  const setServers = useChatStore((state) => state.setServers)
+  const setActiveServer = useChatStore((state) => state.setActiveServer)
+  const setChannels = useChatStore((state) => state.setChannels)
+  const setActiveChannel = useChatStore((state) => state.setActiveChannel)
+  const setServersLoading = useChatStore((state) => state.setServersLoading)
+  const setChannelsLoading = useChatStore((state) => state.setChannelsLoading)
+  const setServersError = useChatStore((state) => state.setServersError)
+  const setChannelsError = useChatStore((state) => state.setChannelsError)
+  const upsertServer = useChatStore((state) => state.upsertServer)
+  const setMessages = useChatStore((state) => state.setMessages)
+  const setMessagesError = useChatStore((state) => state.setMessagesError)
+  const setMessagesLoading = useChatStore((state) => state.setMessagesLoading)
 
   const activeServer = useMemo(
     () => servers.find((server) => server.id === activeServerId) ?? null,
@@ -63,6 +46,13 @@ function ChatPage() {
   )
 
   useEffect(() => {
+    if (!user?.id) {
+      setServers([])
+      setServersError('')
+      setServersLoading(false)
+      return undefined
+    }
+
     let ignore = false
 
     async function loadServers() {
@@ -98,11 +88,16 @@ function ChatPage() {
     return () => {
       ignore = true
     }
-  }, [setServers, setServersError, setServersLoading])
+  }, [setServers, setServersError, setServersLoading, user?.id])
 
   useEffect(() => {
     if (!activeServerId) {
       setChannels([])
+      setChannelsError('')
+      setChannelsLoading(false)
+      setMessages([])
+      setMessagesError('')
+      setMessagesLoading(false)
       return
     }
 
@@ -146,6 +141,9 @@ function ChatPage() {
     setChannels,
     setChannelsError,
     setChannelsLoading,
+    setMessages,
+    setMessagesError,
+    setMessagesLoading,
   ])
 
   return (

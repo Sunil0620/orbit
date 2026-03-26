@@ -1,9 +1,30 @@
 import axios from 'axios'
 import useAuthStore from '../store/useAuthStore'
+import useChatStore from '../store/useChatStore'
 
-export const apiBaseUrl = (
-  import.meta.env.VITE_API_URL ?? 'http://localhost:8000/api'
-).replace(/\/$/, '')
+function normalizeApiBaseUrl(value) {
+  const fallbackUrl = 'http://localhost:8000/api'
+  const rawValue = value ?? fallbackUrl
+
+  try {
+    const parsedUrl = new URL(rawValue, window.location.origin)
+    const normalizedPath = parsedUrl.pathname.replace(/\/$/, '')
+
+    if (!normalizedPath || normalizedPath === '') {
+      parsedUrl.pathname = '/api'
+    } else if (normalizedPath === '/') {
+      parsedUrl.pathname = '/api'
+    } else {
+      parsedUrl.pathname = normalizedPath
+    }
+
+    return parsedUrl.toString().replace(/\/$/, '')
+  } catch {
+    return rawValue.replace(/\/$/, '')
+  }
+}
+
+export const apiBaseUrl = normalizeApiBaseUrl(import.meta.env.VITE_API_URL)
 
 const axiosInstance = axios.create({
   baseURL: apiBaseUrl,
@@ -29,8 +50,10 @@ function redirectToLogin() {
 
 axiosInstance.interceptors.request.use((config) => {
   const accessToken = useAuthStore.getState().tokens?.access
+  const hasAuthorizationHeader =
+    Boolean(config.headers?.Authorization) || Boolean(config.headers?.authorization)
 
-  if (accessToken) {
+  if (accessToken && !hasAuthorizationHeader) {
     config.headers = config.headers ?? {}
     config.headers.Authorization = `Bearer ${accessToken}`
   }
@@ -59,6 +82,7 @@ axiosInstance.interceptors.response.use(
 
     if (!refreshToken) {
       useAuthStore.getState().logout()
+      useChatStore.getState().resetChatState()
       redirectToLogin()
       return Promise.reject(error)
     }
@@ -88,6 +112,7 @@ axiosInstance.interceptors.response.use(
       return axiosInstance(originalRequest)
     } catch (refreshError) {
       useAuthStore.getState().logout()
+      useChatStore.getState().resetChatState()
       redirectToLogin()
       return Promise.reject(refreshError)
     }

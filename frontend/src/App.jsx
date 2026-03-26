@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
-import { Navigate, NavLink, Route, Routes } from 'react-router-dom'
+import { Navigate, NavLink, Outlet, Route, Routes } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
-import { fetchProfile } from './api/auth'
+import { fetchProfile, logoutUser } from './api/auth'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import ChatPage from './pages/ChatPage'
 import ServerSettings from './pages/ServerSettings'
+import useChatStore from './store/useChatStore'
 import useAuthStore, { readStoredAuth } from './store/useAuthStore'
 
 const navItems = [
@@ -53,11 +54,9 @@ function Panel({ eyebrow, title, description, checklist, actions }) {
 }
 
 function OverviewPanel() {
-  const { isAuthenticated, user, tokens } = useAuthStore((state) => ({
-    isAuthenticated: state.isAuthenticated,
-    user: state.user,
-    tokens: state.tokens,
-  }))
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const user = useAuthStore((state) => state.user)
+  const tokens = useAuthStore((state) => state.tokens)
 
   return (
     <Panel
@@ -120,47 +119,7 @@ function NotFoundRoute() {
   )
 }
 
-function App() {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
-  const user = useAuthStore((state) => state.user)
-  const logout = useAuthStore((state) => state.logout)
-  const hydrateAuth = useAuthStore((state) => state.hydrateAuth)
-  const setUser = useAuthStore((state) => state.setUser)
-
-  useEffect(() => {
-    const storedAuth = readStoredAuth()
-
-    if (storedAuth) {
-      hydrateAuth(storedAuth)
-    }
-  }, [hydrateAuth])
-
-  useEffect(() => {
-    if (!isAuthenticated || user?.id) {
-      return
-    }
-
-    let ignore = false
-
-    async function loadProfile() {
-      try {
-        const profile = await fetchProfile()
-
-        if (!ignore) {
-          setUser(profile)
-        }
-      } catch {
-        // The auth interceptor handles logout/redirect if the token is invalid.
-      }
-    }
-
-    loadProfile()
-
-    return () => {
-      ignore = true
-    }
-  }, [isAuthenticated, setUser, user?.id])
-
+function ShellBackground({ children }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950 text-gray-100">
       <div className="pointer-events-none absolute inset-0">
@@ -169,6 +128,14 @@ function App() {
         <div className="absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
       </div>
 
+      {children}
+    </div>
+  )
+}
+
+function MarketingLayout({ isAuthenticated, clearSession }) {
+  return (
+    <ShellBackground>
       <div className="relative mx-auto flex min-h-screen max-w-7xl flex-col px-6 py-8 sm:px-8 lg:px-10">
         <header className="flex flex-col gap-6 border-b border-white/10 pb-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
@@ -204,13 +171,13 @@ function App() {
             </nav>
 
             {isAuthenticated ? (
-              <button
-                type="button"
+              <NavLink
+                to="/login"
                 className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-200 transition hover:border-white/20 hover:text-white"
-                onClick={logout}
+                onClick={clearSession}
               >
-                Clear session
-              </button>
+                Switch user
+              </NavLink>
             ) : null}
           </div>
         </header>
@@ -251,22 +218,169 @@ function App() {
           </section>
 
           <section className="rounded-[2rem] border border-white/10 bg-slate-900/70 p-6 shadow-panel backdrop-blur sm:p-8">
-            <Routes>
-              <Route path="/" element={<OverviewPanel />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/auth/login" element={<Navigate to="/login" replace />} />
-              <Route path="/auth/register" element={<Navigate to="/register" replace />} />
-              <Route path="/app/*" element={<ProtectedRoute />}>
-                <Route index element={<ChatPage />} />
-                <Route path="servers/:serverId/settings" element={<ServerSettings />} />
-              </Route>
-              <Route path="*" element={<NotFoundRoute />} />
-            </Routes>
+            <Outlet />
           </section>
         </main>
       </div>
-    </div>
+    </ShellBackground>
+  )
+}
+
+function WorkspaceLayout({ isAuthenticated, clearSession, user }) {
+  return (
+    <ShellBackground>
+      <div className="relative mx-auto flex min-h-screen w-full max-w-[1600px] flex-col px-6 py-6 sm:px-8 lg:px-10">
+        <header className="flex flex-col gap-5 border-b border-white/10 pb-5 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-300">
+              Orbit Workspace
+            </p>
+            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Realtime chat shell
+            </h1>
+            <p className="text-sm text-slate-400">
+              Signed in as {user?.username ?? 'current user'}. Servers, channels, members,
+              and messages live here.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <NavLink
+              to="/"
+              className={({ isActive }) =>
+                [
+                  'rounded-full border px-4 py-2 text-sm transition',
+                  isActive
+                    ? 'border-cyan-300/60 bg-cyan-400/10 text-cyan-100'
+                    : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/20 hover:text-white',
+                ].join(' ')
+              }
+            >
+              Overview
+            </NavLink>
+
+            <NavLink
+              to="/app"
+              className={({ isActive }) =>
+                [
+                  'rounded-full border px-4 py-2 text-sm transition',
+                  isActive
+                    ? 'border-cyan-300/60 bg-cyan-400/10 text-cyan-100'
+                    : 'border-white/10 bg-white/5 text-gray-300 hover:border-white/20 hover:text-white',
+                ].join(' ')
+              }
+            >
+              Chat
+            </NavLink>
+
+            {isAuthenticated ? (
+              <NavLink
+                to="/login"
+                className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-200 transition hover:border-white/20 hover:text-white"
+                onClick={clearSession}
+              >
+                Switch user
+              </NavLink>
+            ) : null}
+          </div>
+        </header>
+
+        <main className="flex-1 py-6">
+          <Outlet />
+        </main>
+      </div>
+    </ShellBackground>
+  )
+}
+
+function App() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+  const user = useAuthStore((state) => state.user)
+  const tokens = useAuthStore((state) => state.tokens)
+  const logout = useAuthStore((state) => state.logout)
+  const hydrateAuth = useAuthStore((state) => state.hydrateAuth)
+  const setUser = useAuthStore((state) => state.setUser)
+  const resetChatState = useChatStore((state) => state.resetChatState)
+
+  const clearSession = () => {
+    void logoutUser({
+      accessToken: tokens?.access,
+      refreshToken: tokens?.refresh,
+    }).catch(() => {
+      // Clear local state even if the logout request fails.
+    })
+
+    logout()
+    resetChatState()
+  }
+
+  useEffect(() => {
+    const storedAuth = readStoredAuth()
+
+    if (storedAuth) {
+      hydrateAuth(storedAuth)
+    }
+  }, [hydrateAuth])
+
+  useEffect(() => {
+    if (!isAuthenticated || user?.id) {
+      return
+    }
+
+    let ignore = false
+
+    async function loadProfile() {
+      try {
+        const profile = await fetchProfile()
+
+        if (!ignore) {
+          setUser(profile)
+        }
+      } catch {
+        // The auth interceptor handles logout/redirect if the token is invalid.
+      }
+    }
+
+    loadProfile()
+
+    return () => {
+      ignore = true
+    }
+  }, [isAuthenticated, setUser, user?.id])
+
+  return (
+    <Routes>
+      <Route
+        element={
+          <MarketingLayout
+            isAuthenticated={isAuthenticated}
+            clearSession={clearSession}
+          />
+        }
+      >
+        <Route path="/" element={<OverviewPanel />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/auth/login" element={<Navigate to="/login" replace />} />
+        <Route path="/auth/register" element={<Navigate to="/register" replace />} />
+        <Route path="*" element={<NotFoundRoute />} />
+      </Route>
+
+      <Route path="/app/*" element={<ProtectedRoute />}>
+        <Route
+          element={
+            <WorkspaceLayout
+              isAuthenticated={isAuthenticated}
+              clearSession={clearSession}
+              user={user}
+            />
+          }
+        >
+          <Route index element={<ChatPage />} />
+          <Route path="servers/:serverId/settings" element={<ServerSettings />} />
+        </Route>
+      </Route>
+    </Routes>
   )
 }
 

@@ -8,23 +8,13 @@ import MessageBubble from './MessageBubble'
 
 function ChatWindow({ server, channel }) {
   const accessToken = useAuthStore((state) => state.tokens?.access)
-  const {
-    messages,
-    isMessagesLoading,
-    messagesError,
-    setMessages,
-    appendMessage,
-    setMessagesLoading,
-    setMessagesError,
-  } = useChatStore((state) => ({
-    messages: state.messages,
-    isMessagesLoading: state.isMessagesLoading,
-    messagesError: state.messagesError,
-    setMessages: state.setMessages,
-    appendMessage: state.appendMessage,
-    setMessagesLoading: state.setMessagesLoading,
-    setMessagesError: state.setMessagesError,
-  }))
+  const messages = useChatStore((state) => state.messages)
+  const isMessagesLoading = useChatStore((state) => state.isMessagesLoading)
+  const messagesError = useChatStore((state) => state.messagesError)
+  const setMessages = useChatStore((state) => state.setMessages)
+  const appendMessage = useChatStore((state) => state.appendMessage)
+  const setMessagesLoading = useChatStore((state) => state.setMessagesLoading)
+  const setMessagesError = useChatStore((state) => state.setMessagesError)
   const [draft, setDraft] = useState('')
   const [composerError, setComposerError] = useState('')
   const messageListRef = useRef(null)
@@ -38,6 +28,7 @@ function ChatWindow({ server, channel }) {
     if (!channel?.id) {
       setMessages([])
       setMessagesError('')
+      setMessagesLoading(false)
       return
     }
 

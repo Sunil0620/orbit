@@ -20,3 +20,19 @@ export const fetchProfile = async (accessToken) => {
   })
   return response.data
 }
+
+export const logoutUser = async ({ accessToken, refreshToken } = {}) => {
+  if (!refreshToken) {
+    return
+  }
+
+  await axiosInstance.post('/auth/logout/', {
+    refresh: refreshToken,
+  }, {
+    headers: accessToken
+      ? {
+          Authorization: `Bearer ${accessToken}`,
+        }
+      : undefined,
+  })
+}

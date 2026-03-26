@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { fetchProfile, loginUser } from '../api/auth'
 import useAuthStore from '../store/useAuthStore'
+import useChatStore from '../store/useChatStore'
 import extractApiErrors from '../utils/extractApiErrors'
 
 const initialFormData = {
@@ -27,6 +28,7 @@ function Login() {
   const location = useLocation()
   const navigate = useNavigate()
   const setAuth = useAuthStore((state) => state.setAuth)
+  const resetChatState = useChatStore((state) => state.resetChatState)
   const redirectPath = location.state?.from?.pathname ?? '/app'
   const [formData, setFormData] = useState({
     ...initialFormData,
@@ -76,6 +78,7 @@ function Login() {
       })
       const profile = await fetchProfile(tokens.access)
 
+      resetChatState()
       setAuth({
         user: profile,
         tokens,

@@ -24,6 +24,12 @@ export default function extractApiErrors(error) {
   }
 
   if (typeof payload === 'string') {
+    if (payload.includes('<!DOCTYPE html') || payload.includes('<html')) {
+      return {
+        form: 'The backend returned an HTML error page instead of JSON. Check the API base URL and backend logs.',
+      }
+    }
+
     return { form: payload }
   }
 

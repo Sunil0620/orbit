@@ -14,11 +14,9 @@ function ServerSettings() {
   const navigate = useNavigate()
   const { serverId } = useParams()
   const user = useAuthStore((state) => state.user)
-  const { servers, upsertServer, removeServer } = useChatStore((state) => ({
-    servers: state.servers,
-    upsertServer: state.upsertServer,
-    removeServer: state.removeServer,
-  }))
+  const servers = useChatStore((state) => state.servers)
+  const upsertServer = useChatStore((state) => state.upsertServer)
+  const removeServer = useChatStore((state) => state.removeServer)
   const [server, setServer] = useState(null)
   const [name, setName] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -33,16 +31,20 @@ function ServerSettings() {
   const isOwner = server?.owner?.id === user?.id
 
   useEffect(() => {
+    if (!cachedServer) {
+      return
+    }
+
+    setServer(cachedServer)
+    setName(cachedServer.name)
+  }, [cachedServer])
+
+  useEffect(() => {
     let ignore = false
 
     async function loadServer() {
       setIsLoading(true)
       setError('')
-
-      if (cachedServer) {
-        setServer(cachedServer)
-        setName(cachedServer.name)
-      }
 
       try {
         const nextServer = await getServer(serverId)
@@ -73,7 +75,7 @@ function ServerSettings() {
     return () => {
       ignore = true
     }
-  }, [cachedServer, serverId, upsertServer])
+  }, [serverId, upsertServer])
 
   const handleCopyInvite = async () => {
     if (!server?.invite_code || !navigator?.clipboard) {

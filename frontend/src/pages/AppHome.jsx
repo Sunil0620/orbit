@@ -1,10 +1,8 @@
 import useAuthStore from '../store/useAuthStore'
 
 function AppHome() {
-  const { user, tokens } = useAuthStore((state) => ({
-    user: state.user,
-    tokens: state.tokens,
-  }))
+  const user = useAuthStore((state) => state.user)
+  const tokens = useAuthStore((state) => state.tokens)
 
   return (
     <div className="space-y-6 rounded-3xl border border-gray-700 bg-gray-800 p-6 shadow-2xl shadow-black/25 sm:p-8">
