@@ -297,7 +297,7 @@ feat(day 15): configure asgi, django channels routing and redis channel layer
 ### Day 16
 
 ```
-feat: implement chat consumer (connect, auth, receive, broadcast)
+feat(day 16): implement chat consumer (connect, auth, receive, broadcast)
 ```
 
 **Changes:**
@@ -605,4 +605,5 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 13 — Add create server modal and join by invite code
 - ✅ Day 14 — Members list panel and server settings page
 - ✅ Day 15 — Configure ASGI, Django Channels routing, and Redis channel layer
-- ⬜ Day 16 — Implement chat consumer (connect, auth, receive, broadcast) ← **you are here**
+- ✅ Day 16 — Implement chat consumer (connect, auth, receive, broadcast)
+- ⬜ Day 17 — Add message model and persist messages in consumer ← **you are here**
