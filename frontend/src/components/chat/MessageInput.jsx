@@ -8,7 +8,9 @@ function MessageInput({
   onSendTypingState,
 }) {
   const [draft, setDraft] = useState('')
+  const [attachedFile, setAttachedFile] = useState(null)
   const [composerError, setComposerError] = useState('')
+  const fileUploadRef = useRef(null)
   const typingTimeoutRef = useRef(null)
 
   const clearTypingTimeout = () => {
@@ -56,11 +58,16 @@ function MessageInput({
     event.preventDefault()
 
     const content = draft.trim()
-    if (!content) {
+    if (!content && !attachedFile) {
       return
     }
 
-    const wasSent = onSendMessage(content)
+    const wasSent = onSendMessage({
+      content,
+      file_url: attachedFile?.url ?? '',
+      file_name: attachedFile?.file_name ?? '',
+      file_type: attachedFile?.file_type ?? '',
+    })
     if (!wasSent) {
       setComposerError('WebSocket connection is not ready yet.')
       return
@@ -69,6 +76,8 @@ function MessageInput({
     clearTypingTimeout()
     onSendTypingState(false)
     setDraft('')
+    setAttachedFile(null)
+    fileUploadRef.current?.clearUpload()
     setComposerError('')
   }
 
@@ -89,7 +98,11 @@ function MessageInput({
       </div>
 
       <div className="mt-4 grid grid-cols-[auto_minmax(0,1fr)_auto] gap-3">
-        <FileUpload channel={channel} />
+        <FileUpload
+          ref={fileUploadRef}
+          channel={channel}
+          onUploadComplete={setAttachedFile}
+        />
         <input
           type="text"
           value={draft}

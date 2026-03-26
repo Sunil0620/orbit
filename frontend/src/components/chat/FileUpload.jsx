@@ -1,4 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useRef,
+  useState,
+} from 'react'
 import { uploadMessageFile } from '../../api/messages'
 import extractApiErrors from '../../utils/extractApiErrors'
 
@@ -23,13 +29,31 @@ function AttachmentIcon() {
   )
 }
 
-function FileUpload({ channel, onUploadComplete }) {
+const FileUpload = forwardRef(function FileUpload(
+  { channel, onUploadComplete },
+  ref,
+) {
   const [uploadedFile, setUploadedFile] = useState(null)
   const [previewUrl, setPreviewUrl] = useState('')
   const [uploadProgress, setUploadProgress] = useState(0)
   const [uploadError, setUploadError] = useState('')
   const [isUploading, setIsUploading] = useState(false)
   const inputRef = useRef(null)
+
+  const clearUpload = () => {
+    setUploadedFile(null)
+    setUploadProgress(0)
+    setUploadError('')
+
+    if (previewUrl) {
+      window.URL.revokeObjectURL(previewUrl)
+      setPreviewUrl('')
+    }
+
+    if (inputRef.current) {
+      inputRef.current.value = ''
+    }
+  }
 
   useEffect(() => {
     return () => {
@@ -39,20 +63,17 @@ function FileUpload({ channel, onUploadComplete }) {
     }
   }, [previewUrl])
 
+  useImperativeHandle(ref, () => ({
+    clearUpload,
+  }))
+
   const handleFileSelect = async (event) => {
     const file = event.target.files?.[0]
 
-    setUploadError('')
-    setUploadedFile(null)
+    clearUpload()
     onUploadComplete?.(null)
 
-    if (previewUrl) {
-      window.URL.revokeObjectURL(previewUrl)
-      setPreviewUrl('')
-    }
-
     if (!file) {
-      setUploadProgress(0)
       return
     }
 
@@ -164,6 +185,6 @@ function FileUpload({ channel, onUploadComplete }) {
       ) : null}
     </>
   )
-}
+})
 
 export default FileUpload

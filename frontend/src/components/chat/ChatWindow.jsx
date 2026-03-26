@@ -184,10 +184,10 @@ function ChatWindow({ server, channel }) {
             key={channel?.id ?? 'message-input'}
             channel={channel}
             connectionStatus={connectionStatus}
-            onSendMessage={(content) =>
+            onSendMessage={(message) =>
               sendMessage({
                 type: 'chat_message',
-                content,
+                ...message,
               })
             }
             onSendTypingState={(isTyping) =>

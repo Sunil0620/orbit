@@ -5,6 +5,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 from .models import Channel
 from apps.messages.models import Message
+from apps.utils import build_cloudinary_asset_url
 
 
 class ChatConsumer(AsyncWebsocketConsumer):
@@ -55,10 +56,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
             return
 
         content = str(payload.get('content', '')).strip()
-        if not content:
+        file_url = str(payload.get('file_url', '')).strip()
+        file_name = str(payload.get('file_name', '')).strip()
+        file_type = str(payload.get('file_type', '')).strip()
+
+        if not content and not file_url:
             return
 
-        message = await self.create_message(content)
+        message = await self.create_message(content, file_url, file_name, file_type)
 
         await self.channel_layer.group_send(
             self.group_name,
@@ -79,11 +84,14 @@ class ChatConsumer(AsyncWebsocketConsumer):
         ).exists()
 
     @database_sync_to_async
-    def create_message(self, content):
+    def create_message(self, content, file_url='', file_name='', file_type=''):
         message = Message.objects.create(
             channel_id=self.channel_id,
             sender=self.scope['user'],
             content=content,
+            file_url=file_url,
+            file_name=file_name,
+            file_type=file_type,
         )
         return {
             'type': 'chat_message',
@@ -93,7 +101,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'sender': {
                 'id': self.scope['user'].id,
                 'username': self.scope['user'].username,
+                'avatar': build_cloudinary_asset_url(self.scope['user'].avatar),
             },
             'timestamp': message.created_at.isoformat(),
             'file_url': message.file_url,
+            'file_name': message.file_name,
+            'file_type': message.file_type,
         }
