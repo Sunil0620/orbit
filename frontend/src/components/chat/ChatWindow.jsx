@@ -1,22 +1,25 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { listMessages } from '../../api/messages'
 import useWebSocket from '../../hooks/useWebSocket'
 import useAuthStore from '../../store/useAuthStore'
 import useChatStore from '../../store/useChatStore'
 import extractApiErrors from '../../utils/extractApiErrors'
 import MessageBubble from './MessageBubble'
+import MessageInput from './MessageInput'
 
 function ChatWindow({ server, channel }) {
+  const currentUserId = useAuthStore((state) => state.user?.id)
   const accessToken = useAuthStore((state) => state.tokens?.access)
   const messages = useChatStore((state) => state.messages)
+  const typingUsers = useChatStore((state) => state.typingUsers)
   const isMessagesLoading = useChatStore((state) => state.isMessagesLoading)
   const messagesError = useChatStore((state) => state.messagesError)
   const setMessages = useChatStore((state) => state.setMessages)
   const appendMessage = useChatStore((state) => state.appendMessage)
+  const setTypingState = useChatStore((state) => state.setTypingState)
+  const clearTypingUsers = useChatStore((state) => state.clearTypingUsers)
   const setMessagesLoading = useChatStore((state) => state.setMessagesLoading)
   const setMessagesError = useChatStore((state) => state.setMessagesError)
-  const [draft, setDraft] = useState('')
-  const [composerError, setComposerError] = useState('')
   const messageListRef = useRef(null)
   const shouldStickToBottomRef = useRef(true)
   const { lastMessage, sendMessage, connectionStatus } = useWebSocket(
@@ -27,6 +30,7 @@ function ChatWindow({ server, channel }) {
   useEffect(() => {
     if (!channel?.id) {
       setMessages([])
+      clearTypingUsers()
       setMessagesError('')
       setMessagesLoading(false)
       return
@@ -64,6 +68,7 @@ function ChatWindow({ server, channel }) {
     }
   }, [
     channel?.id,
+    clearTypingUsers,
     setMessages,
     setMessagesError,
     setMessagesLoading,
@@ -74,8 +79,23 @@ function ChatWindow({ server, channel }) {
       return
     }
 
-    appendMessage(lastMessage)
-  }, [appendMessage, channel?.id, lastMessage])
+    if (lastMessage.type === 'typing') {
+      if (lastMessage.user_id === currentUserId) {
+        return
+      }
+
+      setTypingState({
+        userId: lastMessage.user_id,
+        username: lastMessage.username,
+        isTyping: lastMessage.is_typing,
+      })
+      return
+    }
+
+    if (lastMessage.type === 'chat_message') {
+      appendMessage(lastMessage)
+    }
+  }, [appendMessage, channel?.id, currentUserId, lastMessage, setTypingState])
 
   useEffect(() => {
     const container = messageListRef.current
@@ -97,26 +117,23 @@ function ChatWindow({ server, channel }) {
     shouldStickToBottomRef.current = distanceFromBottom < 48
   }
 
-  const handleSubmit = (event) => {
-    event.preventDefault()
+  const typingNames = useMemo(() => Object.values(typingUsers), [typingUsers])
 
-    if (!draft.trim()) {
-      return
+  const typingIndicatorText = useMemo(() => {
+    if (typingNames.length === 0) {
+      return ''
     }
 
-    const wasSent = sendMessage({
-      type: 'chat_message',
-      content: draft.trim(),
-    })
-
-    if (!wasSent) {
-      setComposerError('WebSocket connection is not ready yet.')
-      return
+    if (typingNames.length === 1) {
+      return `${typingNames[0]} is typing...`
     }
 
-    setDraft('')
-    setComposerError('')
-  }
+    if (typingNames.length === 2) {
+      return `${typingNames[0]} and ${typingNames[1]} are typing...`
+    }
+
+    return `${typingNames[0]} and ${typingNames.length - 1} others are typing...`
+  }, [typingNames])
 
   return (
     <section className="flex h-full min-h-[32rem] flex-col rounded-[2rem] border border-white/10 bg-slate-800/80">
@@ -162,46 +179,28 @@ function ChatWindow({ server, channel }) {
           ) : null}
         </div>
 
-        <form
-          className="rounded-3xl border border-white/10 bg-slate-950/70 px-5 py-4"
-          onSubmit={handleSubmit}
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-xs uppercase tracking-[0.35em] text-slate-500">
-              Connection {connectionStatus}
-            </p>
-            {composerError ? (
-              <p className="text-xs uppercase tracking-[0.28em] text-red-300">
-                {composerError}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="mt-4 flex gap-3">
-            <input
-              type="text"
-              value={draft}
-              onChange={(event) => {
-                setDraft(event.target.value)
-                setComposerError('')
-              }}
-              disabled={!channel}
-              placeholder={
-                channel
-                  ? `Message #${channel.name}`
-                  : 'Choose a channel before sending messages'
-              }
-              className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-            />
-            <button
-              type="submit"
-              disabled={!channel}
-              className="rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              Send
-            </button>
-          </div>
-        </form>
+        <div className="space-y-3">
+          <MessageInput
+            key={channel?.id ?? 'message-input'}
+            channel={channel}
+            connectionStatus={connectionStatus}
+            onSendMessage={(content) =>
+              sendMessage({
+                type: 'chat_message',
+                content,
+              })
+            }
+            onSendTypingState={(isTyping) =>
+              sendMessage({
+                type: 'typing',
+                is_typing: isTyping,
+              })
+            }
+          />
+          {typingIndicatorText ? (
+            <p className="px-2 text-sm text-cyan-100/80">{typingIndicatorText}</p>
+          ) : null}
+        </div>
       </div>
     </section>
   )

@@ -16,6 +16,7 @@ function buildWebSocketBaseUrl() {
 
 export default function useWebSocket(channelId, accessToken) {
   const socketRef = useRef(null)
+  const connectRef = useRef(null)
   const reconnectTimerRef = useRef(null)
   const reconnectAttemptRef = useRef(0)
   const closedByEffectRef = useRef(false)
@@ -84,24 +85,31 @@ export default function useWebSocket(channelId, accessToken) {
 
       reconnectAttemptRef.current += 1
       setConnectionStatus('reconnecting')
-      reconnectTimerRef.current = window.setTimeout(connect, nextDelay)
+      reconnectTimerRef.current = window.setTimeout(() => {
+        connectRef.current?.()
+      }, nextDelay)
     }
   }, [clearReconnectTimer, handleMessage, socketUrl])
+
+  useEffect(() => {
+    connectRef.current = connect
+  }, [connect])
 
   useEffect(() => {
     closedByEffectRef.current = false
     clearReconnectTimer()
     reconnectAttemptRef.current = 0
-    setLastMessage(null)
 
     if (!socketUrl) {
-      setConnectionStatus('idle')
       return undefined
     }
 
-    connect()
+    const initialConnectTimer = window.setTimeout(() => {
+      connectRef.current?.()
+    }, 0)
 
     return () => {
+      window.clearTimeout(initialConnectTimer)
       closedByEffectRef.current = true
       clearReconnectTimer()
       socketRef.current?.close()
@@ -121,6 +129,6 @@ export default function useWebSocket(channelId, accessToken) {
   return {
     lastMessage,
     sendMessage,
-    connectionStatus,
+    connectionStatus: socketUrl ? connectionStatus : 'idle',
   }
 }

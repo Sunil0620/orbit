@@ -33,7 +33,25 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except json.JSONDecodeError:
             return
 
-        if payload.get('type', 'chat_message') != 'chat_message':
+        message_type = payload.get('type', 'chat_message')
+
+        if message_type == 'typing':
+            await self.channel_layer.group_send(
+                self.group_name,
+                {
+                    'type': 'typing_event',
+                    'message': {
+                        'type': 'typing',
+                        'channel_id': int(self.channel_id),
+                        'user_id': self.scope['user'].id,
+                        'username': self.scope['user'].username,
+                        'is_typing': bool(payload.get('is_typing')),
+                    },
+                },
+            )
+            return
+
+        if message_type != 'chat_message':
             return
 
         content = str(payload.get('content', '')).strip()
@@ -48,6 +66,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def chat_message(self, event):
+        await self.send(text_data=json.dumps(event['message']))
+
+    async def typing_event(self, event):
         await self.send(text_data=json.dumps(event['message']))
 
     @database_sync_to_async

@@ -6,6 +6,7 @@ const initialState = {
   channels: [],
   activeChannelId: null,
   messages: [],
+  typingUsers: {},
   isServersLoading: false,
   isChannelsLoading: false,
   isMessagesLoading: false,
@@ -39,18 +40,21 @@ const useChatStore = create((set) => ({
       activeChannelId: state.activeServerId === serverId ? state.activeChannelId : null,
       channelsError: '',
       messages: state.activeServerId === serverId ? state.messages : [],
+      typingUsers: state.activeServerId === serverId ? state.typingUsers : {},
     })),
   setChannels: (channels) =>
     set((state) => ({
       channels,
       activeChannelId: resolveActiveId(channels, state.activeChannelId),
       channelsError: '',
+      typingUsers: {},
     })),
   setActiveChannel: (channelId) =>
     set((state) => ({
       activeChannelId: channelId,
       messages: state.activeChannelId === channelId ? state.messages : [],
       messagesError: '',
+      typingUsers: state.activeChannelId === channelId ? state.typingUsers : {},
     })),
   setServersLoading: (isServersLoading) =>
     set(() => ({
@@ -114,12 +118,48 @@ const useChatStore = create((set) => ({
     set(() => ({
       messages,
       messagesError: '',
+      typingUsers: {},
     })),
   appendMessage: (message) =>
     set((state) => ({
       messages: state.messages.some((item) => item.id === message.id)
         ? state.messages
         : [...state.messages, message],
+      typingUsers:
+        message?.sender?.id == null
+          ? state.typingUsers
+          : Object.fromEntries(
+              Object.entries(state.typingUsers).filter(
+                ([userId]) => Number(userId) !== message.sender.id,
+              ),
+            ),
+    })),
+  setTypingState: ({ userId, username, isTyping }) =>
+    set((state) => {
+      if (!userId) {
+        return state
+      }
+
+      if (!isTyping) {
+        return {
+          typingUsers: Object.fromEntries(
+            Object.entries(state.typingUsers).filter(
+              ([entryUserId]) => Number(entryUserId) !== Number(userId),
+            ),
+          ),
+        }
+      }
+
+      return {
+        typingUsers: {
+          ...state.typingUsers,
+          [userId]: username,
+        },
+      }
+    }),
+  clearTypingUsers: () =>
+    set(() => ({
+      typingUsers: {},
     })),
   resetChatState: () =>
     set(() => ({
