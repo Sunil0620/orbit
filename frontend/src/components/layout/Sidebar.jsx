@@ -17,6 +17,8 @@ function Sidebar({
   onSelectServer,
   onOpenCreate,
   onOpenJoin,
+  isLoading = false,
+  emptyMessage = 'No servers yet.',
 }) {
   return (
     <aside className="flex h-full flex-col items-center gap-4 rounded-[2rem] border border-white/10 bg-slate-950/90 px-3 py-5">
@@ -27,6 +29,18 @@ function Sidebar({
       <div className="h-px w-10 bg-white/10" />
 
       <div className="flex flex-1 flex-col items-center gap-3">
+        {isLoading ? (
+          <div className="mt-6 rounded-2xl border border-dashed border-white/10 bg-white/5 px-3 py-4 text-center text-[11px] uppercase tracking-[0.28em] text-slate-400">
+            Loading
+          </div>
+        ) : null}
+
+        {!isLoading && servers.length === 0 ? (
+          <div className="mt-6 max-w-[4.5rem] text-center text-[11px] leading-5 text-slate-500">
+            {emptyMessage}
+          </div>
+        ) : null}
+
         {servers.map((server) => {
           const isActive = server.id === activeServerId
 

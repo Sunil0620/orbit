@@ -6,6 +6,8 @@ function ChannelList({
   activeChannelId,
   onSelectChannel,
   settingsHref,
+  isLoading = false,
+  error = '',
 }) {
   return (
     <aside className="flex h-full flex-col rounded-[2rem] border border-white/10 bg-slate-900/90 p-5">
@@ -35,6 +37,18 @@ function ChannelList({
       </div>
 
       <div className="mt-5 flex-1 space-y-2 overflow-y-auto pr-1">
+        {error ? (
+          <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-4 text-sm leading-6 text-red-100">
+            {error}
+          </div>
+        ) : null}
+
+        {isLoading ? (
+          <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-5 text-sm leading-6 text-slate-400">
+            Loading channels for the selected server.
+          </div>
+        ) : null}
+
         {channels.length > 0 ? (
           channels.map((channel) => {
             const isActive = channel.id === activeChannelId
@@ -60,11 +74,13 @@ function ChannelList({
               </button>
             )
           })
-        ) : (
+        ) : !isLoading && !error ? (
           <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-5 text-sm leading-6 text-slate-400">
-            Day 11 focuses on the shell. Channel data wiring lands on Day 12.
+            {server
+              ? 'No channels were returned for this server yet.'
+              : 'Pick a server to load its channels.'}
           </div>
-        )}
+        ) : null}
       </div>
     </aside>
   )

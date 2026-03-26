@@ -1,59 +1,175 @@
+import { useEffect, useMemo } from 'react'
 import Sidebar from '../components/layout/Sidebar'
 import ChannelList from '../components/layout/ChannelList'
 import ChatWindow from '../components/chat/ChatWindow'
+import { listChannels, listServers } from '../api/servers'
+import extractApiErrors from '../utils/extractApiErrors'
 import useAuthStore from '../store/useAuthStore'
-
-const placeholderServers = [
-  { id: 1, name: 'Orbit Crew' },
-  { id: 2, name: 'Launch Room' },
-  { id: 3, name: 'Design Desk' },
-]
-
-const placeholderChannels = [
-  { id: 11, name: 'general', channel_type: 'text' },
-  { id: 12, name: 'announcements', channel_type: 'announcement' },
-  { id: 13, name: 'handoff', channel_type: 'text' },
-]
-
-const placeholderMessages = [
-  {
-    id: 1,
-    author: 'Orbit',
-    content:
-      'Day 11 ships the workspace shell. Server state, channel data, and real message history connect in the next steps.',
-  },
-  {
-    id: 2,
-    author: 'System',
-    content:
-      'This center pane is now a dedicated chat surface instead of a generic protected-route card.',
-  },
-]
+import useChatStore from '../store/useChatStore'
 
 function ChatPage() {
   const user = useAuthStore((state) => state.user)
-  const activeServer = placeholderServers[0]
-  const activeChannel = placeholderChannels[0]
+  const {
+    servers,
+    activeServerId,
+    channels,
+    activeChannelId,
+    isServersLoading,
+    isChannelsLoading,
+    serversError,
+    channelsError,
+    setServers,
+    setActiveServer,
+    setChannels,
+    setActiveChannel,
+    setServersLoading,
+    setChannelsLoading,
+    setServersError,
+    setChannelsError,
+  } = useChatStore((state) => ({
+    servers: state.servers,
+    activeServerId: state.activeServerId,
+    channels: state.channels,
+    activeChannelId: state.activeChannelId,
+    isServersLoading: state.isServersLoading,
+    isChannelsLoading: state.isChannelsLoading,
+    serversError: state.serversError,
+    channelsError: state.channelsError,
+    setServers: state.setServers,
+    setActiveServer: state.setActiveServer,
+    setChannels: state.setChannels,
+    setActiveChannel: state.setActiveChannel,
+    setServersLoading: state.setServersLoading,
+    setChannelsLoading: state.setChannelsLoading,
+    setServersError: state.setServersError,
+    setChannelsError: state.setChannelsError,
+  }))
+
+  const activeServer = useMemo(
+    () => servers.find((server) => server.id === activeServerId) ?? null,
+    [servers, activeServerId],
+  )
+  const activeChannel = useMemo(
+    () => channels.find((channel) => channel.id === activeChannelId) ?? null,
+    [channels, activeChannelId],
+  )
+
+  useEffect(() => {
+    let ignore = false
+
+    async function loadServers() {
+      setServersLoading(true)
+      setServersError('')
+
+      try {
+        const nextServers = await listServers()
+
+        if (ignore) {
+          return
+        }
+
+        setServers(nextServers)
+      } catch (error) {
+        if (ignore) {
+          return
+        }
+
+        setServersError(
+          extractApiErrors(error).form ?? 'Unable to load servers right now.',
+        )
+        setServers([])
+      } finally {
+        if (!ignore) {
+          setServersLoading(false)
+        }
+      }
+    }
+
+    loadServers()
+
+    return () => {
+      ignore = true
+    }
+  }, [setServers, setServersError, setServersLoading])
+
+  useEffect(() => {
+    if (!activeServerId) {
+      setChannels([])
+      return
+    }
+
+    let ignore = false
+
+    async function loadChannels() {
+      setChannelsLoading(true)
+      setChannelsError('')
+
+      try {
+        const nextChannels = await listChannels(activeServerId)
+
+        if (ignore) {
+          return
+        }
+
+        setChannels(nextChannels)
+      } catch (error) {
+        if (ignore) {
+          return
+        }
+
+        setChannelsError(
+          extractApiErrors(error).form ?? 'Unable to load channels right now.',
+        )
+        setChannels([])
+      } finally {
+        if (!ignore) {
+          setChannelsLoading(false)
+        }
+      }
+    }
+
+    loadChannels()
+
+    return () => {
+      ignore = true
+    }
+  }, [
+    activeServerId,
+    setChannels,
+    setChannelsError,
+    setChannelsLoading,
+  ])
 
   return (
     <div className="space-y-5">
       <div className="rounded-[2rem] border border-cyan-300/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-50">
         Logged in as <span className="font-semibold">{user?.username ?? 'orbit-user'}</span>.
-        The shell is live and ready for real server/channel wiring.
+        Server and channel state now hydrates from the backend.
       </div>
 
+      {serversError ? (
+        <div className="rounded-[2rem] border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
+          {serversError}
+        </div>
+      ) : null}
+
       <div className="grid gap-4 xl:grid-cols-[84px_280px_minmax(0,1fr)]">
-        <Sidebar servers={placeholderServers} activeServerId={activeServer.id} />
+        <Sidebar
+          servers={servers}
+          activeServerId={activeServerId}
+          onSelectServer={setActiveServer}
+          isLoading={isServersLoading}
+          emptyMessage="No servers yet. Create or join one next."
+        />
         <ChannelList
           server={activeServer}
-          channels={placeholderChannels}
-          activeChannelId={activeChannel.id}
+          channels={channels}
+          activeChannelId={activeChannelId}
+          onSelectChannel={setActiveChannel}
+          isLoading={isChannelsLoading}
+          error={channelsError}
         />
-        <ChatWindow
-          server={activeServer}
-          channel={activeChannel}
-          messages={placeholderMessages}
-        />
+        <ChatWindow server={activeServer} channel={activeChannel} />
       </div>
     </div>
   )
