@@ -1,7 +1,9 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Sidebar from '../components/layout/Sidebar'
 import ChannelList from '../components/layout/ChannelList'
 import ChatWindow from '../components/chat/ChatWindow'
+import CreateServerModal from '../components/server/CreateServerModal'
+import JoinServerModal from '../components/server/JoinServerModal'
 import { listChannels, listServers } from '../api/servers'
 import extractApiErrors from '../utils/extractApiErrors'
 import useAuthStore from '../store/useAuthStore'
@@ -9,6 +11,9 @@ import useChatStore from '../store/useChatStore'
 
 function ChatPage() {
   const user = useAuthStore((state) => state.user)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
+  const [actionNotice, setActionNotice] = useState('')
   const {
     servers,
     activeServerId,
@@ -26,6 +31,7 @@ function ChatPage() {
     setChannelsLoading,
     setServersError,
     setChannelsError,
+    upsertServer,
   } = useChatStore((state) => ({
     servers: state.servers,
     activeServerId: state.activeServerId,
@@ -43,6 +49,7 @@ function ChatPage() {
     setChannelsLoading: state.setChannelsLoading,
     setServersError: state.setServersError,
     setChannelsError: state.setChannelsError,
+    upsertServer: state.upsertServer,
   }))
 
   const activeServer = useMemo(
@@ -147,6 +154,12 @@ function ChatPage() {
         Server and channel state now hydrates from the backend.
       </div>
 
+      {actionNotice ? (
+        <div className="rounded-[2rem] border border-emerald-500/20 bg-emerald-500/10 px-5 py-4 text-sm text-emerald-100">
+          {actionNotice}
+        </div>
+      ) : null}
+
       {serversError ? (
         <div className="rounded-[2rem] border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
           {serversError}
@@ -158,6 +171,8 @@ function ChatPage() {
           servers={servers}
           activeServerId={activeServerId}
           onSelectServer={setActiveServer}
+          onOpenCreate={() => setIsCreateModalOpen(true)}
+          onOpenJoin={() => setIsJoinModalOpen(true)}
           isLoading={isServersLoading}
           emptyMessage="No servers yet. Create or join one next."
         />
@@ -171,6 +186,26 @@ function ChatPage() {
         />
         <ChatWindow server={activeServer} channel={activeChannel} />
       </div>
+
+      <CreateServerModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSuccess={(server) => {
+          upsertServer(server)
+          setActiveServer(server.id)
+          setActionNotice(`Created ${server.name} and set it as your active server.`)
+        }}
+      />
+
+      <JoinServerModal
+        isOpen={isJoinModalOpen}
+        onClose={() => setIsJoinModalOpen(false)}
+        onSuccess={(server) => {
+          upsertServer(server)
+          setActiveServer(server.id)
+          setActionNotice(`Joined ${server.name} and switched into it.`)
+        }}
+      />
     </div>
   )
 }
