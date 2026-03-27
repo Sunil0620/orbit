@@ -212,6 +212,30 @@ const useChatStore = create((set) => ({
     set(() => ({
       typingUsers: {},
     })),
+  updateMemberPresence: ({ userId, isOnline }) =>
+    set((state) => ({
+      servers: state.servers.map((server) => {
+        let hasPresenceChange = false
+        const nextMembers = (server.members ?? []).map((member) => {
+          if (Number(member.id) !== Number(userId) || member.is_online === isOnline) {
+            return member
+          }
+
+          hasPresenceChange = true
+          return {
+            ...member,
+            is_online: isOnline,
+          }
+        })
+
+        return hasPresenceChange
+          ? {
+              ...server,
+              members: nextMembers,
+            }
+          : server
+      }),
+    })),
   resetChatState: () =>
     set(() => ({
       ...initialState,

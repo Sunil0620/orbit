@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { apiBaseUrl } from '../api/axiosInstance'
+import useChatStore from '../store/useChatStore'
 
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000]
 
@@ -41,7 +42,16 @@ export default function useWebSocket(channelId, accessToken) {
 
   const handleMessage = useCallback((event) => {
     try {
-      setLastMessage(JSON.parse(event.data))
+      const parsedMessage = JSON.parse(event.data)
+
+      if (parsedMessage.type === 'presence') {
+        useChatStore.getState().updateMemberPresence({
+          userId: parsedMessage.user_id,
+          isOnline: Boolean(parsedMessage.is_online),
+        })
+      }
+
+      setLastMessage(parsedMessage)
     } catch {
       // Ignore malformed websocket payloads.
     }

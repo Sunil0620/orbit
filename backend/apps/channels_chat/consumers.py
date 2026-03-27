@@ -10,10 +10,11 @@ from apps.utils import build_cloudinary_asset_url
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
+        self.user = self.scope['user']
         self.channel_id = self.scope['url_route']['kwargs'].get('channel_id')
         self.group_name = f'chat_{self.channel_id}'
 
-        if self.scope['user'].is_anonymous:
+        if self.user.is_anonymous:
             await self.close()
             return
 
@@ -23,9 +24,13 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         await self.channel_layer.group_add(self.group_name, self.channel_name)
         await self.accept()
+        await self.set_user_online_state(True)
+        await self.broadcast_presence(True)
 
     async def disconnect(self, close_code):
         if hasattr(self, 'group_name'):
+            await self.set_user_online_state(False)
+            await self.broadcast_presence(False)
             await self.channel_layer.group_discard(self.group_name, self.channel_name)
 
     async def receive(self, text_data):
@@ -76,18 +81,39 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def typing_event(self, event):
         await self.send(text_data=json.dumps(event['message']))
 
+    async def presence_event(self, event):
+        await self.send(text_data=json.dumps(event['message']))
+
     @database_sync_to_async
     def user_can_access_channel(self):
         return Channel.objects.filter(
             pk=self.channel_id,
-            server__members=self.scope['user'],
+            server__members=self.user,
         ).exists()
+
+    async def broadcast_presence(self, is_online):
+        await self.channel_layer.group_send(
+            self.group_name,
+            {
+                'type': 'presence_event',
+                'message': {
+                    'type': 'presence',
+                    'user_id': self.user.id,
+                    'is_online': is_online,
+                },
+            },
+        )
+
+    @database_sync_to_async
+    def set_user_online_state(self, is_online):
+        self.user.is_online = is_online
+        self.user.save(update_fields=['is_online', 'last_seen'])
 
     @database_sync_to_async
     def create_message(self, content, file_url='', file_name='', file_type=''):
         message = Message.objects.create(
             channel_id=self.channel_id,
-            sender=self.scope['user'],
+            sender=self.user,
             content=content,
             file_url=file_url,
             file_name=file_name,
@@ -99,9 +125,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'channel_id': int(self.channel_id),
             'content': message.content,
             'sender': {
-                'id': self.scope['user'].id,
-                'username': self.scope['user'].username,
-                'avatar': build_cloudinary_asset_url(self.scope['user'].avatar),
+                'id': self.user.id,
+                'username': self.user.username,
+                'avatar': build_cloudinary_asset_url(self.user.avatar),
             },
             'timestamp': message.created_at.isoformat(),
             'file_url': message.file_url,

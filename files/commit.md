@@ -617,4 +617,5 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 25 — Send file metadata through websocket after upload completes
 - ✅ Day 26 — Render images inline and file download links in chat
 - ✅ Day 27 — Add unread message badges and mention highlighting
-- ⬜ Day 28 — Add online/offline presence tracking via websocket ← **you are here**
+- ✅ Day 28 — Add online/offline presence tracking via websocket
+- ⬜ Day 29 — UI polish: skeletons, animations, dark/light mode toggle ← **you are here**
