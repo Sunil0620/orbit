@@ -8,6 +8,17 @@ from .models import Channel
 from .serializers import ChannelSerializer
 
 
+def ensure_default_channel(server):
+    if server.channels.exists():
+        return
+
+    Channel.objects.create(
+        server=server,
+        name='general',
+        channel_type=Channel.ChannelType.TEXT,
+    )
+
+
 class ChannelListCreateView(generics.ListCreateAPIView):
     serializer_class = ChannelSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -31,7 +42,9 @@ class ChannelListCreateView(generics.ListCreateAPIView):
         )
 
     def get_queryset(self):
-        return self.get_server().channels.order_by('created_at', 'id')
+        server = self.get_server()
+        ensure_default_channel(server)
+        return server.channels.order_by('created_at', 'id')
 
     def perform_create(self, serializer):
         serializer.save(server=self.get_server())

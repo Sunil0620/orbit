@@ -116,7 +116,7 @@ const FileUpload = forwardRef(function FileUpload(
 
   return (
     <>
-      <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-slate-200 transition hover:border-cyan-400/40 hover:text-white">
+      <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-[#313338] px-4 py-3 text-sm text-slate-200 transition hover:border-cyan-400/40 hover:text-white">
         <span className="flex items-center gap-2">
           <AttachmentIcon />
           Attach
@@ -132,7 +132,7 @@ const FileUpload = forwardRef(function FileUpload(
       </label>
 
       {isUploading || uploadError || uploadedFile ? (
-        <div className="col-span-3 row-start-2 space-y-3">
+        <div className="space-y-3 sm:col-span-3 sm:row-start-2">
           {isUploading ? (
             <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">
               Uploading {uploadProgress}%
@@ -159,7 +159,7 @@ const FileUpload = forwardRef(function FileUpload(
           ) : null}
 
           {uploadedFile ? (
-            <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
+            <div className="rounded-3xl border border-white/10 bg-[#313338] p-4">
               {previewUrl ? (
                 <img
                   src={previewUrl}

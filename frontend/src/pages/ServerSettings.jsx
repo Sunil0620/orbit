@@ -158,7 +158,7 @@ function ServerSettings() {
       <div className="flex items-center justify-between gap-4 rounded-[2rem] border border-white/10 bg-slate-900/80 px-5 py-4">
         <div>
           <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
-            Day 14
+            Server Settings
           </p>
           <h1 className="mt-2 text-2xl font-semibold text-white">
             Server settings
@@ -198,7 +198,7 @@ function ServerSettings() {
                 <h2 className="text-3xl font-semibold text-white">{server.name}</h2>
                 <p className="text-sm leading-7 text-slate-300">
                   Rename the server if you own it, or leave it if you are a
-                  member. The invite code is exposed here for sharing.
+                  member. Share the invite code from here when you want someone new to join.
                 </p>
               </div>
 

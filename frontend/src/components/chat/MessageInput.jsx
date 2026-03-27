@@ -12,6 +12,12 @@ function MessageInput({
   const [composerError, setComposerError] = useState('')
   const fileUploadRef = useRef(null)
   const typingTimeoutRef = useRef(null)
+  const isConnectionReady = connectionStatus === 'open'
+  const helperText = !channel
+    ? 'Pick a channel to start chatting.'
+    : !isConnectionReady
+      ? 'Reconnecting to this channel...'
+      : ''
 
   const clearTypingTimeout = () => {
     if (typingTimeoutRef.current) {
@@ -83,21 +89,16 @@ function MessageInput({
 
   return (
     <form
-      className="rounded-3xl border border-white/10 bg-slate-950/70 px-5 py-4"
+      className="rounded-[1.4rem] border border-white/10 bg-[#383a40] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
       onSubmit={handleSubmit}
     >
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <p className="text-xs uppercase tracking-[0.35em] text-slate-500">
-          Connection {connectionStatus}
+      {composerError ? (
+        <p className="mb-3 text-xs uppercase tracking-[0.28em] text-red-300">
+          {composerError}
         </p>
-        {composerError ? (
-          <p className="text-xs uppercase tracking-[0.28em] text-red-300">
-            {composerError}
-          </p>
-        ) : null}
-      </div>
+      ) : null}
 
-      <div className="mt-4 grid grid-cols-[auto_minmax(0,1fr)_auto] gap-3">
+      <div className="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
         <FileUpload
           ref={fileUploadRef}
           channel={channel}
@@ -113,16 +114,22 @@ function MessageInput({
               ? `Message #${channel.name}`
               : 'Choose a channel before sending messages'
           }
-          className="w-full rounded-2xl border border-white/10 bg-slate-900 px-4 py-3 text-sm text-white outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className="w-full rounded-2xl border border-white/10 bg-[#313338] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           type="submit"
-          disabled={!channel}
+          disabled={!channel || !isConnectionReady}
           className="rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Send
         </button>
       </div>
+
+      {helperText ? (
+        <div className="mt-3 px-1">
+          <p className="text-xs text-slate-500">{helperText}</p>
+        </div>
+      ) : null}
     </form>
   )
 }

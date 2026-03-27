@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createServer } from '../../api/servers'
 import extractApiErrors from '../../utils/extractApiErrors'
 
@@ -12,23 +12,40 @@ function CreateServerModal({ isOpen, onClose, onSuccess }) {
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  if (!isOpen) {
-    return null
-  }
-
-  const resetState = () => {
+  const resetState = useCallback(() => {
     setFormData(initialFormData)
     setErrors({})
     setIsSubmitting(false)
-  }
+  }, [])
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (isSubmitting) {
       return
     }
 
     resetState()
     onClose?.()
+  }, [isSubmitting, onClose, resetState])
+
+  useEffect(() => {
+    if (!isOpen) {
+      return undefined
+    }
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        handleClose()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [handleClose, isOpen])
+
+  if (!isOpen) {
+    return null
   }
 
   const updateName = (event) => {
@@ -90,18 +107,25 @@ function CreateServerModal({ isOpen, onClose, onSuccess }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-8 backdrop-blur-sm">
-      <div className="w-full max-w-lg rounded-[2rem] border border-white/10 bg-slate-900 p-6 shadow-2xl shadow-black/40">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-8 backdrop-blur-sm"
+      onClick={handleClose}
+      role="presentation"
+    >
+      <div
+        className="w-full max-w-lg rounded-[2rem] border border-white/10 bg-slate-900 p-6 shadow-2xl shadow-black/40"
+        onClick={(event) => event.stopPropagation()}
+      >
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
-              Day 13
+              Create Server
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-white">
               Create a new server
             </h2>
             <p className="mt-3 text-sm leading-7 text-slate-300">
-              Spin up a workspace and make it the active server immediately.
+              Start a space for your crew, class, or project and jump into it right away.
             </p>
           </div>
 

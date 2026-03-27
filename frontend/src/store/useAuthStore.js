@@ -2,7 +2,7 @@ import { create } from 'zustand'
 
 export const AUTH_STORAGE_KEY = 'orbit-auth'
 
-const initialState = {
+const emptyAuthState = {
   user: null,
   tokens: null,
   isAuthenticated: false,
@@ -60,7 +60,7 @@ export function readStoredAuth() {
 }
 
 const useAuthStore = create((set) => ({
-  ...initialState,
+  ...(readStoredAuth() ?? emptyAuthState),
   setAuth: ({ user, tokens }) =>
     set(() => {
       const nextState = buildAuthState({ user, tokens })
@@ -69,7 +69,7 @@ const useAuthStore = create((set) => ({
     }),
   hydrateAuth: (authState) =>
     set(() => {
-      const nextState = authState ? buildAuthState(authState) : initialState
+      const nextState = authState ? buildAuthState(authState) : emptyAuthState
       persistAuthState(nextState)
       return nextState
     }),
@@ -87,8 +87,8 @@ const useAuthStore = create((set) => ({
     }),
   logout: () =>
     set(() => {
-      persistAuthState(initialState)
-      return initialState
+      persistAuthState(emptyAuthState)
+      return emptyAuthState
     }),
 }))
 

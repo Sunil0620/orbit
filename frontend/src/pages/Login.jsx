@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { fetchProfile, loginUser } from '../api/auth'
 import useAuthStore from '../store/useAuthStore'
 import useChatStore from '../store/useChatStore'
@@ -27,15 +27,20 @@ function validateLoginForm(formData) {
 function Login() {
   const location = useLocation()
   const navigate = useNavigate()
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const setAuth = useAuthStore((state) => state.setAuth)
   const resetChatState = useChatStore((state) => state.resetChatState)
-  const redirectPath = location.state?.from?.pathname ?? '/app'
   const [formData, setFormData] = useState({
     ...initialFormData,
     username: location.state?.username ?? '',
   })
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const isSwitchUserFlow = location.state?.reason === 'switch-user'
+
+  if (isAuthenticated) {
+    return <Navigate to="/app" replace />
+  }
 
   const updateField = (event) => {
     const { name, value } = event.target
@@ -84,7 +89,16 @@ function Login() {
         tokens,
       })
 
-      navigate(redirectPath, { replace: true })
+      navigate(
+        !isSwitchUserFlow && location.state?.from
+          ? {
+              pathname: location.state.from.pathname ?? '/app',
+              search: location.state.from.search ?? '',
+              hash: location.state.from.hash ?? '',
+            }
+          : '/app',
+        { replace: true },
+      )
     } catch (error) {
       setErrors(extractApiErrors(error))
     } finally {
@@ -96,14 +110,13 @@ function Login() {
     <div className="w-full rounded-3xl border border-gray-700 bg-gray-800 p-6 shadow-2xl shadow-black/25 sm:p-8">
       <div className="space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-indigo-300">
-          Day 6
+          Welcome Back
         </p>
         <h2 className="text-3xl font-semibold tracking-tight text-white">
           Sign in to Orbit
         </h2>
         <p className="text-sm leading-7 text-gray-300">
-          Authenticate through the JWT token endpoint and load the token pair
-          into the auth store for the next stages of the app.
+          Jump back into your servers, channels, and active conversations.
         </p>
       </div>
 

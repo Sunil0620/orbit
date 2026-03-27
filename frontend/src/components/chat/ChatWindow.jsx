@@ -7,6 +7,72 @@ import extractApiErrors from '../../utils/extractApiErrors'
 import MessageBubble from './MessageBubble'
 import MessageInput from './MessageInput'
 
+function SearchIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </svg>
+  )
+}
+
+function BellIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M15 17H5l1.4-1.4A2 2 0 0 0 7 14.2V11a5 5 0 1 1 10 0v3.2a2 2 0 0 0 .6 1.4L19 17h-4" />
+      <path d="M10 20a2 2 0 0 0 4 0" />
+    </svg>
+  )
+}
+
+function PinIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m15 3 6 6-4 1-4 4-1 4-2-2 4-4 1-4-4 1 4-6Z" />
+      <path d="m5 19 4-4" />
+    </svg>
+  )
+}
+
+function IconButton({ children, label }) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      className="rounded-lg border border-white/10 bg-white/5 p-2 text-slate-400 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+    >
+      {children}
+    </button>
+  )
+}
+
 function ChatWindow({ server, channel }) {
   const currentUserId = useAuthStore((state) => state.user?.id)
   const accessToken = useAuthStore((state) => state.tokens?.access)
@@ -132,33 +198,71 @@ function ChatWindow({ server, channel }) {
       return `${typingNames[0]} and ${typingNames[1]} are typing...`
     }
 
-    return `${typingNames[0]} and ${typingNames.length - 1} others are typing...`
+      return `${typingNames[0]} and ${typingNames.length - 1} others are typing...`
   }, [typingNames])
 
+  const connectionStateMeta = {
+    idle: 'Standby',
+    connecting: 'Syncing',
+    reconnecting: 'Syncing',
+    open: 'Live',
+    closed: 'Offline',
+  }
+
+  const emptyStateText = useMemo(() => {
+    if (!server) {
+      return 'Choose or create a server to start chatting.'
+    }
+
+    if (!channel) {
+      return 'Pick a channel to jump into the conversation.'
+    }
+
+    return 'No messages yet. Be the first to say something.'
+  }, [channel, server])
+
   return (
-    <section className="flex h-full min-h-[32rem] flex-col rounded-[2rem] border border-white/10 bg-slate-800/80">
-      <header className="border-b border-white/10 px-6 py-5">
-        <p className="text-xs uppercase tracking-[0.35em] text-slate-400">
-          Chat window
-        </p>
-        <h2 className="mt-2 text-2xl font-semibold text-white">
-          {channel?.name ? `# ${channel.name}` : 'Workspace preview'}
-        </h2>
-        <p className="mt-2 text-sm text-slate-300">
-          {server && channel
-            ? `History and live websocket messages are now rendered for ${server.name}.`
-            : 'Choose a channel to load history and open the live websocket feed.'}
-        </p>
+    <section className="flex h-full min-h-[32rem] min-w-0 flex-col overflow-hidden bg-[#313338] xl:min-h-0">
+      <header className="flex items-center justify-between gap-4 border-b border-white/5 bg-[#313338] px-4 py-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-semibold text-slate-500">#</span>
+            <h2 className="truncate text-lg font-semibold text-white">
+              {channel?.name ?? 'Select a channel'}
+            </h2>
+          </div>
+          <p className="mt-0.5 truncate text-sm text-slate-400">
+            {channel
+              ? `Chatting in ${server?.name ?? 'Orbit'}`
+              : 'Choose a channel to open the conversation.'}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="hidden items-center gap-2 rounded-lg border border-white/10 bg-[#1f2229] px-3 py-2 text-sm text-slate-400 lg:flex">
+            <SearchIcon />
+            <span>Search</span>
+          </div>
+          <IconButton label="Pinned messages">
+            <PinIcon />
+          </IconButton>
+          <IconButton label="Notifications">
+            <BellIcon />
+          </IconButton>
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-300">
+            {connectionStateMeta[connectionStatus] ?? connectionStateMeta.idle}
+          </span>
+        </div>
       </header>
 
-      <div className="flex flex-1 flex-col justify-between gap-6 px-6 py-6">
+      <div className="flex min-h-0 flex-1 flex-col justify-between bg-[#313338]">
         <div
           ref={messageListRef}
           onScroll={handleScroll}
-          className="space-y-4 overflow-y-auto pr-2"
+          className="orbit-scrollbar min-h-0 flex-1 space-y-0.5 overflow-y-auto px-4 py-3"
         >
           {isMessagesLoading ? (
-            <div className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-slate-300">
+            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-slate-300">
               <span className="h-3 w-3 animate-pulse rounded-full bg-cyan-300" />
               Loading message history...
             </div>
@@ -174,12 +278,15 @@ function ChatWindow({ server, channel }) {
             messages.map((message) => <MessageBubble key={message.id} message={message} />)
           ) : !isMessagesLoading && !messagesError ? (
             <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 px-6 py-6 text-sm leading-7 text-slate-300">
-              No messages yet. Send the first one once the websocket is open.
+              {emptyStateText}
             </div>
           ) : null}
         </div>
 
-        <div className="space-y-3">
+        <div className="border-t border-white/5 bg-[#2b2d31] px-4 py-3">
+          {typingIndicatorText ? (
+            <p className="mb-2 px-2 text-sm text-cyan-100/80">{typingIndicatorText}</p>
+          ) : null}
           <MessageInput
             key={channel?.id ?? 'message-input'}
             channel={channel}
@@ -197,9 +304,6 @@ function ChatWindow({ server, channel }) {
               })
             }
           />
-          {typingIndicatorText ? (
-            <p className="px-2 text-sm text-cyan-100/80">{typingIndicatorText}</p>
-          ) : null}
         </div>
       </div>
     </section>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { registerUser } from '../api/auth'
+import useAuthStore from '../store/useAuthStore'
 import extractApiErrors from '../utils/extractApiErrors'
 
 const initialFormData = {
@@ -38,9 +39,14 @@ function validateRegisterForm(formData) {
 
 function Register() {
   const navigate = useNavigate()
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  if (isAuthenticated) {
+    return <Navigate to="/app" replace />
+  }
 
   const updateField = (event) => {
     const { name, value } = event.target
@@ -86,7 +92,7 @@ function Register() {
       navigate('/login', {
         replace: true,
         state: {
-          notice: 'Account created. Sign in to continue.',
+          notice: 'Account created. Sign in to open your workspace.',
           username: formData.username.trim(),
         },
       })
@@ -101,14 +107,13 @@ function Register() {
     <div className="w-full rounded-3xl border border-gray-700 bg-gray-800 p-6 shadow-2xl shadow-black/25 sm:p-8">
       <div className="space-y-3">
         <p className="text-xs font-semibold uppercase tracking-[0.35em] text-indigo-300">
-          Day 6
+          New Account
         </p>
         <h2 className="text-3xl font-semibold tracking-tight text-white">
           Create your Orbit account
         </h2>
         <p className="text-sm leading-7 text-gray-300">
-          Register against the Django auth API so the frontend is ready for the
-          protected app shell on the next day.
+          Set up your profile so you can join servers and start chatting right away.
         </p>
       </div>
 
