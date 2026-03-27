@@ -104,15 +104,15 @@ function Register() {
   }
 
   return (
-    <div className="w-full rounded-3xl border border-gray-700 bg-gray-800 p-6 shadow-2xl shadow-black/25 sm:p-8">
+    <div className="orbit-panel w-full rounded-3xl p-6 shadow-2xl shadow-black/20 sm:p-8">
       <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-indigo-300">
+        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
           New Account
         </p>
-        <h2 className="text-3xl font-semibold tracking-tight text-white">
+        <h2 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)]">
           Create your Orbit account
         </h2>
-        <p className="text-sm leading-7 text-gray-300">
+        <p className="text-sm leading-7 text-[var(--orbit-text-muted)]">
           Set up your profile so you can join servers and start chatting right away.
         </p>
       </div>
@@ -125,9 +125,9 @@ function Register() {
         ) : null}
 
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-gray-100">Username</span>
+          <span className="text-sm font-medium text-[var(--orbit-text)]">Username</span>
           <input
-            className="w-full rounded-2xl border border-gray-600 bg-gray-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30"
+            className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
             name="username"
             type="text"
             value={formData.username}
@@ -141,9 +141,9 @@ function Register() {
         </label>
 
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-gray-100">Email</span>
+          <span className="text-sm font-medium text-[var(--orbit-text)]">Email</span>
           <input
-            className="w-full rounded-2xl border border-gray-600 bg-gray-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30"
+            className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
             name="email"
             type="email"
             value={formData.email}
@@ -157,9 +157,9 @@ function Register() {
         </label>
 
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-gray-100">Password</span>
+          <span className="text-sm font-medium text-[var(--orbit-text)]">Password</span>
           <input
-            className="w-full rounded-2xl border border-gray-600 bg-gray-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30"
+            className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
             name="password"
             type="password"
             value={formData.password}
@@ -173,9 +173,9 @@ function Register() {
         </label>
 
         <label className="block space-y-2">
-          <span className="text-sm font-medium text-gray-100">Confirm password</span>
+          <span className="text-sm font-medium text-[var(--orbit-text)]">Confirm password</span>
           <input
-            className="w-full rounded-2xl border border-gray-600 bg-gray-900 px-4 py-3 text-sm text-white outline-none transition placeholder:text-gray-500 focus:border-indigo-400 focus:ring-2 focus:ring-indigo-500/30"
+            className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
             name="password2"
             type="password"
             value={formData.password2}
@@ -189,7 +189,7 @@ function Register() {
         </label>
 
         <button
-          className="w-full rounded-2xl bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-indigo-400 focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:ring-offset-2 focus:ring-offset-gray-800 disabled:cursor-not-allowed disabled:opacity-70"
+          className="w-full rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-70"
           type="submit"
           disabled={isSubmitting}
         >
@@ -197,9 +197,9 @@ function Register() {
         </button>
       </form>
 
-      <p className="mt-6 text-sm text-gray-400">
+      <p className="mt-6 text-sm text-[var(--orbit-text-muted)]">
         Already registered?{' '}
-        <Link className="font-medium text-indigo-300 hover:text-indigo-200" to="/login">
+        <Link className="font-medium text-cyan-300 hover:text-cyan-200" to="/login">
           Sign in
         </Link>
       </p>

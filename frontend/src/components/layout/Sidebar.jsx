@@ -1,3 +1,5 @@
+import useThemeStore from '../../store/useThemeStore'
+
 function getInitials(name) {
   if (!name) {
     return 'OR'
@@ -25,6 +27,48 @@ function getServerLabel(server) {
   return getInitials(server?.name)
 }
 
+function SunIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="12" r="4" />
+      <path d="M12 2v2.5" />
+      <path d="M12 19.5V22" />
+      <path d="m4.93 4.93 1.77 1.77" />
+      <path d="m17.3 17.3 1.77 1.77" />
+      <path d="M2 12h2.5" />
+      <path d="M19.5 12H22" />
+      <path d="m4.93 19.07 1.77-1.77" />
+      <path d="m17.3 6.7 1.77-1.77" />
+    </svg>
+  )
+}
+
+function MoonIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-4 w-4"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 12.8A9 9 0 1 1 11.2 3c-.1.4-.2.9-.2 1.4a8 8 0 0 0 8 8c.5 0 1-.1 1.5-.2Z" />
+    </svg>
+  )
+}
+
 function Sidebar({
   servers = [],
   activeServerId,
@@ -34,24 +78,39 @@ function Sidebar({
   isLoading = false,
   emptyMessage = 'No servers yet.',
 }) {
+  const theme = useThemeStore((state) => state.theme)
+  const toggleTheme = useThemeStore((state) => state.toggleTheme)
+
   return (
-    <aside className="flex min-h-0 flex-row items-center gap-3 border-b border-white/5 bg-[#1d2028] px-3 py-3 xl:h-full xl:flex-col xl:justify-between xl:border-b-0 xl:border-r">
+    <aside className="flex min-h-0 flex-row items-center gap-3 border-b border-[color:var(--orbit-border)] bg-[var(--orbit-sidebar-bg)] px-3 py-3 xl:h-full xl:flex-col xl:justify-between xl:border-b-0 xl:border-r">
       <div className="flex min-h-0 min-w-0 flex-1 items-center gap-3 xl:w-full xl:flex-col xl:items-center">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] bg-gradient-to-br from-cyan-400/20 to-sky-400/5 text-sm font-semibold uppercase tracking-[0.32em] text-cyan-100 shadow-lg shadow-cyan-950/30">
-          O
+        <div className="flex shrink-0 items-center gap-3 xl:w-full xl:flex-col xl:gap-4">
+          <div className="flex h-12 w-12 items-center justify-center rounded-[1rem] bg-gradient-to-br from-cyan-400/20 to-sky-400/5 text-sm font-semibold uppercase tracking-[0.32em] text-[var(--orbit-text)] shadow-lg shadow-cyan-950/20">
+            O
+          </div>
+
+          <button
+            type="button"
+            onClick={toggleTheme}
+            className="orbit-secondary-button flex h-10 w-10 items-center justify-center rounded-[0.95rem]"
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </button>
         </div>
 
-        <div className="hidden h-px w-10 bg-white/10 xl:block" />
+        <div className="hidden h-px w-10 bg-[var(--orbit-border)] xl:block" />
 
         <div className="orbit-scrollbar flex min-w-0 flex-1 items-center gap-3 overflow-x-auto pb-1 xl:min-h-0 xl:w-full xl:flex-col xl:overflow-x-visible xl:overflow-y-auto xl:pb-0">
           {isLoading ? (
-            <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-3 py-4 text-center text-[11px] uppercase tracking-[0.28em] text-slate-400">
+            <div className="rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3 py-4 text-center text-[11px] uppercase tracking-[0.28em] text-[var(--orbit-text-muted)]">
               Loading
             </div>
           ) : null}
 
           {!isLoading && servers.length === 0 ? (
-            <div className="max-w-[8rem] text-center text-[11px] leading-5 text-slate-500 xl:max-w-[4.5rem]">
+            <div className="max-w-[8rem] text-center text-[11px] leading-5 text-[var(--orbit-text-subtle)] xl:max-w-[4.5rem]">
               {emptyMessage}
             </div>
           ) : null}
@@ -73,8 +132,8 @@ function Sidebar({
                   className={[
                     'flex h-14 w-14 items-center justify-center rounded-[1.15rem] border text-sm font-semibold transition',
                     isActive
-                      ? 'border-cyan-300/60 bg-cyan-400/15 text-cyan-100 shadow-lg shadow-cyan-900/40'
-                      : 'border-white/10 bg-white/5 text-slate-300 hover:border-white/20 hover:bg-white/10 hover:text-white',
+                      ? 'border-cyan-300/60 bg-cyan-400/15 text-[var(--orbit-text)] shadow-lg shadow-cyan-900/20'
+                      : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] hover:text-[var(--orbit-text)]',
                   ].join(' ')}
                   title={server.name}
                 >
@@ -98,7 +157,7 @@ function Sidebar({
         <button
           type="button"
           onClick={onOpenJoin}
-          className="rounded-[0.95rem] border border-white/10 bg-white/5 px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.3em] text-slate-300 transition hover:border-white/20 hover:text-white"
+          className="orbit-secondary-button rounded-[0.95rem] px-3 py-2.5 text-[10px] font-semibold uppercase tracking-[0.3em]"
         >
           Join
         </button>

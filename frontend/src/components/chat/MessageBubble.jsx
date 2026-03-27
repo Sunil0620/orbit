@@ -1,5 +1,5 @@
-import formatDate from '../../utils/formatDate'
 import useAuthStore from '../../store/useAuthStore'
+import formatDate from '../../utils/formatDate'
 
 function AttachmentIcon() {
   return (
@@ -21,7 +21,7 @@ function AttachmentIcon() {
   )
 }
 
-function MessageBubble({ message }) {
+function MessageBubble({ message, shouldAnimate = false }) {
   const currentUsername = useAuthStore((state) => state.user?.username ?? '')
   const avatar = message.sender?.avatar
   const username = message.sender?.username ?? 'Unknown'
@@ -37,7 +37,12 @@ function MessageBubble({ message }) {
     : [message.content ?? '']
 
   return (
-    <article className="group rounded-2xl px-3 py-2 transition hover:bg-white/5">
+    <article
+      className={[
+        'group rounded-2xl px-3 py-2 transition hover:bg-[var(--orbit-surface-soft)]',
+        shouldAnimate ? 'orbit-message-enter' : '',
+      ].join(' ')}
+    >
       <div className="flex items-start gap-3">
         {avatar ? (
           <img
@@ -47,21 +52,21 @@ function MessageBubble({ message }) {
             className="h-11 w-11 rounded-2xl object-cover"
           />
         ) : (
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400/15 text-sm font-semibold text-cyan-100">
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400/15 text-sm font-semibold text-[var(--orbit-text)]">
             {username.slice(0, 1).toUpperCase()}
           </div>
         )}
 
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-semibold text-white">{username}</p>
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
+            <p className="text-sm font-semibold text-[var(--orbit-text)]">{username}</p>
+            <p className="text-xs uppercase tracking-[0.24em] text-[var(--orbit-text-subtle)]">
               {formatDate(message.timestamp ?? message.created_at)}
             </p>
           </div>
 
           {message.content ? (
-            <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-7 text-slate-200 [overflow-wrap:anywhere]">
+            <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-7 text-[var(--orbit-text-muted)] [overflow-wrap:anywhere]">
               {contentSegments.map((segment, index) =>
                 normalizedCurrentUsername &&
                 segment.toLowerCase() === `@${normalizedCurrentUsername}` ? (
@@ -83,21 +88,21 @@ function MessageBubble({ message }) {
               src={message.file_url}
               alt={message.file_name || 'Chat attachment'}
               loading="lazy"
-              className="mt-3 max-h-[26rem] w-auto max-w-full rounded-2xl border border-white/10 bg-slate-950/50 object-cover shadow-lg shadow-black/20"
+              className="mt-3 max-h-[26rem] w-auto max-w-full rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-0)] object-cover shadow-lg shadow-black/15"
             />
           ) : null}
 
           {message.file_url && isDownloadableFile ? (
-            <div className="mt-3 flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+            <div className="mt-3 flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-3">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="rounded-xl bg-cyan-400/10 p-2 text-cyan-100">
+                <div className="rounded-xl bg-cyan-400/10 p-2 text-[var(--orbit-text)]">
                   <AttachmentIcon />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-white">
+                  <p className="truncate text-sm font-medium text-[var(--orbit-text)]">
                     {message.file_name || 'Attachment'}
                   </p>
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-slate-400">
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
                     {fileType === 'application/pdf' ? 'PDF' : 'Text file'}
                   </p>
                 </div>
@@ -108,7 +113,7 @@ function MessageBubble({ message }) {
                 download={message.file_name || true}
                 target="_blank"
                 rel="noreferrer"
-                className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.24em] text-slate-200 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+                className="orbit-secondary-button shrink-0 rounded-full px-3 py-2 text-[10px] font-medium uppercase tracking-[0.24em]"
               >
                 Download
               </a>
@@ -120,7 +125,7 @@ function MessageBubble({ message }) {
               href={message.file_url}
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium uppercase tracking-[0.24em] text-slate-200 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+              className="orbit-secondary-button mt-3 inline-flex rounded-full px-3 py-2 text-xs font-medium uppercase tracking-[0.24em]"
             >
               {message.file_name || 'Open attachment'}
             </a>

@@ -12,7 +12,7 @@ function MemberList({ server }) {
     return (
       <div
         key={member.id}
-        className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition hover:bg-white/5"
+        className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition hover:bg-[var(--orbit-surface-soft)]"
       >
         <div className="relative">
           {member.avatar ? (
@@ -22,23 +22,24 @@ function MemberList({ server }) {
               className="h-8 w-8 rounded-xl object-cover"
             />
           ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-400/15 text-sm font-semibold text-cyan-100">
+            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-400/15 text-sm font-semibold text-[var(--orbit-text)]">
               {member.username.slice(0, 1).toUpperCase()}
             </div>
           )}
           <span
+            style={{ borderColor: 'var(--orbit-member-bg)' }}
             className={[
-              'absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#2b2d31]',
+              'absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2',
               member.is_online ? 'bg-emerald-400' : 'bg-slate-500',
             ].join(' ')}
           />
         </div>
 
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-white">
+          <p className="truncate text-sm font-medium text-[var(--orbit-text)]">
             {member.username}
           </p>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-slate-500">
+          <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
             {isOwner ? 'Owner' : member.is_online ? 'Active' : 'Offline'}
           </p>
         </div>
@@ -47,15 +48,15 @@ function MemberList({ server }) {
   }
 
   return (
-    <aside className="hidden h-full min-h-0 flex-col bg-[#23262d] xl:flex xl:border-l xl:border-white/5">
-      <div className="border-b border-white/5 px-4 py-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500">
+    <aside className="hidden h-full min-h-0 flex-col bg-[var(--orbit-member-bg)] xl:flex xl:border-l xl:border-[color:var(--orbit-border)]">
+      <div className="border-b border-[color:var(--orbit-border)] px-4 py-4">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--orbit-text-subtle)]">
           Members
         </p>
-        <h2 className="mt-2 text-lg font-semibold text-white">
+        <h2 className="mt-2 text-lg font-semibold text-[var(--orbit-text)]">
           {server ? memberCountLabel : 'No server selected'}
         </h2>
-        <p className="mt-1 text-sm text-slate-400">
+        <p className="mt-1 text-sm text-[var(--orbit-text-muted)]">
           {server
             ? `${onlineCount} online right now`
             : 'Select a server to see who is here.'}
@@ -66,7 +67,7 @@ function MemberList({ server }) {
         {members.length > 0 ? (
           <>
             <section>
-              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
                 Active — {activeMembers.length}
               </p>
               <div className="space-y-1">
@@ -75,7 +76,7 @@ function MemberList({ server }) {
             </section>
 
             <section>
-              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
                 Offline — {offlineMembers.length}
               </p>
               <div className="space-y-1">
@@ -84,7 +85,7 @@ function MemberList({ server }) {
             </section>
           </>
         ) : (
-          <div className="rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-5 text-sm leading-6 text-slate-400">
+          <div className="rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-sm leading-6 text-[var(--orbit-text-muted)]">
             No members to show yet.
           </div>
         )}

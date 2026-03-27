@@ -199,8 +199,8 @@ function ChatPage() {
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-[1.2rem] border border-white/10 bg-[#1f2229] shadow-[0_18px_60px_rgba(0,0,0,0.32)]">
-        <div className="grid min-h-[calc(100dvh-5.35rem)] min-w-0 bg-[#1f2229] xl:grid-cols-[72px_252px_minmax(0,1fr)_236px] 2xl:grid-cols-[76px_272px_minmax(0,1fr)_248px]">
+      <div className="overflow-hidden rounded-[1.2rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
+        <div className="grid min-h-[calc(100dvh-5.35rem)] min-w-0 bg-[var(--orbit-shell-bg)] xl:grid-cols-[72px_252px_minmax(0,1fr)_236px] 2xl:grid-cols-[76px_272px_minmax(0,1fr)_248px]">
           <Sidebar
             servers={servers}
             activeServerId={activeServerId}

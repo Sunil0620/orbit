@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { listMessages } from '../../api/messages'
 import useWebSocket from '../../hooks/useWebSocket'
 import useAuthStore from '../../store/useAuthStore'
@@ -6,6 +6,7 @@ import useChatStore from '../../store/useChatStore'
 import extractApiErrors from '../../utils/extractApiErrors'
 import MessageBubble from './MessageBubble'
 import MessageInput from './MessageInput'
+import MessageSkeleton from './MessageSkeleton'
 
 function SearchIcon() {
   return (
@@ -66,7 +67,7 @@ function IconButton({ children, label }) {
     <button
       type="button"
       aria-label={label}
-      className="rounded-lg border border-white/10 bg-white/5 p-2 text-slate-400 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
+      className="orbit-secondary-button rounded-lg p-2"
     >
       {children}
     </button>
@@ -88,10 +89,26 @@ function ChatWindow({ server, channel }) {
   const setMessagesError = useChatStore((state) => state.setMessagesError)
   const messageListRef = useRef(null)
   const shouldStickToBottomRef = useRef(true)
+  const transitionTimeoutRef = useRef(null)
+  const animationTimeoutRef = useRef(null)
+  const [isChannelTransitioning, setIsChannelTransitioning] = useState(false)
+  const [animatedMessageId, setAnimatedMessageId] = useState(null)
   const { lastMessage, sendMessage, connectionStatus } = useWebSocket(
     channel?.id,
     accessToken,
   )
+
+  useEffect(() => {
+    return () => {
+      if (transitionTimeoutRef.current) {
+        window.clearTimeout(transitionTimeoutRef.current)
+      }
+
+      if (animationTimeoutRef.current) {
+        window.clearTimeout(animationTimeoutRef.current)
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (!channel?.id) {
@@ -99,10 +116,14 @@ function ChatWindow({ server, channel }) {
       clearTypingUsers()
       setMessagesError('')
       setMessagesLoading(false)
+      setIsChannelTransitioning(false)
+      setAnimatedMessageId(null)
       return
     }
 
     let ignore = false
+    setIsChannelTransitioning(true)
+    setAnimatedMessageId(null)
 
     async function loadMessages() {
       setMessagesLoading(true)
@@ -123,6 +144,14 @@ function ChatWindow({ server, channel }) {
       } finally {
         if (!ignore) {
           setMessagesLoading(false)
+          if (transitionTimeoutRef.current) {
+            window.clearTimeout(transitionTimeoutRef.current)
+          }
+
+          transitionTimeoutRef.current = window.setTimeout(() => {
+            setIsChannelTransitioning(false)
+            transitionTimeoutRef.current = null
+          }, 120)
         }
       }
     }
@@ -160,6 +189,16 @@ function ChatWindow({ server, channel }) {
 
     if (lastMessage.type === 'chat_message') {
       appendMessage(lastMessage)
+      setAnimatedMessageId(lastMessage.id)
+
+      if (animationTimeoutRef.current) {
+        window.clearTimeout(animationTimeoutRef.current)
+      }
+
+      animationTimeoutRef.current = window.setTimeout(() => {
+        setAnimatedMessageId(null)
+        animationTimeoutRef.current = null
+      }, 280)
     }
   }, [appendMessage, channel?.id, currentUserId, lastMessage, setTypingState])
 
@@ -222,16 +261,16 @@ function ChatWindow({ server, channel }) {
   }, [channel, server])
 
   return (
-    <section className="flex h-full min-h-[32rem] min-w-0 flex-col overflow-hidden bg-[#313338] xl:min-h-0">
-      <header className="flex items-center justify-between gap-4 border-b border-white/5 bg-[#313338] px-4 py-3">
+    <section className="flex h-full min-h-[32rem] min-w-0 flex-col overflow-hidden bg-[var(--orbit-chat-bg)] xl:min-h-0">
+      <header className="flex items-center justify-between gap-4 border-b border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-4 py-3">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
-            <span className="text-lg font-semibold text-slate-500">#</span>
-            <h2 className="truncate text-lg font-semibold text-white">
+            <span className="text-lg font-semibold text-[var(--orbit-text-subtle)]">#</span>
+            <h2 className="truncate text-lg font-semibold text-[var(--orbit-text)]">
               {channel?.name ?? 'Select a channel'}
             </h2>
           </div>
-          <p className="mt-0.5 truncate text-sm text-slate-400">
+          <p className="mt-0.5 truncate text-sm text-[var(--orbit-text-muted)]">
             {channel
               ? `Chatting in ${server?.name ?? 'Orbit'}`
               : 'Choose a channel to open the conversation.'}
@@ -239,7 +278,7 @@ function ChatWindow({ server, channel }) {
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
-          <div className="hidden items-center gap-2 rounded-lg border border-white/10 bg-[#1f2229] px-3 py-2 text-sm text-slate-400 lg:flex">
+          <div className="orbit-secondary-button hidden items-center gap-2 rounded-lg px-3 py-2 text-sm lg:flex">
             <SearchIcon />
             <span>Search</span>
           </div>
@@ -249,23 +288,20 @@ function ChatWindow({ server, channel }) {
           <IconButton label="Notifications">
             <BellIcon />
           </IconButton>
-          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-slate-300">
+          <span className="rounded-full border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-muted)]">
             {connectionStateMeta[connectionStatus] ?? connectionStateMeta.idle}
           </span>
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1 flex-col justify-between bg-[#313338]">
+      <div className="flex min-h-0 flex-1 flex-col justify-between bg-[var(--orbit-chat-bg)]">
         <div
           ref={messageListRef}
           onScroll={handleScroll}
           className="orbit-scrollbar min-h-0 flex-1 space-y-0.5 overflow-y-auto px-4 py-3"
         >
           {isMessagesLoading ? (
-            <div className="flex items-center gap-3 rounded-2xl border border-white/10 bg-white/5 px-5 py-4 text-sm text-slate-300">
-              <span className="h-3 w-3 animate-pulse rounded-full bg-cyan-300" />
-              Loading message history...
-            </div>
+            <MessageSkeleton count={6} />
           ) : null}
 
           {messagesError ? (
@@ -274,18 +310,33 @@ function ChatWindow({ server, channel }) {
             </div>
           ) : null}
 
-          {messages.length > 0 ? (
-            messages.map((message) => <MessageBubble key={message.id} message={message} />)
-          ) : !isMessagesLoading && !messagesError ? (
-            <div className="rounded-3xl border border-dashed border-white/10 bg-white/5 px-6 py-6 text-sm leading-7 text-slate-300">
-              {emptyStateText}
+          {!isMessagesLoading ? (
+            <div
+              className={[
+                'transition-all duration-200 ease-out',
+                isChannelTransitioning ? 'translate-y-1 opacity-0' : 'translate-y-0 opacity-100',
+              ].join(' ')}
+            >
+              {messages.length > 0 ? (
+                messages.map((message) => (
+                  <MessageBubble
+                    key={message.id}
+                    message={message}
+                    shouldAnimate={message.id === animatedMessageId}
+                  />
+                ))
+              ) : !messagesError ? (
+                <div className="rounded-3xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-6 py-6 text-sm leading-7 text-[var(--orbit-text-muted)]">
+                  {emptyStateText}
+                </div>
+              ) : null}
             </div>
           ) : null}
         </div>
 
-        <div className="border-t border-white/5 bg-[#2b2d31] px-4 py-3">
+        <div className="border-t border-[color:var(--orbit-border)] bg-[var(--orbit-chat-footer-bg)] px-4 py-3">
           {typingIndicatorText ? (
-            <p className="mb-2 px-2 text-sm text-cyan-100/80">{typingIndicatorText}</p>
+            <p className="mb-2 px-2 text-sm text-cyan-500/90">{typingIndicatorText}</p>
           ) : null}
           <MessageInput
             key={channel?.id ?? 'message-input'}

@@ -24,14 +24,14 @@ function ChannelList({
   error = '',
 }) {
   return (
-    <aside className="flex h-full min-h-0 flex-col border-b border-white/5 bg-[#262a35] xl:border-b-0 xl:border-r xl:border-white/5">
-      <div className="flex items-center justify-between gap-3 border-b border-white/5 px-4 py-4 shadow-[0_1px_0_rgba(255,255,255,0.03)]">
+    <aside className="flex h-full min-h-0 flex-col border-b border-[color:var(--orbit-border)] bg-[var(--orbit-channel-bg)] xl:border-b-0 xl:border-r">
+      <div className="flex items-center justify-between gap-3 border-b border-[color:var(--orbit-border)] px-4 py-4 shadow-[0_1px_0_rgba(255,255,255,0.03)]">
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-slate-500">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-[var(--orbit-text-subtle)]">
             Server
           </p>
           <div className="mt-1 flex min-w-0 items-center gap-2">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-[11px] font-semibold text-cyan-100">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[11px] font-semibold text-[var(--orbit-text)]">
               {server?.icon ? (
                 <img
                   src={server.icon}
@@ -43,10 +43,10 @@ function ChannelList({
               )}
             </div>
             <div className="min-w-0">
-              <h2 className="truncate text-[15px] font-semibold text-white">
+              <h2 className="truncate text-[15px] font-semibold text-[var(--orbit-text)]">
                 {server?.name ?? 'Select a server'}
               </h2>
-              <p className="truncate text-xs text-slate-400">
+              <p className="truncate text-xs text-[var(--orbit-text-muted)]">
                 {server
                   ? `${channels.length} channel${channels.length === 1 ? '' : 's'}`
                   : 'Choose a server from the rail.'}
@@ -57,7 +57,7 @@ function ChannelList({
 
         {settingsHref ? (
           <Link
-            className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-300 transition hover:border-white/20 hover:text-white"
+            className="orbit-secondary-button rounded-lg px-2.5 py-2 text-[10px] font-semibold uppercase tracking-[0.24em]"
             to={settingsHref}
           >
             Manage
@@ -73,17 +73,17 @@ function ChannelList({
         ) : null}
 
         {isLoading ? (
-          <div className="mx-2 rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-5 text-sm leading-6 text-slate-400">
+          <div className="mx-2 rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-sm leading-6 text-[var(--orbit-text-muted)]">
             Loading channels for the selected server.
           </div>
         ) : null}
 
         {channels.length > 0 ? (
           <div className="mb-2 mt-1 flex items-center justify-between px-2">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-500">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
               Text Channels
             </p>
-            <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-600">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--orbit-text-subtle)]">
               {channels.length}
             </span>
           </div>
@@ -102,15 +102,17 @@ function ChannelList({
                 className={[
                   'group mb-0.5 flex w-full items-center justify-between rounded-md px-2.5 py-1.5 text-left transition',
                   isActive
-                    ? 'bg-white/10 text-white shadow-[inset_0_0_0_1px_rgba(255,255,255,0.05)]'
-                    : 'text-slate-400 hover:bg-white/5 hover:text-slate-200',
+                    ? 'border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-hover)] text-[var(--orbit-text)]'
+                    : 'text-[var(--orbit-text-muted)] hover:bg-[var(--orbit-surface-soft)] hover:text-[var(--orbit-text)]',
                 ].join(' ')}
               >
                 <div className="flex min-w-0 items-center gap-2">
                   <span
                     className={[
                       'text-base leading-none transition',
-                      isActive ? 'text-slate-200' : 'text-slate-500 group-hover:text-slate-300',
+                      isActive
+                        ? 'text-[var(--orbit-text)]'
+                        : 'text-[var(--orbit-text-subtle)] group-hover:text-[var(--orbit-text-muted)]',
                     ].join(' ')}
                   >
                     #
@@ -128,7 +130,7 @@ function ChannelList({
             )
           })
         ) : !isLoading && !error ? (
-          <div className="mx-2 rounded-2xl border border-dashed border-white/10 bg-white/5 px-4 py-5 text-sm leading-6 text-slate-400">
+          <div className="mx-2 rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-sm leading-6 text-[var(--orbit-text-muted)]">
             {server
               ? 'No channels yet.'
               : 'Pick a server to see its channels.'}

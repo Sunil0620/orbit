@@ -89,7 +89,7 @@ function MessageInput({
 
   return (
     <form
-      className="rounded-[1.4rem] border border-white/10 bg-[#383a40] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+      className="rounded-[1.4rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-composer-bg)] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
       onSubmit={handleSubmit}
     >
       {composerError ? (
@@ -114,7 +114,7 @@ function MessageInput({
               ? `Message #${channel.name}`
               : 'Choose a channel before sending messages'
           }
-          className="w-full rounded-2xl border border-white/10 bg-[#313338] px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+          className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           type="submit"
@@ -127,7 +127,7 @@ function MessageInput({
 
       {helperText ? (
         <div className="mt-3 px-1">
-          <p className="text-xs text-slate-500">{helperText}</p>
+          <p className="text-xs text-[var(--orbit-text-subtle)]">{helperText}</p>
         </div>
       ) : null}
     </form>

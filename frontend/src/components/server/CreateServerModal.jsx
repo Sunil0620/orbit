@@ -113,7 +113,7 @@ function CreateServerModal({ isOpen, onClose, onSuccess }) {
       role="presentation"
     >
       <div
-        className="w-full max-w-lg rounded-[2rem] border border-white/10 bg-slate-900 p-6 shadow-2xl shadow-black/40"
+        className="orbit-modal-surface w-full max-w-lg rounded-[2rem] p-6"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">
@@ -121,10 +121,10 @@ function CreateServerModal({ isOpen, onClose, onSuccess }) {
             <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
               Create Server
             </p>
-            <h2 className="mt-3 text-2xl font-semibold text-white">
+            <h2 className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
               Create a new server
             </h2>
-            <p className="mt-3 text-sm leading-7 text-slate-300">
+            <p className="mt-3 text-sm leading-7 text-[var(--orbit-text-muted)]">
               Start a space for your crew, class, or project and jump into it right away.
             </p>
           </div>
@@ -132,7 +132,7 @@ function CreateServerModal({ isOpen, onClose, onSuccess }) {
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-xs uppercase tracking-[0.25em] text-slate-300 transition hover:border-white/20 hover:text-white"
+            className="orbit-secondary-button rounded-2xl px-3 py-2 text-xs uppercase tracking-[0.25em]"
           >
             Close
           </button>
@@ -146,29 +146,29 @@ function CreateServerModal({ isOpen, onClose, onSuccess }) {
           ) : null}
 
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-100">Server name</span>
+            <span className="text-sm font-medium text-[var(--orbit-text)]">Server name</span>
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={updateName}
-              className="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-2 focus:ring-cyan-400/20"
+              className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
               placeholder="Orbit crew"
             />
             {errors.name ? <p className="text-sm text-red-200">{errors.name}</p> : null}
           </label>
 
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-slate-100">
+            <span className="text-sm font-medium text-[var(--orbit-text)]">
               Optional icon upload
             </span>
             <input
               type="file"
               accept="image/*"
               onChange={updateIcon}
-              className="block w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-sm text-slate-300 file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-400/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-cyan-100"
+              className="orbit-input block w-full rounded-2xl px-4 py-3 text-sm file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-400/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-cyan-100"
             />
-            <p className="text-xs uppercase tracking-[0.24em] text-slate-500">
+            <p className="text-xs uppercase tracking-[0.24em] text-[var(--orbit-text-subtle)]">
               {formData.icon ? formData.icon.name : 'No file selected'}
             </p>
           </label>

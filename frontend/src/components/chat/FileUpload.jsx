@@ -116,7 +116,7 @@ const FileUpload = forwardRef(function FileUpload(
 
   return (
     <>
-      <label className="inline-flex cursor-pointer items-center justify-center rounded-2xl border border-white/10 bg-[#313338] px-4 py-3 text-sm text-slate-200 transition hover:border-cyan-400/40 hover:text-white">
+      <label className="orbit-secondary-button inline-flex cursor-pointer items-center justify-center rounded-2xl px-4 py-3 text-sm">
         <span className="flex items-center gap-2">
           <AttachmentIcon />
           Attach
@@ -144,7 +144,7 @@ const FileUpload = forwardRef(function FileUpload(
           ) : null}
 
           {isUploading ? (
-            <div className="h-2 overflow-hidden rounded-full bg-white/10">
+            <div className="h-2 overflow-hidden rounded-full bg-[var(--orbit-surface-soft)]">
               <div
                 className="h-full rounded-full bg-cyan-400 transition-[width] duration-200"
                 style={{ width: `${uploadProgress}%` }}
@@ -159,7 +159,7 @@ const FileUpload = forwardRef(function FileUpload(
           ) : null}
 
           {uploadedFile ? (
-            <div className="rounded-3xl border border-white/10 bg-[#313338] p-4">
+            <div className="rounded-3xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] p-4">
               {previewUrl ? (
                 <img
                   src={previewUrl}
@@ -167,16 +167,16 @@ const FileUpload = forwardRef(function FileUpload(
                   className="max-h-40 w-auto rounded-2xl object-cover"
                 />
               ) : (
-                <div className="inline-flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/60 px-4 py-3 text-sm text-slate-200">
-                  <span className="rounded-xl bg-cyan-400/10 px-3 py-2 text-cyan-100">
+                <div className="inline-flex items-center gap-3 rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-0)] px-4 py-3 text-sm text-[var(--orbit-text-muted)]">
+                  <span className="rounded-xl bg-cyan-400/10 px-3 py-2 text-[var(--orbit-text)]">
                     File
                   </span>
                   <span className="break-all">{uploadedFile.file_name}</span>
                 </div>
               )}
 
-              <p className="mt-3 text-sm text-slate-200">{uploadedFile.file_name}</p>
-              <p className="mt-1 text-xs uppercase tracking-[0.24em] text-slate-400">
+              <p className="mt-3 text-sm text-[var(--orbit-text)]">{uploadedFile.file_name}</p>
+              <p className="mt-1 text-xs uppercase tracking-[0.24em] text-[var(--orbit-text-subtle)]">
                 {uploadedFile.file_type} ready to attach
               </p>
             </div>
