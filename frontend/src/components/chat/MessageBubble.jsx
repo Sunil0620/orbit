@@ -1,4 +1,5 @@
 import formatDate from '../../utils/formatDate'
+import useAuthStore from '../../store/useAuthStore'
 
 function AttachmentIcon() {
   return (
@@ -21,14 +22,22 @@ function AttachmentIcon() {
 }
 
 function MessageBubble({ message }) {
+  const currentUsername = useAuthStore((state) => state.user?.username ?? '')
   const avatar = message.sender?.avatar
   const username = message.sender?.username ?? 'Unknown'
   const fileType = message.file_type ?? ''
   const isImageAttachment = fileType.startsWith('image/')
   const isDownloadableFile = fileType === 'application/pdf' || fileType === 'text/plain'
+  const normalizedCurrentUsername = currentUsername.toLowerCase()
+  const mentionPattern = currentUsername
+    ? new RegExp(`(@${currentUsername.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\b)`, 'gi')
+    : null
+  const contentSegments = mentionPattern
+    ? (message.content ?? '').split(mentionPattern)
+    : [message.content ?? '']
 
   return (
-    <article className="rounded-3xl border border-white/10 bg-white/5 px-5 py-4">
+    <article className="group rounded-2xl px-3 py-2 transition hover:bg-white/5">
       <div className="flex items-start gap-3">
         {avatar ? (
           <img
@@ -52,8 +61,20 @@ function MessageBubble({ message }) {
           </div>
 
           {message.content ? (
-            <p className="mt-3 whitespace-pre-wrap text-sm leading-7 text-slate-200">
-              {message.content}
+            <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-7 text-slate-200 [overflow-wrap:anywhere]">
+              {contentSegments.map((segment, index) =>
+                normalizedCurrentUsername &&
+                segment.toLowerCase() === `@${normalizedCurrentUsername}` ? (
+                  <span
+                    key={`${message.id}-mention-${index}`}
+                    className="rounded bg-yellow-500/20 px-1 text-yellow-300"
+                  >
+                    {segment}
+                  </span>
+                ) : (
+                  <span key={`${message.id}-text-${index}`}>{segment}</span>
+                ),
+              )}
             </p>
           ) : null}
 
@@ -62,21 +83,21 @@ function MessageBubble({ message }) {
               src={message.file_url}
               alt={message.file_name || 'Chat attachment'}
               loading="lazy"
-              className="mt-3 max-w-xs rounded-lg object-cover"
+              className="mt-3 max-h-[26rem] w-auto max-w-full rounded-2xl border border-white/10 bg-slate-950/50 object-cover shadow-lg shadow-black/20"
             />
           ) : null}
 
           {message.file_url && isDownloadableFile ? (
-            <div className="mt-3 flex max-w-sm items-center justify-between gap-3 rounded-2xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-3">
+            <div className="mt-3 flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
               <div className="flex min-w-0 items-center gap-3">
-                <div className="rounded-xl bg-cyan-950/60 p-2 text-cyan-100">
+                <div className="rounded-xl bg-cyan-400/10 p-2 text-cyan-100">
                   <AttachmentIcon />
                 </div>
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-cyan-50">
+                  <p className="truncate text-sm font-medium text-white">
                     {message.file_name || 'Attachment'}
                   </p>
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-cyan-200/75">
+                  <p className="text-[10px] uppercase tracking-[0.28em] text-slate-400">
                     {fileType === 'application/pdf' ? 'PDF' : 'Text file'}
                   </p>
                 </div>
@@ -87,7 +108,7 @@ function MessageBubble({ message }) {
                 download={message.file_name || true}
                 target="_blank"
                 rel="noreferrer"
-                className="shrink-0 rounded-full border border-cyan-300/30 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.24em] text-cyan-100 transition hover:border-cyan-300/50 hover:bg-cyan-400/10"
+                className="shrink-0 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-[10px] font-medium uppercase tracking-[0.24em] text-slate-200 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
               >
                 Download
               </a>
@@ -99,7 +120,7 @@ function MessageBubble({ message }) {
               href={message.file_url}
               target="_blank"
               rel="noreferrer"
-              className="mt-3 inline-flex rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-2 text-xs font-medium uppercase tracking-[0.24em] text-cyan-100 transition hover:border-cyan-300/40 hover:bg-cyan-400/15"
+              className="mt-3 inline-flex rounded-full border border-white/10 bg-white/5 px-3 py-2 text-xs font-medium uppercase tracking-[0.24em] text-slate-200 transition hover:border-white/20 hover:bg-white/10 hover:text-white"
             >
               {message.file_name || 'Open attachment'}
             </a>

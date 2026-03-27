@@ -19,6 +19,8 @@ function ChatPage() {
   const activeServerId = useChatStore((state) => state.activeServerId)
   const channels = useChatStore((state) => state.channels)
   const activeChannelId = useChatStore((state) => state.activeChannelId)
+  const messagesByChannel = useChatStore((state) => state.messagesByChannel)
+  const lastReadMessageId = useChatStore((state) => state.lastReadMessageId)
   const isServersLoading = useChatStore((state) => state.isServersLoading)
   const isChannelsLoading = useChatStore((state) => state.isChannelsLoading)
   const serversError = useChatStore((state) => state.serversError)
@@ -36,6 +38,20 @@ function ChatPage() {
   const setMessagesError = useChatStore((state) => state.setMessagesError)
   const setMessagesLoading = useChatStore((state) => state.setMessagesLoading)
 
+  useEffect(() => {
+    if (!actionNotice) {
+      return undefined
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setActionNotice('')
+    }, 3600)
+
+    return () => {
+      window.clearTimeout(timeoutId)
+    }
+  }, [actionNotice])
+
   const activeServer = useMemo(
     () => servers.find((server) => server.id === activeServerId) ?? null,
     [servers, activeServerId],
@@ -43,6 +59,25 @@ function ChatPage() {
   const activeChannel = useMemo(
     () => channels.find((channel) => channel.id === activeChannelId) ?? null,
     [channels, activeChannelId],
+  )
+  const unreadCountByChannel = useMemo(
+    () =>
+      Object.fromEntries(
+        channels.map((channel) => {
+          const channelMessages = messagesByChannel[channel.id] ?? []
+          const lastReadId = lastReadMessageId[channel.id]
+
+          if (lastReadId == null) {
+            return [channel.id, 0]
+          }
+
+          return [
+            channel.id,
+            channelMessages.filter((message) => message.id > lastReadId).length,
+          ]
+        }),
+      ),
+    [channels, lastReadMessageId, messagesByChannel],
   )
 
   useEffect(() => {
@@ -147,45 +182,47 @@ function ChatPage() {
   ])
 
   return (
-    <div className="space-y-5">
-      <div className="rounded-[2rem] border border-cyan-300/20 bg-cyan-400/10 px-5 py-4 text-sm text-cyan-50">
-        Logged in as <span className="font-semibold">{user?.username ?? 'orbit-user'}</span>.
-        Server and channel state now hydrates from the backend.
-      </div>
+    <div className="relative flex h-full min-h-0 flex-col">
+      {actionNotice || serversError ? (
+        <div className="pointer-events-none absolute right-3 top-3 z-20 space-y-2">
+          {actionNotice ? (
+            <div className="w-[min(24rem,calc(100vw-2rem))] rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100 shadow-[0_18px_32px_rgba(0,0,0,0.22)] backdrop-blur">
+              {actionNotice}
+            </div>
+          ) : null}
 
-      {actionNotice ? (
-        <div className="rounded-[2rem] border border-emerald-500/20 bg-emerald-500/10 px-5 py-4 text-sm text-emerald-100">
-          {actionNotice}
+          {serversError ? (
+            <div className="w-[min(24rem,calc(100vw-2rem))] rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100 shadow-[0_18px_32px_rgba(0,0,0,0.22)] backdrop-blur">
+              {serversError}
+            </div>
+          ) : null}
         </div>
       ) : null}
 
-      {serversError ? (
-        <div className="rounded-[2rem] border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
-          {serversError}
+      <div className="overflow-hidden rounded-[1.2rem] border border-white/10 bg-[#1f2229] shadow-[0_18px_60px_rgba(0,0,0,0.32)]">
+        <div className="grid min-h-[calc(100dvh-5.35rem)] min-w-0 bg-[#1f2229] xl:grid-cols-[72px_252px_minmax(0,1fr)_236px] 2xl:grid-cols-[76px_272px_minmax(0,1fr)_248px]">
+          <Sidebar
+            servers={servers}
+            activeServerId={activeServerId}
+            onSelectServer={setActiveServer}
+            onOpenCreate={() => setIsCreateModalOpen(true)}
+            onOpenJoin={() => setIsJoinModalOpen(true)}
+            isLoading={isServersLoading}
+            emptyMessage="No servers yet. Create or join one next."
+          />
+          <ChannelList
+            server={activeServer}
+            channels={channels}
+            activeChannelId={activeChannelId}
+            unreadCountByChannel={unreadCountByChannel}
+            onSelectChannel={setActiveChannel}
+            settingsHref={activeServer ? `/app/servers/${activeServer.id}/settings` : null}
+            isLoading={isChannelsLoading}
+            error={channelsError}
+          />
+          <ChatWindow server={activeServer} channel={activeChannel} />
+          <MemberList server={activeServer} />
         </div>
-      ) : null}
-
-      <div className="grid gap-4 xl:grid-cols-[84px_280px_minmax(0,1fr)_260px]">
-        <Sidebar
-          servers={servers}
-          activeServerId={activeServerId}
-          onSelectServer={setActiveServer}
-          onOpenCreate={() => setIsCreateModalOpen(true)}
-          onOpenJoin={() => setIsJoinModalOpen(true)}
-          isLoading={isServersLoading}
-          emptyMessage="No servers yet. Create or join one next."
-        />
-        <ChannelList
-          server={activeServer}
-          channels={channels}
-          activeChannelId={activeChannelId}
-          onSelectChannel={setActiveChannel}
-          settingsHref={activeServer ? `/app/servers/${activeServer.id}/settings` : null}
-          isLoading={isChannelsLoading}
-          error={channelsError}
-        />
-        <ChatWindow server={activeServer} channel={activeChannel} />
-        <MemberList server={activeServer} />
       </div>
 
       <CreateServerModal

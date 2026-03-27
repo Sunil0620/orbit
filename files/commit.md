@@ -610,4 +610,11 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 18 — Add message history REST endpoint with pagination
 - ✅ Day 19 — Add useWebSocket hook with reconnect and JWT auth
 - ✅ Day 20 — Render message history and live messages in chat window
-- ⬜ Day 21 — Add typing indicators via websocket events ← **you are here**
+- ✅ Day 21 — Add typing indicators via websocket events
+- ✅ Day 22 — Configure Cloudinary storage and verify avatar upload
+- ✅ Day 23 — Add file upload REST endpoint with type and size validation
+- ✅ Day 24 — Add file upload component with preview and progress
+- ✅ Day 25 — Send file metadata through websocket after upload completes
+- ✅ Day 26 — Render images inline and file download links in chat
+- ✅ Day 27 — Add unread message badges and mention highlighting
+- ⬜ Day 28 — Add online/offline presence tracking via websocket ← **you are here**

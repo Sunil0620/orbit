@@ -6,6 +6,8 @@ const initialState = {
   channels: [],
   activeChannelId: null,
   messages: [],
+  messagesByChannel: {},
+  lastReadMessageId: {},
   typingUsers: {},
   isServersLoading: false,
   isChannelsLoading: false,
@@ -52,9 +54,21 @@ const useChatStore = create((set) => ({
   setActiveChannel: (channelId) =>
     set((state) => ({
       activeChannelId: channelId,
-      messages: state.activeChannelId === channelId ? state.messages : [],
+      messages:
+        state.activeChannelId === channelId
+          ? state.messages
+          : state.messagesByChannel[channelId] ?? [],
       messagesError: '',
       typingUsers: state.activeChannelId === channelId ? state.typingUsers : {},
+      lastReadMessageId:
+        channelId == null
+          ? state.lastReadMessageId
+          : {
+              ...state.lastReadMessageId,
+              [channelId]:
+                state.messagesByChannel[channelId]?.[state.messagesByChannel[channelId].length - 1]
+                  ?.id ?? state.lastReadMessageId[channelId] ?? null,
+            },
     })),
   setServersLoading: (isServersLoading) =>
     set(() => ({
@@ -112,19 +126,56 @@ const useChatStore = create((set) => ({
         channels: isRemovingActiveServer ? [] : state.channels,
         activeChannelId: isRemovingActiveServer ? null : state.activeChannelId,
         messages: isRemovingActiveServer ? [] : state.messages,
+        messagesByChannel: isRemovingActiveServer ? {} : state.messagesByChannel,
+        lastReadMessageId: isRemovingActiveServer ? {} : state.lastReadMessageId,
       }
     }),
   setMessages: (messages) =>
-    set(() => ({
+    set((state) => ({
       messages,
+      messagesByChannel:
+        state.activeChannelId == null
+          ? state.messagesByChannel
+          : {
+              ...state.messagesByChannel,
+              [state.activeChannelId]: messages,
+            },
+      lastReadMessageId:
+        state.activeChannelId == null
+          ? state.lastReadMessageId
+          : {
+              ...state.lastReadMessageId,
+              [state.activeChannelId]:
+                messages[messages.length - 1]?.id ??
+                state.lastReadMessageId[state.activeChannelId] ??
+                null,
+            },
       messagesError: '',
       typingUsers: {},
     })),
   appendMessage: (message) =>
     set((state) => ({
-      messages: state.messages.some((item) => item.id === message.id)
-        ? state.messages
-        : [...state.messages, message],
+      messages:
+        state.activeChannelId === message.channel_id
+          ? state.messages.some((item) => item.id === message.id)
+            ? state.messages
+            : [...state.messages, message]
+          : state.messages,
+      messagesByChannel: {
+        ...state.messagesByChannel,
+        [message.channel_id]: (state.messagesByChannel[message.channel_id] ?? []).some(
+          (item) => item.id === message.id,
+        )
+          ? state.messagesByChannel[message.channel_id] ?? []
+          : [...(state.messagesByChannel[message.channel_id] ?? []), message],
+      },
+      lastReadMessageId:
+        state.activeChannelId === message.channel_id
+          ? {
+              ...state.lastReadMessageId,
+              [message.channel_id]: message.id,
+            }
+          : state.lastReadMessageId,
       typingUsers:
         message?.sender?.id == null
           ? state.typingUsers
