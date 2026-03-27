@@ -619,4 +619,5 @@ feat: deploy to render/railway with custom domain and smoke test
 - ✅ Day 27 — Add unread message badges and mention highlighting
 - ✅ Day 28 — Add online/offline presence tracking via websocket
 - ✅ Day 29 — UI polish: skeletons, animations, dark/light mode toggle
-- ⬜ Day 30 — Write nginx config and docker-compose.prod.yml ← **you are here**
+- ✅ Day 30 — Write nginx config and docker-compose.prod.yml
+- ⬜ Day 31 — Deploy to Render/Railway, custom domain, smoke test ← **you are here**
