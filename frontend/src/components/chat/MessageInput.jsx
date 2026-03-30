@@ -3,20 +3,30 @@ import FileUpload from './FileUpload'
 
 function MessageInput({
   channel,
+  directConversation,
   connectionStatus,
   onSendMessage,
   onSendTypingState,
 }) {
   const [draft, setDraft] = useState('')
-  const [attachedFile, setAttachedFile] = useState(null)
+  const [attachedFiles, setAttachedFiles] = useState([])
+  const [isUploadingAttachments, setIsUploadingAttachments] = useState(false)
   const [composerError, setComposerError] = useState('')
   const fileUploadRef = useRef(null)
   const typingTimeoutRef = useRef(null)
+  const hasConversationTarget = Boolean(channel || directConversation)
+  const conversationLabel = directConversation
+    ? `@${directConversation.participant?.username ?? 'direct-message'}`
+    : channel
+      ? `#${channel.name}`
+      : ''
   const isConnectionReady = connectionStatus === 'open'
-  const helperText = !channel
-    ? 'Pick a channel to start chatting.'
+  const helperText = !hasConversationTarget
+    ? 'Pick a conversation to start chatting.'
+    : isUploadingAttachments
+      ? 'Finish uploading attachments before sending.'
     : !isConnectionReady
-      ? 'Reconnecting to this channel...'
+      ? 'Reconnecting to this conversation...'
       : ''
 
   const clearTypingTimeout = () => {
@@ -45,7 +55,7 @@ function MessageInput({
     setDraft(nextValue)
     setComposerError('')
 
-    if (!channel) {
+    if (!hasConversationTarget) {
       return
     }
 
@@ -64,15 +74,21 @@ function MessageInput({
     event.preventDefault()
 
     const content = draft.trim()
-    if (!content && !attachedFile) {
+    if (!content && attachedFiles.length === 0) {
+      return
+    }
+
+    if (isUploadingAttachments) {
+      setComposerError('Wait for the attachments to finish uploading.')
       return
     }
 
     const wasSent = onSendMessage({
       content,
-      file_url: attachedFile?.url ?? '',
-      file_name: attachedFile?.file_name ?? '',
-      file_type: attachedFile?.file_type ?? '',
+      attachments: attachedFiles,
+      file_url: attachedFiles[0]?.url ?? '',
+      file_name: attachedFiles[0]?.file_name ?? '',
+      file_type: attachedFiles[0]?.file_type ?? '',
     })
     if (!wasSent) {
       setComposerError('WebSocket connection is not ready yet.')
@@ -82,44 +98,47 @@ function MessageInput({
     clearTypingTimeout()
     onSendTypingState(false)
     setDraft('')
-    setAttachedFile(null)
+    setAttachedFiles([])
+    setIsUploadingAttachments(false)
     fileUploadRef.current?.clearUpload()
     setComposerError('')
   }
 
   return (
     <form
-      className="rounded-[1.4rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-composer-bg)] px-3 py-3 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
+      className="rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-composer-bg)] px-2.5 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]"
       onSubmit={handleSubmit}
     >
       {composerError ? (
-        <p className="mb-3 text-xs uppercase tracking-[0.28em] text-red-300">
+        <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-red-300">
           {composerError}
         </p>
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+      <div className="grid gap-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
         <FileUpload
           ref={fileUploadRef}
           channel={channel}
-          onUploadComplete={setAttachedFile}
+          directConversation={directConversation}
+          onUploadComplete={setAttachedFiles}
+          onUploadStateChange={setIsUploadingAttachments}
         />
         <input
           type="text"
           value={draft}
           onChange={handleChange}
-          disabled={!channel}
+          disabled={!hasConversationTarget}
           placeholder={
-            channel
-              ? `Message #${channel.name}`
-              : 'Choose a channel before sending messages'
+          hasConversationTarget
+              ? `Message ${conversationLabel}`
+              : 'Choose a conversation before sending messages'
           }
-          className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition disabled:cursor-not-allowed disabled:opacity-60"
+          className="orbit-input w-full rounded-[0.95rem] px-4 py-2.5 text-[13px] transition disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           type="submit"
-          disabled={!channel || !isConnectionReady}
-          className="rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={!hasConversationTarget || !isConnectionReady || isUploadingAttachments}
+          className="rounded-[0.95rem] bg-cyan-500 px-4 py-2.5 text-[12px] font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Send
         </button>
@@ -127,7 +146,7 @@ function MessageInput({
 
       {helperText ? (
         <div className="mt-3 px-1">
-          <p className="text-xs text-[var(--orbit-text-subtle)]">{helperText}</p>
+          <p className="text-[11px] text-[var(--orbit-text-subtle)]">{helperText}</p>
         </div>
       ) : null}
     </form>

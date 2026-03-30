@@ -5,45 +5,140 @@ const initialState = {
   activeServerId: null,
   channels: [],
   activeChannelId: null,
+  directConversations: [],
+  activeDirectConversationId: null,
   messages: [],
   messagesByChannel: {},
+  messagesByDirectConversation: {},
   lastReadMessageId: {},
+  lastReadDirectMessageId: {},
   typingUsers: {},
   isServersLoading: false,
   isChannelsLoading: false,
+  isDirectConversationsLoading: false,
   isMessagesLoading: false,
   serversError: '',
   channelsError: '',
+  directConversationsError: '',
   messagesError: '',
 }
 
 function resolveActiveId(items, currentId) {
+  if (currentId == null) {
+    return null
+  }
+
   if (items.some((item) => item.id === currentId)) {
     return currentId
   }
 
-  return items[0]?.id ?? null
+  return null
+}
+
+function toTimestamp(value) {
+  const date = value ? new Date(value) : null
+  return date && !Number.isNaN(date.getTime()) ? date.getTime() : 0
+}
+
+function sortDirectConversations(conversations) {
+  return [...conversations].sort((leftConversation, rightConversation) => {
+    const leftTimestamp = Math.max(
+      toTimestamp(leftConversation.last_message_at),
+      toTimestamp(leftConversation.updated_at),
+      toTimestamp(leftConversation.created_at),
+    )
+    const rightTimestamp = Math.max(
+      toTimestamp(rightConversation.last_message_at),
+      toTimestamp(rightConversation.updated_at),
+      toTimestamp(rightConversation.created_at),
+    )
+
+    if (leftTimestamp !== rightTimestamp) {
+      return rightTimestamp - leftTimestamp
+    }
+
+    return rightConversation.id - leftConversation.id
+  })
+}
+
+function buildMessagePreview(message) {
+  const content = String(message?.content ?? '').trim()
+  if (content) {
+    return content.slice(0, 120)
+  }
+
+  const attachments = Array.isArray(message?.attachments) ? message.attachments : []
+  if (attachments.length === 1) {
+    return attachments[0]?.file_name || 'Attachment'
+  }
+
+  if (attachments.length > 1) {
+    return `${attachments.length} attachments`
+  }
+
+  return ''
+}
+
+function upsertUniqueMessage(messages, message) {
+  return messages.some((item) => item.id === message.id) ? messages : [...messages, message]
 }
 
 const useChatStore = create((set) => ({
   ...initialState,
   setServers: (servers) =>
-    set((state) => ({
-      servers,
-      activeServerId: resolveActiveId(servers, state.activeServerId),
-      channels: servers.length > 0 ? state.channels : [],
-      activeChannelId: servers.length > 0 ? state.activeChannelId : null,
-      serversError: '',
+    set((state) => {
+      const nextActiveServerId = resolveActiveId(servers, state.activeServerId)
+
+      return {
+        servers,
+        activeServerId: nextActiveServerId,
+        channels: nextActiveServerId == null ? [] : state.channels,
+        activeChannelId: nextActiveServerId == null ? null : state.activeChannelId,
+        serversError: '',
+      }
+    }),
+  openHome: () =>
+    set(() => ({
+      activeServerId: null,
+      activeChannelId: null,
+      activeDirectConversationId: null,
+      channels: [],
+      messages: [],
+      typingUsers: {},
+      channelsError: '',
+      messagesError: '',
+      isChannelsLoading: false,
+      isMessagesLoading: false,
     })),
   setActiveServer: (serverId) =>
-    set((state) => ({
-      activeServerId: serverId,
-      channels: state.activeServerId === serverId ? state.channels : [],
-      activeChannelId: state.activeServerId === serverId ? state.activeChannelId : null,
-      channelsError: '',
-      messages: state.activeServerId === serverId ? state.messages : [],
-      typingUsers: state.activeServerId === serverId ? state.typingUsers : {},
-    })),
+    set((state) => {
+      if (serverId == null) {
+        return {
+          activeServerId: null,
+          activeChannelId: null,
+          activeDirectConversationId: null,
+          channels: [],
+          messages: [],
+          typingUsers: {},
+          channelsError: '',
+          messagesError: '',
+          isChannelsLoading: false,
+          isMessagesLoading: false,
+        }
+      }
+
+      const isSameServer = state.activeServerId === serverId
+
+      return {
+        activeServerId: serverId,
+        activeDirectConversationId: null,
+        channels: isSameServer ? state.channels : [],
+        activeChannelId: isSameServer ? state.activeChannelId : null,
+        channelsError: '',
+        messages: isSameServer ? state.messages : [],
+        typingUsers: isSameServer ? state.typingUsers : {},
+      }
+    }),
   setChannels: (channels) =>
     set((state) => ({
       channels,
@@ -54,6 +149,7 @@ const useChatStore = create((set) => ({
   setActiveChannel: (channelId) =>
     set((state) => ({
       activeChannelId: channelId,
+      activeDirectConversationId: null,
       messages:
         state.activeChannelId === channelId
           ? state.messages
@@ -70,6 +166,58 @@ const useChatStore = create((set) => ({
                   ?.id ?? state.lastReadMessageId[channelId] ?? null,
             },
     })),
+  setDirectConversations: (directConversations) =>
+    set((state) => ({
+      directConversations: sortDirectConversations(directConversations),
+      activeDirectConversationId: resolveActiveId(
+        directConversations,
+        state.activeDirectConversationId,
+      ),
+      directConversationsError: '',
+    })),
+  upsertDirectConversation: (conversation) =>
+    set((state) => {
+      const existingIndex = state.directConversations.findIndex(
+        (item) => item.id === conversation.id,
+      )
+      const nextDirectConversations = [...state.directConversations]
+
+      if (existingIndex === -1) {
+        nextDirectConversations.push(conversation)
+      } else {
+        nextDirectConversations[existingIndex] = {
+          ...nextDirectConversations[existingIndex],
+          ...conversation,
+        }
+      }
+
+      return {
+        directConversations: sortDirectConversations(nextDirectConversations),
+      }
+    }),
+  setActiveDirectConversation: (conversationId) =>
+    set((state) => ({
+      activeServerId: null,
+      activeChannelId: null,
+      activeDirectConversationId: conversationId,
+      messages:
+        state.activeDirectConversationId === conversationId
+          ? state.messages
+          : state.messagesByDirectConversation[conversationId] ?? [],
+      messagesError: '',
+      typingUsers:
+        state.activeDirectConversationId === conversationId ? state.typingUsers : {},
+      lastReadDirectMessageId:
+        conversationId == null
+          ? state.lastReadDirectMessageId
+          : {
+              ...state.lastReadDirectMessageId,
+              [conversationId]:
+                state.messagesByDirectConversation[conversationId]?.[
+                  state.messagesByDirectConversation[conversationId].length - 1
+                ]?.id ?? state.lastReadDirectMessageId[conversationId] ?? null,
+            },
+    })),
   setServersLoading: (isServersLoading) =>
     set(() => ({
       isServersLoading,
@@ -78,6 +226,10 @@ const useChatStore = create((set) => ({
     set(() => ({
       isChannelsLoading,
     })),
+  setDirectConversationsLoading: (isDirectConversationsLoading) =>
+    set(() => ({
+      isDirectConversationsLoading,
+    })),
   setServersError: (serversError) =>
     set(() => ({
       serversError,
@@ -85,6 +237,10 @@ const useChatStore = create((set) => ({
   setChannelsError: (channelsError) =>
     set(() => ({
       channelsError,
+    })),
+  setDirectConversationsError: (directConversationsError) =>
+    set(() => ({
+      directConversationsError,
     })),
   setMessagesLoading: (isMessagesLoading) =>
     set(() => ({
@@ -121,7 +277,7 @@ const useChatStore = create((set) => ({
       return {
         servers: nextServers,
         activeServerId: isRemovingActiveServer
-          ? nextServers[0]?.id ?? null
+          ? null
           : resolveActiveId(nextServers, state.activeServerId),
         channels: isRemovingActiveServer ? [] : state.channels,
         activeChannelId: isRemovingActiveServer ? null : state.activeChannelId,
@@ -131,60 +287,133 @@ const useChatStore = create((set) => ({
       }
     }),
   setMessages: (messages) =>
-    set((state) => ({
-      messages,
-      messagesByChannel:
-        state.activeChannelId == null
-          ? state.messagesByChannel
-          : {
-              ...state.messagesByChannel,
-              [state.activeChannelId]: messages,
-            },
-      lastReadMessageId:
-        state.activeChannelId == null
-          ? state.lastReadMessageId
-          : {
-              ...state.lastReadMessageId,
-              [state.activeChannelId]:
-                messages[messages.length - 1]?.id ??
-                state.lastReadMessageId[state.activeChannelId] ??
-                null,
-            },
-      messagesError: '',
-      typingUsers: {},
-    })),
+    set((state) => {
+      if (state.activeDirectConversationId != null) {
+        return {
+          messages,
+          messagesByDirectConversation: {
+            ...state.messagesByDirectConversation,
+            [state.activeDirectConversationId]: messages,
+          },
+          lastReadDirectMessageId: {
+            ...state.lastReadDirectMessageId,
+            [state.activeDirectConversationId]:
+              messages[messages.length - 1]?.id ??
+              state.lastReadDirectMessageId[state.activeDirectConversationId] ??
+              null,
+          },
+          messagesError: '',
+          typingUsers: {},
+        }
+      }
+
+      return {
+        messages,
+        messagesByChannel:
+          state.activeChannelId == null
+            ? state.messagesByChannel
+            : {
+                ...state.messagesByChannel,
+                [state.activeChannelId]: messages,
+              },
+        lastReadMessageId:
+          state.activeChannelId == null
+            ? state.lastReadMessageId
+            : {
+                ...state.lastReadMessageId,
+                [state.activeChannelId]:
+                  messages[messages.length - 1]?.id ??
+                  state.lastReadMessageId[state.activeChannelId] ??
+                  null,
+              },
+        messagesError: '',
+        typingUsers: {},
+      }
+    }),
   appendMessage: (message) =>
-    set((state) => ({
-      messages:
-        state.activeChannelId === message.channel_id
-          ? state.messages.some((item) => item.id === message.id)
-            ? state.messages
-            : [...state.messages, message]
-          : state.messages,
-      messagesByChannel: {
-        ...state.messagesByChannel,
-        [message.channel_id]: (state.messagesByChannel[message.channel_id] ?? []).some(
-          (item) => item.id === message.id,
+    set((state) => {
+      const directConversationId =
+        message.direct_conversation_id ?? message.direct_conversation ?? null
+      const channelId = message.channel_id ?? message.channel ?? null
+
+      if (directConversationId != null) {
+        const nextMessages = upsertUniqueMessage(
+          state.messagesByDirectConversation[directConversationId] ?? [],
+          message,
         )
-          ? state.messagesByChannel[message.channel_id] ?? []
-          : [...(state.messagesByChannel[message.channel_id] ?? []), message],
-      },
-      lastReadMessageId:
-        state.activeChannelId === message.channel_id
-          ? {
-              ...state.lastReadMessageId,
-              [message.channel_id]: message.id,
-            }
-          : state.lastReadMessageId,
-      typingUsers:
-        message?.sender?.id == null
-          ? state.typingUsers
-          : Object.fromEntries(
-              Object.entries(state.typingUsers).filter(
-                ([userId]) => Number(userId) !== message.sender.id,
+        const nextDirectConversations = state.directConversations.map((conversation) =>
+          conversation.id === directConversationId
+            ? {
+                ...conversation,
+                last_message_preview: buildMessagePreview(message),
+                last_message_at:
+                  message.timestamp ?? message.created_at ?? conversation.last_message_at,
+                updated_at: message.timestamp ?? message.created_at ?? conversation.updated_at,
+              }
+            : conversation,
+        )
+
+        return {
+          messages:
+            state.activeDirectConversationId === directConversationId
+              ? upsertUniqueMessage(state.messages, message)
+              : state.messages,
+          messagesByDirectConversation: {
+            ...state.messagesByDirectConversation,
+            [directConversationId]: nextMessages,
+          },
+          lastReadDirectMessageId:
+            state.activeDirectConversationId === directConversationId
+              ? {
+                  ...state.lastReadDirectMessageId,
+                  [directConversationId]: message.id,
+                }
+              : state.lastReadDirectMessageId,
+          directConversations: sortDirectConversations(nextDirectConversations),
+          typingUsers:
+            message?.sender?.id == null
+              ? state.typingUsers
+              : Object.fromEntries(
+                  Object.entries(state.typingUsers).filter(
+                    ([userId]) => Number(userId) !== message.sender.id,
+                  ),
+                ),
+        }
+      }
+
+      if (channelId == null) {
+        return state
+      }
+
+      return {
+        messages:
+          state.activeChannelId === channelId
+            ? upsertUniqueMessage(state.messages, message)
+            : state.messages,
+        messagesByChannel: {
+          ...state.messagesByChannel,
+          [channelId]: upsertUniqueMessage(
+            state.messagesByChannel[channelId] ?? [],
+            message,
+          ),
+        },
+        lastReadMessageId:
+          state.activeChannelId === channelId
+            ? {
+                ...state.lastReadMessageId,
+                [channelId]: message.id,
+              }
+            : state.lastReadMessageId,
+        typingUsers:
+          message?.sender?.id == null
+            ? state.typingUsers
+            : Object.fromEntries(
+                Object.entries(state.typingUsers).filter(
+                  ([userId]) => Number(userId) !== message.sender.id,
+                ),
               ),
-            ),
-    })),
+      }
+    }),
   setTypingState: ({ userId, username, isTyping }) =>
     set((state) => {
       if (!userId) {
@@ -235,6 +464,17 @@ const useChatStore = create((set) => ({
             }
           : server
       }),
+      directConversations: state.directConversations.map((conversation) =>
+        Number(conversation.participant?.id) === Number(userId)
+          ? {
+              ...conversation,
+              participant: {
+                ...conversation.participant,
+                is_online: isOnline,
+              },
+            }
+          : conversation,
+      ),
     })),
   resetChatState: () =>
     set(() => ({

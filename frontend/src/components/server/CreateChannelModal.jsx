@@ -1,14 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
-import { joinServer } from '../../api/servers'
+import { createChannel } from '../../api/servers'
 import extractApiErrors from '../../utils/extractApiErrors'
 
-function JoinServerModal({ isOpen, onClose, onSuccess }) {
-  const [inviteCode, setInviteCode] = useState('')
+const initialFormData = {
+  name: '',
+  channel_type: 'text',
+}
+
+function CreateChannelModal({ isOpen, onClose, onSuccess, server }) {
+  const [formData, setFormData] = useState(initialFormData)
   const [errors, setErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const resetState = useCallback(() => {
-    setInviteCode('')
+    setFormData(initialFormData)
     setErrors({})
     setIsSubmitting(false)
   }, [])
@@ -43,11 +48,29 @@ function JoinServerModal({ isOpen, onClose, onSuccess }) {
     return null
   }
 
+  const updateField = (event) => {
+    const { name, value } = event.target
+    setFormData((current) => ({
+      ...current,
+      [name]: value,
+    }))
+    setErrors((current) => ({
+      ...current,
+      [name]: '',
+      form: '',
+    }))
+  }
+
   const handleSubmit = async (event) => {
     event.preventDefault()
 
-    if (!inviteCode.trim()) {
-      setErrors({ invite_code: 'Invite code is required.' })
+    if (!server?.id) {
+      setErrors({ form: 'Select a server before creating a channel.' })
+      return
+    }
+
+    if (!formData.name.trim()) {
+      setErrors({ name: 'Channel name is required.' })
       return
     }
 
@@ -55,8 +78,12 @@ function JoinServerModal({ isOpen, onClose, onSuccess }) {
     setIsSubmitting(true)
 
     try {
-      const server = await joinServer(inviteCode.trim())
-      onSuccess?.(server)
+      const channel = await createChannel({
+        server: server.id,
+        name: formData.name.trim(),
+        channel_type: formData.channel_type,
+      })
+      onSuccess?.(channel)
       resetState()
       onClose?.()
     } catch (error) {
@@ -79,13 +106,13 @@ function JoinServerModal({ isOpen, onClose, onSuccess }) {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
-              Join Server
+              Add Channel
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
-              Join with an invite code
+              Create a channel in {server?.name ?? 'this server'}
             </h2>
             <p className="mt-3 text-sm leading-7 text-[var(--orbit-text-muted)]">
-              Paste an invite to join an existing Orbit server and open its channels instantly.
+              Add a new space for focused discussion without leaving the workspace.
             </p>
           </div>
 
@@ -106,23 +133,31 @@ function JoinServerModal({ isOpen, onClose, onSuccess }) {
           ) : null}
 
           <label className="block space-y-2">
-            <span className="text-sm font-medium text-[var(--orbit-text)]">Invite code</span>
+            <span className="text-sm font-medium text-[var(--orbit-text)]">Channel name</span>
             <input
               type="text"
-              value={inviteCode}
-              onChange={(event) => {
-                setInviteCode(event.target.value)
-                setErrors((current) => ({
-                  ...current,
-                  invite_code: '',
-                  form: '',
-                }))
-              }}
+              name="name"
+              value={formData.name}
+              onChange={updateField}
               className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
-              placeholder="b8f3d95a-2d3f-4e3f-9231-9c8d9b1fd321"
+              placeholder="announcements"
             />
-            {errors.invite_code ? (
-              <p className="text-sm text-red-200">{errors.invite_code}</p>
+            {errors.name ? <p className="text-sm text-red-200">{errors.name}</p> : null}
+          </label>
+
+          <label className="block space-y-2">
+            <span className="text-sm font-medium text-[var(--orbit-text)]">Channel type</span>
+            <select
+              name="channel_type"
+              value={formData.channel_type}
+              onChange={updateField}
+              className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
+            >
+              <option value="text">Text</option>
+              <option value="announcement">Announcement</option>
+            </select>
+            {errors.channel_type ? (
+              <p className="text-sm text-red-200">{errors.channel_type}</p>
             ) : null}
           </label>
 
@@ -131,7 +166,7 @@ function JoinServerModal({ isOpen, onClose, onSuccess }) {
             disabled={isSubmitting}
             className="w-full rounded-2xl bg-cyan-400/90 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {isSubmitting ? 'Joining server...' : 'Join server'}
+            {isSubmitting ? 'Creating channel...' : 'Create channel'}
           </button>
         </form>
       </div>
@@ -139,4 +174,4 @@ function JoinServerModal({ isOpen, onClose, onSuccess }) {
   )
 }
 
-export default JoinServerModal
+export default CreateChannelModal

@@ -1,35 +1,90 @@
-const formatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto' })
+const timeFormatter = new Intl.DateTimeFormat('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+})
 
-const DIVISIONS = [
-  { amount: 60, unit: 'second' },
-  { amount: 60, unit: 'minute' },
-  { amount: 24, unit: 'hour' },
-  { amount: 7, unit: 'day' },
-  { amount: 4.34524, unit: 'week' },
-  { amount: 12, unit: 'month' },
-  { amount: Number.POSITIVE_INFINITY, unit: 'year' },
-]
+const shortDateFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+})
 
-export default function formatDate(value) {
+const fullDateFormatter = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+})
+
+function toDate(value) {
   if (!value) {
-    return 'just now'
+    return null
   }
 
   const date = value instanceof Date ? value : new Date(value)
 
   if (Number.isNaN(date.getTime())) {
+    return null
+  }
+
+  return date
+}
+
+function isSameDay(leftDate, rightDate) {
+  return (
+    leftDate.getFullYear() === rightDate.getFullYear() &&
+    leftDate.getMonth() === rightDate.getMonth() &&
+    leftDate.getDate() === rightDate.getDate()
+  )
+}
+
+export function formatMessageTime(value) {
+  const date = toDate(value)
+
+  if (!date) {
     return ''
   }
 
-  let duration = (date.getTime() - Date.now()) / 1000
+  return timeFormatter.format(date)
+}
 
-  for (const { amount, unit } of DIVISIONS) {
-    if (Math.abs(duration) < amount) {
-      return formatter.format(Math.round(duration), unit)
-    }
+export function formatMessageDayLabel(value) {
+  const date = toDate(value)
 
-    duration /= amount
+  if (!date) {
+    return ''
   }
 
-  return formatter.format(Math.round(duration), 'year')
+  const now = new Date()
+  const yesterday = new Date(now)
+  yesterday.setDate(now.getDate() - 1)
+
+  if (isSameDay(date, now)) {
+    return 'Today'
+  }
+
+  if (isSameDay(date, yesterday)) {
+    return 'Yesterday'
+  }
+
+  return date.getFullYear() === now.getFullYear()
+    ? shortDateFormatter.format(date)
+    : fullDateFormatter.format(date)
+}
+
+export default function formatDate(value) {
+  const dayLabel = formatMessageDayLabel(value)
+  const timeLabel = formatMessageTime(value)
+
+  if (!dayLabel && !timeLabel) {
+    return ''
+  }
+
+  if (!dayLabel) {
+    return timeLabel
+  }
+
+  if (!timeLabel) {
+    return dayLabel
+  }
+
+  return `${dayLabel} at ${timeLabel}`
 }

@@ -175,6 +175,17 @@
     scrollbar-gutter: stable;
   }
 
+  .orbit-workspace {
+    font-family:
+      'Avenir Next',
+      'SF Pro Text',
+      'Segoe UI Variable Text',
+      'Helvetica Neue',
+      sans-serif;
+    text-rendering: optimizeLegibility;
+    font-kerning: normal;
+  }
+
   .orbit-input {
     border: 1px solid var(--orbit-border);
     background: var(--orbit-surface-0);

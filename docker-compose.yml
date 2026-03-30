@@ -66,8 +66,7 @@ services:
     depends_on:
       - django
     environment:
-      - VITE_API_URL=http://localhost:8000/api
-      - VITE_WS_URL=ws://localhost:8000
+      - VITE_API_URL=/api
 
 volumes:
   postgres_data:

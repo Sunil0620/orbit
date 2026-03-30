@@ -5,12 +5,25 @@ export default defineConfig({
   plugins: [react()],
   server: {
     host: '0.0.0.0',   // required for Docker
+    allowedHosts: ['unrevocable-countably-andre.ngrok-free.dev'],
     port: 5173,
+    headers: {
+      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      Pragma: 'no-cache',
+      Expires: '0',
+      'Surrogate-Control': 'no-store',
+    },
     proxy: {
-      '/api': 'http://django:8000',   // proxy API calls to Django
+      '/api': {
+        target: 'http://django:8000',
+        changeOrigin: true,
+        secure: false,
+      },
       '/ws': {
         target: 'ws://django:8000',
         ws: true,
+        changeOrigin: true,
+        secure: false,
       }
     }
   }

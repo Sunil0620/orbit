@@ -5,6 +5,8 @@ from .views import (
     ServerJoinView,
     ServerLeaveView,
     ServerListCreateView,
+    ServerMemberRemoveView,
+    ServerMemberRoleView,
 )
 
 urlpatterns = [
@@ -12,4 +14,14 @@ urlpatterns = [
     path('join/', ServerJoinView.as_view(), name='server_join'),
     path('<int:pk>/', ServerDetailView.as_view(), name='server_detail'),
     path('<int:pk>/leave/', ServerLeaveView.as_view(), name='server_leave'),
+    path(
+        '<int:pk>/members/<int:member_id>/role/',
+        ServerMemberRoleView.as_view(),
+        name='server_member_role',
+    ),
+    path(
+        '<int:pk>/members/<int:member_id>/',
+        ServerMemberRemoveView.as_view(),
+        name='server_member_remove',
+    ),
 ]

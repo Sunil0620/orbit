@@ -29,60 +29,104 @@ function AttachmentIcon() {
   )
 }
 
+function CloseIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      className="h-3.5 w-3.5"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="m6 6 12 12" />
+      <path d="M18 6 6 18" />
+    </svg>
+  )
+}
+
 const FileUpload = forwardRef(function FileUpload(
-  { channel, onUploadComplete },
+  { channel, directConversation, onUploadComplete, onUploadStateChange },
   ref,
 ) {
-  const [uploadedFile, setUploadedFile] = useState(null)
-  const [previewUrl, setPreviewUrl] = useState('')
-  const [uploadProgress, setUploadProgress] = useState(0)
-  const [uploadError, setUploadError] = useState('')
-  const [isUploading, setIsUploading] = useState(false)
+  const [uploadItems, setUploadItems] = useState([])
   const inputRef = useRef(null)
+  const nextItemIdRef = useRef(0)
+  const uploadItemsRef = useRef([])
+
+  const revokePreview = (item) => {
+    if (item?.previewUrl) {
+      window.URL.revokeObjectURL(item.previewUrl)
+    }
+  }
 
   const clearUpload = () => {
-    setUploadedFile(null)
-    setUploadProgress(0)
-    setUploadError('')
-
-    if (previewUrl) {
-      window.URL.revokeObjectURL(previewUrl)
-      setPreviewUrl('')
-    }
-
+    uploadItems.forEach(revokePreview)
+    setUploadItems([])
     if (inputRef.current) {
       inputRef.current.value = ''
     }
   }
 
+  const handleClearUpload = () => {
+    clearUpload()
+    onUploadComplete?.([])
+    onUploadStateChange?.(false)
+  }
+
+  useEffect(() => {
+    uploadItemsRef.current = uploadItems
+  }, [uploadItems])
+
   useEffect(() => {
     return () => {
-      if (previewUrl) {
-        window.URL.revokeObjectURL(previewUrl)
-      }
+      uploadItemsRef.current.forEach(revokePreview)
     }
-  }, [previewUrl])
+  }, [])
+
+  useEffect(() => {
+    onUploadComplete?.(
+      uploadItems
+        .filter((item) => item.status === 'uploaded' && item.response)
+        .map((item) => item.response),
+    )
+    onUploadStateChange?.(uploadItems.some((item) => item.status === 'uploading'))
+  }, [onUploadComplete, onUploadStateChange, uploadItems])
 
   useImperativeHandle(ref, () => ({
-    clearUpload,
+    clearUpload: handleClearUpload,
   }))
 
-  const handleFileSelect = async (event) => {
-    const file = event.target.files?.[0]
+  const removeUploadItem = (itemId) => {
+    setUploadItems((currentItems) => {
+      const nextItems = currentItems.filter((item) => item.id !== itemId)
+      const removedItem = currentItems.find((item) => item.id === itemId)
+      revokePreview(removedItem)
+      return nextItems
+    })
+  }
 
-    clearUpload()
-    onUploadComplete?.(null)
+  const updateUploadItem = (itemId, nextValues) => {
+    setUploadItems((currentItems) =>
+      currentItems.map((item) =>
+        item.id === itemId
+          ? {
+              ...item,
+              ...nextValues,
+            }
+          : item,
+      ),
+    )
+  }
 
-    if (!file) {
-      return
-    }
-
-    if (isPreviewableImage(file.type)) {
-      setPreviewUrl(window.URL.createObjectURL(file))
-    }
-
-    setIsUploading(true)
-    setUploadProgress(0)
+  const uploadSelectedFile = async (itemId, file) => {
+    updateUploadItem(itemId, {
+      status: 'uploading',
+      progress: 0,
+      error: '',
+    })
 
     try {
       const response = await uploadMessageFile(file, (progressEvent) => {
@@ -90,97 +134,154 @@ const FileUpload = forwardRef(function FileUpload(
           return
         }
 
-        setUploadProgress(
-          Math.min(100, Math.round((progressEvent.loaded / progressEvent.total) * 100)),
-        )
+        updateUploadItem(itemId, {
+          progress: Math.min(
+            100,
+            Math.round((progressEvent.loaded / progressEvent.total) * 100),
+          ),
+        })
       })
 
-      setUploadedFile(response)
-      setUploadProgress(100)
-      onUploadComplete?.(response)
+      updateUploadItem(itemId, {
+        status: 'uploaded',
+        progress: 100,
+        response,
+        error: '',
+      })
     } catch (error) {
       const normalizedErrors = extractApiErrors(error)
 
-      setUploadedFile(null)
-      setUploadProgress(0)
-      setUploadError(
-        normalizedErrors.file ??
+      updateUploadItem(itemId, {
+        status: 'error',
+        progress: 0,
+        response: null,
+        error:
+          normalizedErrors.file ??
           normalizedErrors.form ??
           'Unable to upload that file right now.',
-      )
-      onUploadComplete?.(null)
-    } finally {
-      setIsUploading(false)
+      })
     }
+  }
+
+  const handleFileSelect = async (event) => {
+    const files = Array.from(event.target.files ?? [])
+
+    if (files.length === 0) {
+      return
+    }
+
+    const nextItems = files.map((file) => ({
+      id: `attachment-${nextItemIdRef.current++}`,
+      fileName: file.name,
+      fileType: file.type || 'application/octet-stream',
+      previewUrl: isPreviewableImage(file.type)
+        ? window.URL.createObjectURL(file)
+        : '',
+      progress: 0,
+      status: 'queued',
+      error: '',
+      response: null,
+    }))
+
+    setUploadItems((currentItems) => [...currentItems, ...nextItems])
+
+    if (inputRef.current) {
+      inputRef.current.value = ''
+    }
+
+    await Promise.all(
+      nextItems.map((item, index) => uploadSelectedFile(item.id, files[index])),
+    )
   }
 
   return (
     <>
-      <label className="orbit-secondary-button inline-flex cursor-pointer items-center justify-center rounded-2xl px-4 py-3 text-sm">
-        <span className="flex items-center gap-2">
+      <label
+        className="orbit-secondary-button inline-flex h-10 w-10 cursor-pointer items-center justify-center rounded-[0.95rem] text-sm"
+        title="Attach file"
+        aria-label="Attach file"
+      >
+        <span className="flex items-center justify-center">
           <AttachmentIcon />
-          Attach
         </span>
         <input
           ref={inputRef}
           type="file"
           className="hidden"
-          disabled={!channel || isUploading}
+          disabled={!channel && !directConversation}
           onChange={handleFileSelect}
+          multiple
           accept=".jpg,.jpeg,.png,.gif,.webp,.pdf,.txt"
         />
       </label>
 
-      {isUploading || uploadError || uploadedFile ? (
+      {uploadItems.length > 0 ? (
         <div className="space-y-3 sm:col-span-3 sm:row-start-2">
-          {isUploading ? (
-            <p className="text-xs uppercase tracking-[0.24em] text-cyan-200">
-              Uploading {uploadProgress}%
-            </p>
-          ) : uploadedFile ? (
-            <p className="text-xs uppercase tracking-[0.24em] text-emerald-200">
-              Upload complete
-            </p>
-          ) : null}
+          <p className="text-xs uppercase tracking-[0.24em] text-[var(--orbit-text-subtle)]">
+            {uploadItems.length} attachment{uploadItems.length === 1 ? '' : 's'} in composer
+          </p>
 
-          {isUploading ? (
-            <div className="h-2 overflow-hidden rounded-full bg-[var(--orbit-surface-soft)]">
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {uploadItems.map((item) => (
               <div
-                className="h-full rounded-full bg-cyan-400 transition-[width] duration-200"
-                style={{ width: `${uploadProgress}%` }}
-              />
-            </div>
-          ) : null}
+                key={item.id}
+                className="rounded-3xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] p-4"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
+                    {item.previewUrl ? (
+                      <img
+                        src={item.previewUrl}
+                        alt={item.fileName}
+                        className="max-h-32 w-auto rounded-2xl object-cover"
+                      />
+                    ) : (
+                      <div className="inline-flex items-center gap-3 rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-0)] px-4 py-3 text-sm text-[var(--orbit-text-muted)]">
+                        <span className="rounded-xl bg-cyan-400/10 px-3 py-2 text-[var(--orbit-text)]">
+                          File
+                        </span>
+                        <span className="break-all">{item.fileName}</span>
+                      </div>
+                    )}
+                  </div>
 
-          {uploadError ? (
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
-              {uploadError}
-            </div>
-          ) : null}
-
-          {uploadedFile ? (
-            <div className="rounded-3xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] p-4">
-              {previewUrl ? (
-                <img
-                  src={previewUrl}
-                  alt={uploadedFile.file_name}
-                  className="max-h-40 w-auto rounded-2xl object-cover"
-                />
-              ) : (
-                <div className="inline-flex items-center gap-3 rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-0)] px-4 py-3 text-sm text-[var(--orbit-text-muted)]">
-                  <span className="rounded-xl bg-cyan-400/10 px-3 py-2 text-[var(--orbit-text)]">
-                    File
-                  </span>
-                  <span className="break-all">{uploadedFile.file_name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeUploadItem(item.id)}
+                    className="orbit-secondary-button flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+                    aria-label={`Remove ${item.fileName}`}
+                    title={`Remove ${item.fileName}`}
+                  >
+                    <CloseIcon />
+                  </button>
                 </div>
-              )}
 
-              <p className="mt-3 text-sm text-[var(--orbit-text)]">{uploadedFile.file_name}</p>
-              <p className="mt-1 text-xs uppercase tracking-[0.24em] text-[var(--orbit-text-subtle)]">
-                {uploadedFile.file_type} ready to attach
-              </p>
-            </div>
-          ) : null}
+                <p className="mt-3 truncate text-sm text-[var(--orbit-text)]">{item.fileName}</p>
+                <p className="mt-1 text-xs uppercase tracking-[0.24em] text-[var(--orbit-text-subtle)]">
+                  {item.status === 'uploaded'
+                    ? `${item.response?.file_type ?? item.fileType} ready`
+                    : item.status === 'uploading'
+                      ? `Uploading ${item.progress}%`
+                      : item.status === 'error'
+                        ? 'Upload failed'
+                        : 'Queued'}
+                </p>
+
+                {item.status === 'uploading' ? (
+                  <div className="mt-3 h-2 overflow-hidden rounded-full bg-[var(--orbit-surface-0)]">
+                    <div
+                      className="h-full rounded-full bg-cyan-400 transition-[width] duration-200"
+                      style={{ width: `${item.progress}%` }}
+                    />
+                  </div>
+                ) : null}
+
+                {item.status === 'error' ? (
+                  <p className="mt-3 text-sm text-red-200">{item.error}</p>
+                ) : null}
+              </div>
+            ))}
+          </div>
         </div>
       ) : null}
     </>

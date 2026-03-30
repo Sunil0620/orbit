@@ -4,16 +4,13 @@ import useAuthStore from '../store/useAuthStore'
 import useChatStore from '../store/useChatStore'
 
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000]
+const PRESENCE_PING_INTERVAL_MS = 25000
 
 function isLoopbackHost(hostname = '') {
-  return (
-    hostname === 'localhost' ||
-    hostname === '127.0.0.1' ||
-    hostname === '::1'
-  )
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '::1'
 }
 
-function buildWebSocketBaseUrl() {
+function buildPresenceWebSocketBaseUrl() {
   const explicitUrl = import.meta.env.VITE_WS_URL?.replace(/\/$/, '')
   if (explicitUrl) {
     try {
@@ -35,28 +32,23 @@ function buildWebSocketBaseUrl() {
   return `${protocol}//${httpUrl.host}`
 }
 
-export default function useWebSocket(conversationType, conversationId, accessToken) {
+export default function usePresenceSocket(accessToken) {
   const socketRef = useRef(null)
   const connectRef = useRef(null)
   const reconnectTimerRef = useRef(null)
   const reconnectAttemptRef = useRef(0)
   const closedByEffectRef = useRef(false)
-  const [lastMessage, setLastMessage] = useState(null)
+  const pingIntervalRef = useRef(null)
   const [connectionStatus, setConnectionStatus] = useState('idle')
 
   const socketUrl = useMemo(() => {
-    if (!conversationId || !accessToken || !conversationType) {
+    if (!accessToken) {
       return null
     }
 
-    const baseUrl = buildWebSocketBaseUrl()
-    const socketPath =
-      conversationType === 'direct'
-        ? `/ws/dm/${conversationId}/`
-        : `/ws/chat/${conversationId}/`
-
-    return `${baseUrl}${socketPath}?token=${encodeURIComponent(accessToken)}`
-  }, [accessToken, conversationId, conversationType])
+    const baseUrl = buildPresenceWebSocketBaseUrl()
+    return `${baseUrl}/ws/presence/?token=${encodeURIComponent(accessToken)}`
+  }, [accessToken])
 
   const clearReconnectTimer = useCallback(() => {
     if (reconnectTimerRef.current) {
@@ -65,23 +57,28 @@ export default function useWebSocket(conversationType, conversationId, accessTok
     }
   }, [])
 
+  const clearPingInterval = useCallback(() => {
+    if (pingIntervalRef.current) {
+      window.clearInterval(pingIntervalRef.current)
+      pingIntervalRef.current = null
+    }
+  }, [])
+
   const handleMessage = useCallback((event) => {
     try {
       const parsedMessage = JSON.parse(event.data)
 
-      if (parsedMessage.type === 'presence') {
-        useChatStore.getState().updateMemberPresence({
-          userId: parsedMessage.user_id,
-          isOnline: Boolean(parsedMessage.is_online),
-        })
-
-        useAuthStore.getState().updateUserPresence({
-          userId: parsedMessage.user_id,
-          isOnline: Boolean(parsedMessage.is_online),
-        })
+      if (parsedMessage.type !== 'presence') {
+        return
       }
 
-      setLastMessage(parsedMessage)
+      const nextPresence = {
+        userId: parsedMessage.user_id,
+        isOnline: Boolean(parsedMessage.is_online),
+      }
+
+      useChatStore.getState().updateMemberPresence(nextPresence)
+      useAuthStore.getState().updateUserPresence(nextPresence)
     } catch {
       // Ignore malformed websocket payloads.
     }
@@ -93,6 +90,7 @@ export default function useWebSocket(conversationType, conversationId, accessTok
     }
 
     clearReconnectTimer()
+    clearPingInterval()
     setConnectionStatus(
       reconnectAttemptRef.current > 0 ? 'reconnecting' : 'connecting',
     )
@@ -103,6 +101,12 @@ export default function useWebSocket(conversationType, conversationId, accessTok
     socket.onopen = () => {
       reconnectAttemptRef.current = 0
       setConnectionStatus('open')
+      clearPingInterval()
+      pingIntervalRef.current = window.setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: 'ping' }))
+        }
+      }, PRESENCE_PING_INTERVAL_MS)
     }
 
     socket.onmessage = handleMessage
@@ -112,6 +116,8 @@ export default function useWebSocket(conversationType, conversationId, accessTok
     }
 
     socket.onclose = () => {
+      clearPingInterval()
+
       if (closedByEffectRef.current) {
         setConnectionStatus('closed')
         return
@@ -129,7 +135,7 @@ export default function useWebSocket(conversationType, conversationId, accessTok
         connectRef.current?.()
       }, nextDelay)
     }
-  }, [clearReconnectTimer, handleMessage, socketUrl])
+  }, [clearPingInterval, clearReconnectTimer, handleMessage, socketUrl])
 
   useEffect(() => {
     connectRef.current = connect
@@ -138,6 +144,7 @@ export default function useWebSocket(conversationType, conversationId, accessTok
   useEffect(() => {
     closedByEffectRef.current = false
     clearReconnectTimer()
+    clearPingInterval()
     reconnectAttemptRef.current = 0
 
     if (!socketUrl) {
@@ -152,23 +159,13 @@ export default function useWebSocket(conversationType, conversationId, accessTok
       window.clearTimeout(initialConnectTimer)
       closedByEffectRef.current = true
       clearReconnectTimer()
+      clearPingInterval()
       socketRef.current?.close()
       socketRef.current = null
     }
-  }, [clearReconnectTimer, connect, socketUrl])
-
-  const sendMessage = useCallback((payload) => {
-    if (socketRef.current?.readyState !== WebSocket.OPEN) {
-      return false
-    }
-
-    socketRef.current.send(JSON.stringify(payload))
-    return true
-  }, [])
+  }, [clearPingInterval, clearReconnectTimer, connect, socketUrl])
 
   return {
-    lastMessage,
-    sendMessage,
     connectionStatus: socketUrl ? connectionStatus : 'idle',
   }
 }

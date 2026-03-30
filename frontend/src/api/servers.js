@@ -43,6 +43,15 @@ export async function listChannels(serverId) {
   return unwrapCollection(response.data)
 }
 
+export async function createChannel(data) {
+  const response = await axiosInstance.post('/channels/', data)
+  return response.data
+}
+
+export async function deleteChannel(channelId) {
+  await axiosInstance.delete(`/channels/${channelId}/`)
+}
+
 export async function getServer(serverId) {
   const response = await axiosInstance.get(`/servers/${serverId}/`)
   return response.data
@@ -59,4 +68,17 @@ export async function deleteServer(serverId) {
 
 export async function leaveServer(serverId) {
   await axiosInstance.post(`/servers/${serverId}/leave/`)
+}
+
+export async function updateServerMemberRole(serverId, memberId, role) {
+  const response = await axiosInstance.patch(
+    `/servers/${serverId}/members/${memberId}/role/`,
+    { role },
+  )
+  return response.data
+}
+
+export async function removeServerMember(serverId, memberId) {
+  const response = await axiosInstance.delete(`/servers/${serverId}/members/${memberId}/`)
+  return response.data
 }

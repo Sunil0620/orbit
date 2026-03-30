@@ -18,9 +18,18 @@ function flattenMessages(value) {
 
 export default function extractApiErrors(error) {
   const payload = error?.response?.data
+  const statusCode = error?.response?.status
+  const errorMessage =
+    typeof error?.message === 'string' && error.message.trim()
+      ? error.message.trim()
+      : ''
 
   if (!payload) {
-    return { form: fallbackMessage }
+    return {
+      form:
+        errorMessage ||
+        (statusCode ? `Request failed with status ${statusCode}.` : fallbackMessage),
+    }
   }
 
   if (typeof payload === 'string') {

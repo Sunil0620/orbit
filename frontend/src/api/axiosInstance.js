@@ -2,12 +2,29 @@ import axios from 'axios'
 import useAuthStore from '../store/useAuthStore'
 import useChatStore from '../store/useChatStore'
 
+function isLoopbackHost(hostname = '') {
+  return (
+    hostname === 'localhost' ||
+    hostname === '127.0.0.1' ||
+    hostname === '::1'
+  )
+}
+
 function normalizeApiBaseUrl(value) {
-  const fallbackUrl = 'http://localhost:8000/api'
+  const fallbackUrl = '/api'
   const rawValue = value ?? fallbackUrl
 
   try {
-    const parsedUrl = new URL(rawValue, window.location.origin)
+    const currentOrigin =
+      typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
+    const currentHostname =
+      typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+    let parsedUrl = new URL(rawValue, currentOrigin)
+
+    if (!isLoopbackHost(currentHostname) && isLoopbackHost(parsedUrl.hostname)) {
+      parsedUrl = new URL(fallbackUrl, currentOrigin)
+    }
+
     const normalizedPath = parsedUrl.pathname.replace(/\/$/, '')
 
     if (!normalizedPath || normalizedPath === '') {

@@ -1,5 +1,5 @@
 import useAuthStore from '../../store/useAuthStore'
-import formatDate from '../../utils/formatDate'
+import formatDate, { formatMessageTime } from '../../utils/formatDate'
 
 function AttachmentIcon() {
   return (
@@ -21,13 +21,30 @@ function AttachmentIcon() {
   )
 }
 
-function MessageBubble({ message, shouldAnimate = false }) {
-  const currentUsername = useAuthStore((state) => state.user?.username ?? '')
-  const avatar = message.sender?.avatar
-  const username = message.sender?.username ?? 'Unknown'
-  const fileType = message.file_type ?? ''
-  const isImageAttachment = fileType.startsWith('image/')
-  const isDownloadableFile = fileType === 'application/pdf' || fileType === 'text/plain'
+function resolveMessageAttachments(message) {
+  if (Array.isArray(message.attachments) && message.attachments.length > 0) {
+    return message.attachments
+  }
+
+  if (message.file_url) {
+    return [
+      {
+        url: message.file_url,
+        file_name: message.file_name || 'Attachment',
+        file_type: message.file_type || '',
+      },
+    ]
+  }
+
+  return []
+}
+
+function MessageContent({
+  message,
+  currentUsername = '',
+  hasHeader = false,
+}) {
+  const attachments = resolveMessageAttachments(message)
   const normalizedCurrentUsername = currentUsername.toLowerCase()
   const mentionPattern = currentUsername
     ? new RegExp(`(@${currentUsername.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\$&')}\\b)`, 'gi')
@@ -37,101 +54,177 @@ function MessageBubble({ message, shouldAnimate = false }) {
     : [message.content ?? '']
 
   return (
-    <article
-      className={[
-        'group rounded-2xl px-3 py-2 transition hover:bg-[var(--orbit-surface-soft)]',
-        shouldAnimate ? 'orbit-message-enter' : '',
-      ].join(' ')}
-    >
-      <div className="flex items-start gap-3">
+    <>
+      {message.content ? (
+        <p
+          className={[
+            'whitespace-pre-wrap break-words text-[14px] leading-[1.33rem] text-[var(--orbit-text-muted)] [overflow-wrap:anywhere]',
+            hasHeader ? 'mt-[1px]' : 'mt-0',
+          ].join(' ')}
+        >
+          {contentSegments.map((segment, index) =>
+            normalizedCurrentUsername &&
+            segment.toLowerCase() === `@${normalizedCurrentUsername}` ? (
+              <span
+                key={`${message.id}-mention-${index}`}
+                className="rounded bg-yellow-500/20 px-1 text-yellow-300"
+              >
+                {segment}
+              </span>
+            ) : (
+              <span key={`${message.id}-text-${index}`}>{segment}</span>
+            ),
+          )}
+        </p>
+      ) : null}
+
+      {attachments.length > 0 ? (
+        <div
+          className={[
+            'space-y-2.5',
+            message.content || hasHeader ? 'mt-1.5' : 'mt-0',
+          ].join(' ')}
+        >
+          {attachments.map((attachment, index) => {
+            const fileType = attachment.file_type ?? ''
+            const isImageAttachment = fileType.startsWith('image/')
+            const isDownloadableFile =
+              fileType === 'application/pdf' || fileType === 'text/plain'
+
+            if (isImageAttachment) {
+              return (
+                <img
+                  key={`${message.id}-attachment-image-${index}`}
+                  src={attachment.url}
+                  alt={attachment.file_name || 'Chat attachment'}
+                  loading="lazy"
+                  className="max-h-[14rem] w-auto max-w-[min(100%,14rem)] rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-0)] object-cover shadow-lg shadow-black/15 sm:max-h-[15rem] sm:max-w-[min(100%,15rem)]"
+                />
+              )
+            }
+
+            if (isDownloadableFile) {
+              return (
+                <div
+                  key={`${message.id}-attachment-file-${index}`}
+                  className="flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-3"
+                >
+                  <div className="flex min-w-0 items-center gap-3">
+                    <div className="rounded-xl bg-cyan-400/10 p-2 text-[var(--orbit-text)]">
+                      <AttachmentIcon />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-[13px] font-medium text-[var(--orbit-text)]">
+                        {attachment.file_name || 'Attachment'}
+                      </p>
+                      <p className="text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--orbit-text-subtle)]">
+                        {fileType === 'application/pdf' ? 'PDF' : 'Text file'}
+                      </p>
+                    </div>
+                  </div>
+
+                  <a
+                    href={attachment.url}
+                    download={attachment.file_name || true}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="orbit-secondary-button shrink-0 rounded-full px-3 py-2 text-[10px] font-medium uppercase tracking-[0.14em]"
+                  >
+                    Download
+                  </a>
+                </div>
+              )
+            }
+
+            return (
+              <a
+                key={`${message.id}-attachment-link-${index}`}
+                href={attachment.url}
+                target="_blank"
+                rel="noreferrer"
+                className="orbit-secondary-button inline-flex rounded-full px-3 py-2 text-[10px] font-medium uppercase tracking-[0.14em]"
+              >
+                {attachment.file_name || 'Open attachment'}
+              </a>
+            )
+          })}
+        </div>
+      ) : null}
+    </>
+  )
+}
+
+function MessageBubble({
+  message,
+  messages = null,
+  shouldAnimate = false,
+}) {
+  const currentUsername = useAuthStore((state) => state.user?.username ?? '')
+  const messageList = messages?.length ? messages : message ? [message] : []
+
+  if (messageList.length === 0) {
+    return null
+  }
+
+  const firstMessage = messageList[0]
+  const avatar = firstMessage.sender?.avatar
+  const username = firstMessage.sender?.username ?? 'Unknown'
+  const messageTimestamp = firstMessage.timestamp ?? firstMessage.created_at
+  const headerTimestamp = formatDate(messageTimestamp)
+
+  return (
+    <article className="rounded-2xl">
+      <div
+        className={[
+          'grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-x-3 rounded-2xl px-3 py-[2px] transition hover:bg-[var(--orbit-surface-soft)]',
+          shouldAnimate ? 'orbit-message-enter' : '',
+        ].join(' ')}
+      >
         {avatar ? (
           <img
             src={avatar}
             alt={username}
             loading="lazy"
-            className="h-11 w-11 rounded-2xl object-cover"
+            className="h-9 w-9 rounded-[0.95rem] object-cover"
           />
         ) : (
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-400/15 text-sm font-semibold text-[var(--orbit-text)]">
+          <div className="flex h-9 w-9 items-center justify-center rounded-[0.95rem] bg-cyan-400/15 text-[13px] font-semibold text-[var(--orbit-text)]">
             {username.slice(0, 1).toUpperCase()}
           </div>
         )}
 
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="text-sm font-semibold text-[var(--orbit-text)]">{username}</p>
-            <p className="text-xs uppercase tracking-[0.24em] text-[var(--orbit-text-subtle)]">
-              {formatDate(message.timestamp ?? message.created_at)}
+        <div className="min-w-0 pt-px">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <p className="text-[13px] font-semibold leading-none text-[var(--orbit-text)]">{username}</p>
+            <p className="pt-px text-[10px] leading-none text-[var(--orbit-text-subtle)]">
+              {headerTimestamp}
             </p>
           </div>
 
-          {message.content ? (
-            <p className="mt-1 whitespace-pre-wrap break-words text-sm leading-7 text-[var(--orbit-text-muted)] [overflow-wrap:anywhere]">
-              {contentSegments.map((segment, index) =>
-                normalizedCurrentUsername &&
-                segment.toLowerCase() === `@${normalizedCurrentUsername}` ? (
-                  <span
-                    key={`${message.id}-mention-${index}`}
-                    className="rounded bg-yellow-500/20 px-1 text-yellow-300"
-                  >
-                    {segment}
-                  </span>
-                ) : (
-                  <span key={`${message.id}-text-${index}`}>{segment}</span>
-                ),
-              )}
-            </p>
-          ) : null}
-
-          {message.file_url && isImageAttachment ? (
-            <img
-              src={message.file_url}
-              alt={message.file_name || 'Chat attachment'}
-              loading="lazy"
-              className="mt-3 max-h-[26rem] w-auto max-w-full rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-0)] object-cover shadow-lg shadow-black/15"
-            />
-          ) : null}
-
-          {message.file_url && isDownloadableFile ? (
-            <div className="mt-3 flex max-w-xl items-center justify-between gap-3 rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="rounded-xl bg-cyan-400/10 p-2 text-[var(--orbit-text)]">
-                  <AttachmentIcon />
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-[var(--orbit-text)]">
-                    {message.file_name || 'Attachment'}
-                  </p>
-                  <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
-                    {fileType === 'application/pdf' ? 'PDF' : 'Text file'}
-                  </p>
-                </div>
-              </div>
-
-              <a
-                href={message.file_url}
-                download={message.file_name || true}
-                target="_blank"
-                rel="noreferrer"
-                className="orbit-secondary-button shrink-0 rounded-full px-3 py-2 text-[10px] font-medium uppercase tracking-[0.24em]"
-              >
-                Download
-              </a>
-            </div>
-          ) : null}
-
-          {message.file_url && !isImageAttachment && !isDownloadableFile ? (
-            <a
-              href={message.file_url}
-              target="_blank"
-              rel="noreferrer"
-              className="orbit-secondary-button mt-3 inline-flex rounded-full px-3 py-2 text-xs font-medium uppercase tracking-[0.24em]"
-            >
-              {message.file_name || 'Open attachment'}
-            </a>
-          ) : null}
+          <MessageContent
+            message={firstMessage}
+            currentUsername={currentUsername}
+            hasHeader
+          />
         </div>
       </div>
+
+      {messageList.slice(1).map((groupedMessage) => (
+        <div
+          key={groupedMessage.id}
+          className="group grid grid-cols-[2.5rem_minmax(0,1fr)] items-start gap-x-3 rounded-2xl px-3 py-0.5 transition hover:bg-[var(--orbit-surface-soft)]"
+        >
+          <div className="flex h-[1.33rem] w-10 items-center justify-end pr-1 text-[10px] leading-none text-[var(--orbit-text-subtle)] opacity-0 transition group-hover:opacity-100">
+            {formatMessageTime(groupedMessage.timestamp ?? groupedMessage.created_at)}
+          </div>
+          <div className="min-w-0">
+            <MessageContent
+              message={groupedMessage}
+              currentUsername={currentUsername}
+            />
+          </div>
+        </div>
+      ))}
     </article>
   )
 }

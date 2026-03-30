@@ -4,8 +4,13 @@ import ChannelList from '../components/layout/ChannelList'
 import ChatWindow from '../components/chat/ChatWindow'
 import MemberList from '../components/layout/MemberList'
 import CreateServerModal from '../components/server/CreateServerModal'
+import CreateChannelModal from '../components/server/CreateChannelModal'
 import JoinServerModal from '../components/server/JoinServerModal'
-import { listChannels, listServers } from '../api/servers'
+import {
+  createOrOpenDirectConversation,
+  listDirectConversations,
+} from '../api/directConversations'
+import { deleteChannel, listChannels, listServers } from '../api/servers'
 import extractApiErrors from '../utils/extractApiErrors'
 import useAuthStore from '../store/useAuthStore'
 import useChatStore from '../store/useChatStore'
@@ -13,27 +18,52 @@ import useChatStore from '../store/useChatStore'
 function ChatPage() {
   const user = useAuthStore((state) => state.user)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false)
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
   const [actionNotice, setActionNotice] = useState('')
   const servers = useChatStore((state) => state.servers)
   const activeServerId = useChatStore((state) => state.activeServerId)
   const channels = useChatStore((state) => state.channels)
   const activeChannelId = useChatStore((state) => state.activeChannelId)
+  const directConversations = useChatStore((state) => state.directConversations)
+  const activeDirectConversationId = useChatStore(
+    (state) => state.activeDirectConversationId,
+  )
   const messagesByChannel = useChatStore((state) => state.messagesByChannel)
   const lastReadMessageId = useChatStore((state) => state.lastReadMessageId)
   const isServersLoading = useChatStore((state) => state.isServersLoading)
   const isChannelsLoading = useChatStore((state) => state.isChannelsLoading)
+  const isDirectConversationsLoading = useChatStore(
+    (state) => state.isDirectConversationsLoading,
+  )
   const serversError = useChatStore((state) => state.serversError)
   const channelsError = useChatStore((state) => state.channelsError)
+  const directConversationsError = useChatStore(
+    (state) => state.directConversationsError,
+  )
   const setServers = useChatStore((state) => state.setServers)
+  const openHome = useChatStore((state) => state.openHome)
   const setActiveServer = useChatStore((state) => state.setActiveServer)
   const setChannels = useChatStore((state) => state.setChannels)
   const setActiveChannel = useChatStore((state) => state.setActiveChannel)
+  const setDirectConversations = useChatStore((state) => state.setDirectConversations)
+  const setActiveDirectConversation = useChatStore(
+    (state) => state.setActiveDirectConversation,
+  )
   const setServersLoading = useChatStore((state) => state.setServersLoading)
   const setChannelsLoading = useChatStore((state) => state.setChannelsLoading)
+  const setDirectConversationsLoading = useChatStore(
+    (state) => state.setDirectConversationsLoading,
+  )
   const setServersError = useChatStore((state) => state.setServersError)
   const setChannelsError = useChatStore((state) => state.setChannelsError)
+  const setDirectConversationsError = useChatStore(
+    (state) => state.setDirectConversationsError,
+  )
   const upsertServer = useChatStore((state) => state.upsertServer)
+  const upsertDirectConversation = useChatStore(
+    (state) => state.upsertDirectConversation,
+  )
   const setMessages = useChatStore((state) => state.setMessages)
   const setMessagesError = useChatStore((state) => state.setMessagesError)
   const setMessagesLoading = useChatStore((state) => state.setMessagesLoading)
@@ -56,6 +86,49 @@ function ChatPage() {
     () => servers.find((server) => server.id === activeServerId) ?? null,
     [servers, activeServerId],
   )
+  const activeDirectConversation = useMemo(
+    () =>
+      directConversations.find(
+        (conversation) => conversation.id === activeDirectConversationId,
+      ) ?? null,
+    [activeDirectConversationId, directConversations],
+  )
+  const directMessageMode = activeServerId == null
+  const homeMode = directMessageMode && activeDirectConversation == null
+  const canManageChannels = Boolean(activeServer?.permissions?.can_manage_channels)
+  const canInviteMembers = Boolean(activeServer?.permissions?.can_invite_members)
+  const friendContacts = useMemo(() => {
+    const contactsById = new Map()
+
+    servers.forEach((server) => {
+      ;(server.members ?? []).forEach((member) => {
+        if (Number(member.id) === Number(user?.id)) {
+          return
+        }
+
+        const existingContact = contactsById.get(member.id)
+        const sharedServers = existingContact?.sharedServers ?? []
+
+        if (!sharedServers.includes(server.name)) {
+          sharedServers.push(server.name)
+        }
+
+        contactsById.set(member.id, {
+          ...existingContact,
+          ...member,
+          sharedServers,
+        })
+      })
+    })
+
+    return Array.from(contactsById.values()).sort((leftContact, rightContact) => {
+      if (leftContact.is_online !== rightContact.is_online) {
+        return leftContact.is_online ? -1 : 1
+      }
+
+      return leftContact.username.localeCompare(rightContact.username)
+    })
+  }, [servers, user?.id])
   const activeChannel = useMemo(
     () => channels.find((channel) => channel.id === activeChannelId) ?? null,
     [channels, activeChannelId],
@@ -85,6 +158,9 @@ function ChatPage() {
       setServers([])
       setServersError('')
       setServersLoading(false)
+      setDirectConversations([])
+      setDirectConversationsError('')
+      setDirectConversationsLoading(false)
       return undefined
     }
 
@@ -123,16 +199,92 @@ function ChatPage() {
     return () => {
       ignore = true
     }
-  }, [setServers, setServersError, setServersLoading, user?.id])
+  }, [
+    setDirectConversations,
+    setDirectConversationsError,
+    setDirectConversationsLoading,
+    setServers,
+    setServersError,
+    setServersLoading,
+    user?.id,
+  ])
+
+  useEffect(() => {
+    if (!user?.id) {
+      return undefined
+    }
+
+    let ignore = false
+
+    async function loadDirectConversations({ silent = false } = {}) {
+      if (!silent) {
+        setDirectConversationsLoading(true)
+      }
+      setDirectConversationsError('')
+
+      try {
+        const nextConversations = await listDirectConversations()
+
+        if (ignore) {
+          return
+        }
+
+        setDirectConversations(nextConversations)
+      } catch (error) {
+        if (ignore) {
+          return
+        }
+
+        setDirectConversationsError(
+          extractApiErrors(error).form ??
+            'Unable to load your direct messages right now.',
+        )
+        setDirectConversations([])
+      } finally {
+        if (!ignore && !silent) {
+          setDirectConversationsLoading(false)
+        }
+      }
+    }
+
+    loadDirectConversations()
+
+    const intervalId = window.setInterval(() => {
+      void loadDirectConversations({ silent: true })
+    }, 15000)
+
+    const handleRefresh = () => {
+      if (document.visibilityState === 'visible') {
+        void loadDirectConversations({ silent: true })
+      }
+    }
+
+    window.addEventListener('focus', handleRefresh)
+    document.addEventListener('visibilitychange', handleRefresh)
+
+    return () => {
+      ignore = true
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', handleRefresh)
+      document.removeEventListener('visibilitychange', handleRefresh)
+    }
+  }, [
+    setDirectConversations,
+    setDirectConversationsError,
+    setDirectConversationsLoading,
+    user?.id,
+  ])
 
   useEffect(() => {
     if (!activeServerId) {
       setChannels([])
       setChannelsError('')
       setChannelsLoading(false)
-      setMessages([])
-      setMessagesError('')
-      setMessagesLoading(false)
+      if (activeDirectConversationId == null) {
+        setMessages([])
+        setMessagesError('')
+        setMessagesLoading(false)
+      }
       return
     }
 
@@ -172,6 +324,7 @@ function ChatPage() {
       ignore = true
     }
   }, [
+    activeDirectConversationId,
     activeServerId,
     setChannels,
     setChannelsError,
@@ -181,8 +334,79 @@ function ChatPage() {
     setMessagesLoading,
   ])
 
+  const handleDeleteChannel = async (channel) => {
+    if (!activeServer?.id) {
+      return
+    }
+
+    if (!window.confirm(`Delete #${channel.name}?`)) {
+      return
+    }
+
+    setChannelsLoading(true)
+    setChannelsError('')
+
+    try {
+      await deleteChannel(channel.id)
+      const nextChannels = await listChannels(activeServer.id)
+      setChannels(nextChannels)
+      setActionNotice(`Deleted #${channel.name} from ${activeServer.name}.`)
+    } catch (error) {
+      setChannelsError(
+        extractApiErrors(error).form ?? 'Unable to delete the selected channel.',
+      )
+    } finally {
+      setChannelsLoading(false)
+    }
+  }
+
+  const handleCopyInviteCode = async () => {
+    if (!canInviteMembers || !activeServer?.invite_code || !navigator?.clipboard) {
+      return
+    }
+
+    try {
+      await navigator.clipboard.writeText(activeServer.invite_code)
+      setActionNotice(`Invite code for ${activeServer.name} copied to your clipboard.`)
+    } catch {
+      setActionNotice('Unable to copy the invite code right now.')
+    }
+  }
+
+  const handleOpenDirectConversation = async (contact) => {
+    if (!contact?.id) {
+      return
+    }
+
+    const existingConversation = directConversations.find(
+      (conversation) => Number(conversation.participant?.id) === Number(contact.id),
+    )
+
+    if (existingConversation) {
+      setActiveDirectConversation(existingConversation.id)
+      return
+    }
+
+    setDirectConversationsError('')
+    setDirectConversationsLoading(true)
+
+    try {
+      const conversation = await createOrOpenDirectConversation(contact.id)
+      upsertDirectConversation(conversation)
+      setActiveDirectConversation(conversation.id)
+      setActionNotice(`Opened a direct message with ${contact.username}.`)
+    } catch (error) {
+      setDirectConversationsError(
+        extractApiErrors(error).form ??
+          'Unable to open a direct message with that person.',
+      )
+    } finally {
+      setDirectConversationsLoading(false)
+    }
+  }
+
   return (
-    <div className="relative flex h-full min-h-0 flex-col">
+    <div className="orbit-workspace relative flex h-full min-h-0 w-full min-w-0 flex-1 flex-col">
       {actionNotice || serversError ? (
         <div className="pointer-events-none absolute right-3 top-3 z-20 space-y-2">
           {actionNotice ? (
@@ -199,11 +423,14 @@ function ChatPage() {
         </div>
       ) : null}
 
-      <div className="overflow-hidden rounded-[1.2rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
-        <div className="grid min-h-[calc(100dvh-5.35rem)] min-w-0 bg-[var(--orbit-shell-bg)] xl:grid-cols-[72px_252px_minmax(0,1fr)_236px] 2xl:grid-cols-[76px_272px_minmax(0,1fr)_248px]">
+      <div className="flex h-full min-h-0 flex-1 overflow-hidden rounded-[1.2rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
+        <div className="grid h-full w-full min-w-0 bg-[var(--orbit-shell-bg)] xl:grid-cols-[64px_236px_minmax(0,1fr)_220px] 2xl:grid-cols-[68px_248px_minmax(0,1fr)_228px]">
           <Sidebar
             servers={servers}
             activeServerId={activeServerId}
+            user={user}
+            isHomeActive={directMessageMode}
+            onOpenHome={openHome}
             onSelectServer={setActiveServer}
             onOpenCreate={() => setIsCreateModalOpen(true)}
             onOpenJoin={() => setIsJoinModalOpen(true)}
@@ -211,17 +438,41 @@ function ChatPage() {
             emptyMessage="No servers yet. Create or join one next."
           />
           <ChannelList
+            key={directMessageMode ? 'friends-home' : activeServer?.id ?? 'empty-server'}
             server={activeServer}
+            homeMode={directMessageMode}
+            friendContacts={friendContacts}
+            directConversations={directConversations}
+            activeDirectConversationId={activeDirectConversationId}
             channels={channels}
             activeChannelId={activeChannelId}
             unreadCountByChannel={unreadCountByChannel}
             onSelectChannel={setActiveChannel}
+            onSelectDirectConversation={setActiveDirectConversation}
+            onOpenDirectConversation={handleOpenDirectConversation}
+            onOpenCreateChannel={() => setIsCreateChannelModalOpen(true)}
+            onDeleteChannel={handleDeleteChannel}
+            onCopyInviteCode={handleCopyInviteCode}
             settingsHref={activeServer ? `/app/servers/${activeServer.id}/settings` : null}
-            isLoading={isChannelsLoading}
-            error={channelsError}
+            canManageChannels={canManageChannels}
+            canInviteMembers={canInviteMembers}
+            isLoading={directMessageMode ? isDirectConversationsLoading : isChannelsLoading}
+            error={directMessageMode ? directConversationsError : channelsError}
           />
-          <ChatWindow server={activeServer} channel={activeChannel} />
-          <MemberList server={activeServer} />
+          <ChatWindow
+            server={activeServer}
+            channel={activeChannel}
+            directConversation={activeDirectConversation}
+            homeMode={homeMode}
+            friendContacts={friendContacts}
+            onOpenDirectConversation={handleOpenDirectConversation}
+          />
+          <MemberList
+            server={activeServer}
+            directConversation={activeDirectConversation}
+            homeMode={homeMode}
+            contacts={friendContacts}
+          />
         </div>
       </div>
 
@@ -232,6 +483,17 @@ function ChatPage() {
           upsertServer(server)
           setActiveServer(server.id)
           setActionNotice(`Created ${server.name} and set it as your active server.`)
+        }}
+      />
+
+      <CreateChannelModal
+        isOpen={isCreateChannelModalOpen}
+        onClose={() => setIsCreateChannelModalOpen(false)}
+        server={activeServer}
+        onSuccess={(channel) => {
+          setChannels([...channels, channel])
+          setActiveChannel(channel.id)
+          setActionNotice(`Created #${channel.name} in ${activeServer?.name ?? 'your server'}.`)
         }}
       />
 

@@ -108,12 +108,12 @@ function CreateServerModal({ isOpen, onClose, onSuccess }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 px-4 py-8 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/80 px-4 py-6 backdrop-blur-sm sm:items-center sm:py-8"
       onClick={handleClose}
       role="presentation"
     >
       <div
-        className="orbit-modal-surface w-full max-w-lg rounded-[2rem] p-6"
+        className="orbit-modal-surface my-auto w-full max-w-lg max-h-[min(44rem,calc(100dvh-2rem))] overflow-y-auto rounded-[2rem] p-6"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-4">

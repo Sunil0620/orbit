@@ -240,8 +240,9 @@ Why this approach?
 
 ## 🔮 Future Features (Post Month 1)
 
-- Voice channels (WebRTC)
+- add chat window img in readme.md
 - Message reactions (emoji)
+- Voice channels (WebRTC)
 - Thread replies
 - Search messages
 - Push notifications

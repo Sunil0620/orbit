@@ -25,18 +25,23 @@ function persistAuthState(state) {
     return
   }
 
-  if (!state?.tokens?.access && !state?.tokens?.refresh) {
-    window.localStorage.removeItem(AUTH_STORAGE_KEY)
-    return
-  }
+  try {
+    if (!state?.tokens?.access && !state?.tokens?.refresh) {
+      window.localStorage.removeItem(AUTH_STORAGE_KEY)
+      return
+    }
 
-  window.localStorage.setItem(
-    AUTH_STORAGE_KEY,
-    JSON.stringify({
-      user: state.user ?? null,
-      tokens: state.tokens ?? null,
-    }),
-  )
+    window.localStorage.setItem(
+      AUTH_STORAGE_KEY,
+      JSON.stringify({
+        user: state.user ?? null,
+        tokens: state.tokens ?? null,
+      }),
+    )
+  } catch {
+    // Safari private mode and some embedded browsers can block storage writes.
+    // Keep auth in memory so login can still succeed.
+  }
 }
 
 export function readStoredAuth() {
@@ -44,7 +49,13 @@ export function readStoredAuth() {
     return null
   }
 
-  const storedValue = window.localStorage.getItem(AUTH_STORAGE_KEY)
+  let storedValue = null
+
+  try {
+    storedValue = window.localStorage.getItem(AUTH_STORAGE_KEY)
+  } catch {
+    return null
+  }
 
   if (!storedValue) {
     return null
@@ -54,7 +65,11 @@ export function readStoredAuth() {
     const parsedValue = JSON.parse(storedValue)
     return buildAuthState(parsedValue)
   } catch {
-    window.localStorage.removeItem(AUTH_STORAGE_KEY)
+    try {
+      window.localStorage.removeItem(AUTH_STORAGE_KEY)
+    } catch {
+      // Ignore storage cleanup errors.
+    }
     return null
   }
 }
@@ -82,6 +97,26 @@ const useAuthStore = create((set) => ({
   setUser: (user) =>
     set((state) => {
       const nextState = buildAuthState({ user, tokens: state.tokens })
+      persistAuthState(nextState)
+      return nextState
+    }),
+  updateUserPresence: ({ userId, isOnline }) =>
+    set((state) => {
+      if (
+        !state.user ||
+        Number(state.user.id) !== Number(userId) ||
+        state.user.is_online === isOnline
+      ) {
+        return state
+      }
+
+      const nextState = buildAuthState({
+        user: {
+          ...state.user,
+          is_online: isOnline,
+        },
+        tokens: state.tokens,
+      })
       persistAuthState(nextState)
       return nextState
     }),

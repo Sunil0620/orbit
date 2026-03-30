@@ -6,6 +6,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import ChatPage from './pages/ChatPage'
 import ServerSettings from './pages/ServerSettings'
+import usePresenceSocket from './hooks/usePresenceSocket'
 import useChatStore from './store/useChatStore'
 import useAuthStore from './store/useAuthStore'
 import useThemeStore from './store/useThemeStore'
@@ -334,32 +335,34 @@ function MarketingLayout({ clearSession, isAuthenticated }) {
   )
 }
 
-function WorkspaceLayout({ clearSession, user }) {
+function WorkspaceLayout({ clearSession, user, accessToken }) {
+  usePresenceSocket(accessToken)
+
   return (
     <ShellBackground>
-      <div className="relative flex min-h-screen w-full flex-col px-2 py-2 sm:px-3 sm:py-3">
-        <header className="mb-2 flex items-center justify-between gap-3 rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-3 py-2 shadow-[0_12px_30px_rgba(0,0,0,0.18)] backdrop-blur">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/10 text-sm font-semibold uppercase tracking-[0.32em] text-[var(--orbit-text)]">
+      <div className="relative flex h-dvh min-h-dvh w-full flex-col overflow-hidden px-2 py-2 sm:px-3 sm:py-3">
+        <header className="mb-1.5 shrink-0 flex items-center justify-between gap-3 rounded-[0.95rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-2.5 py-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.16)] backdrop-blur">
+          <div className="flex min-w-0 items-center gap-2.5">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.9rem] bg-cyan-400/10 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text)]">
               O
             </div>
 
-            <div className="min-w-0">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.35em] text-cyan-300">
+            <div className="flex min-w-0 items-center gap-2">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-300">
                 Orbit
               </p>
-              <p className="truncate text-xs text-[var(--orbit-text-muted)]">
+              <p className="truncate text-[11px] text-[var(--orbit-text-muted)]">
                 {user?.username ?? 'Signed in'}
               </p>
             </div>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5">
             <NavLink
               to="/"
               className={({ isActive }) =>
                 [
-                  'rounded-full border px-3 py-1.5 text-xs font-medium transition',
+                  'rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
                   isActive
                     ? 'border-cyan-300/60 bg-cyan-400/10 text-cyan-100'
                     : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:text-[var(--orbit-text)]',
@@ -371,7 +374,7 @@ function WorkspaceLayout({ clearSession, user }) {
 
             <button
               type="button"
-              className="rounded-full border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3 py-1.5 text-xs font-medium text-[var(--orbit-text-muted)] transition hover:border-[color:var(--orbit-border-strong)] hover:text-[var(--orbit-text)]"
+              className="rounded-full border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-2.5 py-1 text-[11px] font-medium text-[var(--orbit-text-muted)] transition hover:border-[color:var(--orbit-border-strong)] hover:text-[var(--orbit-text)]"
               onClick={clearSession}
             >
               Switch
@@ -379,7 +382,7 @@ function WorkspaceLayout({ clearSession, user }) {
           </div>
         </header>
 
-        <main className="flex min-h-0 flex-1">
+        <main className="flex min-h-0 w-full min-w-0 flex-1 overflow-hidden">
           <Outlet />
         </main>
       </div>
@@ -477,6 +480,7 @@ function App() {
             <WorkspaceLayout
               clearSession={clearSession}
               user={user}
+              accessToken={tokens?.access}
             />
           }
         >

@@ -1,28 +1,42 @@
-function MemberList({ server }) {
-  const members = server?.members ?? []
-  const onlineCount = members.filter((member) => member.is_online).length
+function MemberList({
+  server,
+  directConversation = null,
+  homeMode = false,
+  contacts = [],
+}) {
+  const dmMode = Boolean(directConversation)
+  const members = homeMode
+    ? contacts
+    : dmMode
+      ? directConversation?.participant
+        ? [directConversation.participant]
+        : []
+      : server?.members ?? []
   const activeMembers = members.filter((member) => member.is_online)
   const offlineMembers = members.filter((member) => !member.is_online)
-  const memberCountLabel =
-    members.length === 1 ? `1 member in ${server?.name}` : `${members.length} members in ${server?.name}`
 
   const renderMember = (member) => {
-    const isOwner = member.id === server.owner?.id
+    const roleLabel =
+      member.role === 'owner'
+        ? 'Owner'
+        : member.role === 'admin'
+          ? 'Admin'
+          : 'Member'
 
     return (
       <div
         key={member.id}
-        className="flex items-center gap-3 rounded-lg px-2 py-1.5 transition hover:bg-[var(--orbit-surface-soft)]"
+        className="flex items-center gap-2.5 rounded-[0.8rem] px-2 py-1.5 transition hover:bg-[var(--orbit-surface-soft)]"
       >
         <div className="relative">
           {member.avatar ? (
             <img
               src={member.avatar}
               alt={member.username}
-              className="h-8 w-8 rounded-xl object-cover"
+              className="h-8 w-8 rounded-[0.85rem] object-cover"
             />
           ) : (
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-cyan-400/15 text-sm font-semibold text-[var(--orbit-text)]">
+            <div className="flex h-8 w-8 items-center justify-center rounded-[0.85rem] bg-cyan-400/15 text-[13px] font-semibold text-[var(--orbit-text)]">
               {member.username.slice(0, 1).toUpperCase()}
             </div>
           )}
@@ -36,11 +50,11 @@ function MemberList({ server }) {
         </div>
 
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-[var(--orbit-text)]">
+          <p className="truncate text-[12px] font-medium text-[var(--orbit-text)]">
             {member.username}
           </p>
-          <p className="text-[10px] uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
-            {isOwner ? 'Owner' : member.is_online ? 'Active' : 'Offline'}
+          <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--orbit-text-subtle)]">
+            {homeMode || dmMode ? (member.is_online ? 'Online' : 'Offline') : roleLabel}
           </p>
         </div>
       </div>
@@ -49,26 +63,12 @@ function MemberList({ server }) {
 
   return (
     <aside className="hidden h-full min-h-0 flex-col bg-[var(--orbit-member-bg)] xl:flex xl:border-l xl:border-[color:var(--orbit-border)]">
-      <div className="border-b border-[color:var(--orbit-border)] px-4 py-4">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-[var(--orbit-text-subtle)]">
-          Members
-        </p>
-        <h2 className="mt-2 text-lg font-semibold text-[var(--orbit-text)]">
-          {server ? memberCountLabel : 'No server selected'}
-        </h2>
-        <p className="mt-1 text-sm text-[var(--orbit-text-muted)]">
-          {server
-            ? `${onlineCount} online right now`
-            : 'Select a server to see who is here.'}
-        </p>
-      </div>
-
-      <div className="orbit-scrollbar flex-1 space-y-5 overflow-y-auto px-3 py-4">
+      <div className="orbit-scrollbar flex-1 space-y-5 overflow-y-auto px-3 py-3">
         {members.length > 0 ? (
           <>
             <section>
-              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
-                Active — {activeMembers.length}
+              <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-text-subtle)]">
+                Online — {activeMembers.length}
               </p>
               <div className="space-y-1">
                 {activeMembers.map(renderMember)}
@@ -76,7 +76,7 @@ function MemberList({ server }) {
             </section>
 
             <section>
-              <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
+              <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-text-subtle)]">
                 Offline — {offlineMembers.length}
               </p>
               <div className="space-y-1">
@@ -85,7 +85,7 @@ function MemberList({ server }) {
             </section>
           </>
         ) : (
-          <div className="rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-sm leading-6 text-[var(--orbit-text-muted)]">
+          <div className="rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
             No members to show yet.
           </div>
         )}

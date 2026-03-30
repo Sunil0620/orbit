@@ -13,8 +13,12 @@ function unwrapMessages(payload) {
 }
 
 export async function listMessages(channelId) {
+  const params =
+    typeof channelId === 'object' && channelId !== null
+      ? channelId
+      : { channel: channelId }
   const response = await axiosInstance.get('/messages/', {
-    params: { channel: channelId },
+    params,
   })
   return unwrapMessages(response.data)
 }
