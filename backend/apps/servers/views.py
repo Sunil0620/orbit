@@ -4,6 +4,9 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.notifications.models import ChannelReadState
+from apps.notifications.services import ensure_channel_read_states
+
 from .models import Server
 from .serializers import (
     ServerJoinSerializer,
@@ -45,6 +48,7 @@ class ServerJoinView(generics.GenericAPIView):
             invite_code=serializer.validated_data['invite_code'],
         )
         server.members.add(request.user)
+        ensure_channel_read_states(request.user, server.channels.all())
 
         refreshed_server = get_server_queryset().get(pk=server.pk)
         return Response(
@@ -113,6 +117,10 @@ class ServerLeaveView(APIView):
                 {'detail': 'Server owners cannot leave their own server.'}
             )
 
+        ChannelReadState.objects.filter(
+            user=request.user,
+            channel__server=server,
+        ).delete()
         server.admins.remove(request.user)
         server.members.remove(request.user)
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -192,6 +200,10 @@ class ServerMemberRemoveView(APIView):
                 'Only the server owner can remove another admin.'
             )
 
+        ChannelReadState.objects.filter(
+            user=member,
+            channel__server=server,
+        ).delete()
         server.admins.remove(member)
         server.members.remove(member)
 

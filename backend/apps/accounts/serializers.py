@@ -52,6 +52,29 @@ class UserProfileSerializer(serializers.ModelSerializer):
         return normalized_email
 
 
+class UserDirectorySerializer(serializers.ModelSerializer):
+    avatar = CloudinaryImageField(required=False, allow_null=True)
+    shared_server_count = serializers.IntegerField(read_only=True)
+    can_message = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CustomUser
+        fields = (
+            'id',
+            'username',
+            'avatar',
+            'bio',
+            'is_online',
+            'last_seen',
+            'shared_server_count',
+            'can_message',
+        )
+        read_only_fields = fields
+
+    def get_can_message(self, obj):
+        return bool(getattr(obj, 'shared_server_count', 0))
+
+
 class LogoutSerializer(serializers.Serializer):
     refresh = serializers.CharField()
 

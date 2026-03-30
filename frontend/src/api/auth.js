@@ -21,6 +21,11 @@ export const fetchProfile = async (accessToken) => {
   return response.data
 }
 
+export const listUsersDirectory = async () => {
+  const response = await axiosInstance.get('/auth/users/')
+  return Array.isArray(response.data) ? response.data : []
+}
+
 export const logoutUser = async ({ accessToken, refreshToken } = {}) => {
   if (!refreshToken) {
     return

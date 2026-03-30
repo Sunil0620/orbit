@@ -265,7 +265,7 @@ function Sidebar({
 
         <div className="hidden xl:flex flex-col items-center gap-1.5">
           <div
-            title={`${user?.username ?? 'Profile'} • ${user?.is_online ? 'Online' : 'Idle'}`}
+            title={`${user?.username ?? 'Profile'} • ${user?.is_online ? 'Online' : 'Offline'}`}
             className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[13px] font-semibold text-[var(--orbit-text)]"
           >
             {getAvatarLabel(user)}
@@ -297,7 +297,7 @@ function Sidebar({
                 {user?.username ?? 'Profile'}
               </p>
               <p className="truncate text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--orbit-text-subtle)]">
-                {user?.is_online ? 'Online' : 'Idle'}
+                {user?.is_online ? 'Online' : 'Offline'}
               </p>
             </div>
 

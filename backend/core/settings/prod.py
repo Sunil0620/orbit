@@ -5,16 +5,23 @@ Production settings — imports base, locks everything down.
 from .base import *
 from decouple import config
 
+
+def read_csv_env(name, default=''):
+    return config(
+        name,
+        default=default,
+        cast=lambda value: [item.strip() for item in value.split(',') if item.strip()],
+    )
+
+
 DEBUG = False
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', cast=lambda v: [s.strip() for s in v.split(',')])
+ALLOWED_HOSTS = read_csv_env('ALLOWED_HOSTS')
 
 # Only allow the real frontend URL in prod
-CORS_ALLOWED_ORIGINS = config(
-    'CORS_ALLOWED_ORIGINS',
-    cast=lambda v: [s.strip() for s in v.split(',')]
-)
+CORS_ALLOWED_ORIGINS = read_csv_env('CORS_ALLOWED_ORIGINS')
 CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = read_csv_env('CSRF_TRUSTED_ORIGINS')
 
 # Security headers
 SECURE_BROWSER_XSS_FILTER = True

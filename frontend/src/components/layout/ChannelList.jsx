@@ -28,6 +28,21 @@ function getAvatarLabel(contact) {
   return getInitials(contact?.username)
 }
 
+function getDirectoryContextLabel(contact) {
+  if (Array.isArray(contact?.sharedServers) && contact.sharedServers.length > 0) {
+    return `Shared in ${contact.sharedServers[0]}${
+      contact.sharedServers.length > 1 ? ` +${contact.sharedServers.length - 1}` : ''
+    }`
+  }
+
+  const sharedServerCount = Number(contact?.shared_server_count ?? 0)
+  if (sharedServerCount > 0) {
+    return `Shared in ${sharedServerCount} server${sharedServerCount === 1 ? '' : 's'}`
+  }
+
+  return 'No shared server'
+}
+
 function ChevronIcon({ isOpen = false }) {
   return (
     <svg
@@ -151,8 +166,8 @@ function MenuAction({ children, onClick, to, tone = 'default' }) {
 function ChannelList({
   server,
   homeMode = false,
-  friendContacts = [],
   directConversations = [],
+  directoryUsers = [],
   activeDirectConversationId = null,
   channels = [],
   activeChannelId,
@@ -168,6 +183,8 @@ function ChannelList({
   canInviteMembers = false,
   isLoading = false,
   error = '',
+  isDirectoryLoading = false,
+  directoryError = '',
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef(null)
@@ -201,10 +218,10 @@ function ChannelList({
             Home
           </p>
           <h2 className="mt-2 text-[14px] font-semibold text-[var(--orbit-text)]">
-            Friends & Messages
+            Messages
           </h2>
           <p className="mt-1 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-            Keep your shared people close, then jump into servers when you want to talk.
+            Direct messages and people
           </p>
         </div>
 
@@ -228,10 +245,11 @@ function ChannelList({
           ) : null}
 
           {!isLoading && directConversations.length > 0 ? (
-            <div className="mb-4 space-y-1">
+            <div className="mb-4 space-y-0.5">
               {directConversations.map((conversation) => {
                 const participant = conversation.participant
                 const isActive = conversation.id === activeDirectConversationId
+                const unreadCount = isActive ? 0 : Number(conversation.unread_count ?? 0)
 
                 return (
                   <button
@@ -239,13 +257,13 @@ function ChannelList({
                     type="button"
                     onClick={() => onSelectDirectConversation?.(conversation.id)}
                     className={[
-                      'flex w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition',
+                      'flex w-full items-center gap-3 rounded-xl px-2.5 py-2 text-left transition',
                       isActive
-                        ? 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-hover)]'
-                        : 'border-transparent hover:border-[color:var(--orbit-border)] hover:bg-[var(--orbit-surface-soft)]',
+                        ? 'bg-[var(--orbit-surface-hover)]'
+                        : 'hover:bg-[var(--orbit-surface-soft)]',
                     ].join(' ')}
                   >
-                    <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-cyan-400/15 text-sm font-semibold text-[var(--orbit-text)]">
+                    <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-[0.9rem] bg-cyan-400/15 text-[12px] font-semibold text-[var(--orbit-text)]">
                       {getAvatarLabel(participant)}
                       <span
                         className={[
@@ -256,10 +274,20 @@ function ChannelList({
                     </div>
 
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-[12px] font-medium text-[var(--orbit-text)]">
-                        {participant?.username ?? 'Unknown user'}
-                      </p>
-                      <p className="truncate text-[10px] leading-4 text-[var(--orbit-text-muted)]">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="truncate text-[13px] font-medium text-[var(--orbit-text)]">
+                          {participant?.username ?? 'Unknown user'}
+                        </p>
+                        {unreadCount > 0 ? (
+                          <span className="shrink-0 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-semibold text-white">
+                            {unreadCount}
+                          </span>
+                        ) : null}
+                      </div>
+                      <p className="truncate text-[11px] leading-4 text-[var(--orbit-text-muted)]">
+                        {conversation.last_message_sender_username
+                          ? `${conversation.last_message_sender_username}: `
+                          : ''}
                         {conversation.last_message_preview || 'Open the conversation'}
                       </p>
                     </div>
@@ -269,24 +297,37 @@ function ChannelList({
             </div>
           ) : !isLoading ? (
             <div className="mx-2 mb-4 rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-              Start a direct message from one of the shared people below.
+              No direct messages yet.
             </div>
           ) : null}
 
           <div className="mb-3 flex items-center justify-between px-2">
             <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-              Shared People
+              People
             </p>
             <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--orbit-text-subtle)]">
-              {friendContacts.length}
+              {directoryUsers.length}
             </span>
           </div>
 
-          {friendContacts.length > 0 ? (
-            friendContacts.map((contact) => {
+          {directoryError ? (
+            <div className="mx-2 mb-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-4 text-sm leading-6 text-red-100">
+              {directoryError}
+            </div>
+          ) : null}
+
+          {isDirectoryLoading && directoryUsers.length === 0 ? (
+            <div className="mx-2 mb-4 rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
+              Loading people.
+            </div>
+          ) : null}
+
+          {!isDirectoryLoading && directoryUsers.length > 0 ? (
+            directoryUsers.map((contact) => {
               const existingConversation = directConversations.find(
                 (conversation) => Number(conversation.participant?.id) === Number(contact.id),
               )
+              const canOpenConversation = Boolean(existingConversation || contact.can_message)
               const isActive =
                 existingConversation?.id != null &&
                 existingConversation.id === activeDirectConversationId
@@ -295,16 +336,23 @@ function ChannelList({
                 <button
                   key={contact.id}
                   type="button"
-                  onClick={() => onOpenDirectConversation?.(contact)}
+                  onClick={() => {
+                    if (canOpenConversation) {
+                      onOpenDirectConversation?.(contact)
+                    }
+                  }}
+                  disabled={!canOpenConversation}
                   className={[
-                    'mb-1 w-full rounded-xl border px-3 py-2 text-left transition',
+                    'mb-0.5 w-full rounded-xl px-2.5 py-2 text-left transition',
                     isActive
-                      ? 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-hover)]'
-                      : 'border-transparent hover:border-[color:var(--orbit-border)] hover:bg-[var(--orbit-surface-soft)]',
+                      ? 'bg-[var(--orbit-surface-hover)]'
+                      : canOpenConversation
+                        ? 'hover:bg-[var(--orbit-surface-soft)]'
+                        : 'cursor-not-allowed opacity-75',
                   ].join(' ')}
                 >
                   <div className="flex items-center gap-3">
-                    <div className="relative flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-cyan-400/15 text-sm font-semibold text-[var(--orbit-text)]">
+                    <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-[0.9rem] bg-cyan-400/15 text-[12px] font-semibold text-[var(--orbit-text)]">
                       {getAvatarLabel(contact)}
                       <span
                         className={[
@@ -318,26 +366,27 @@ function ChannelList({
                       <p className="truncate text-[13px] font-medium text-[var(--orbit-text)]">
                         {contact.username}
                       </p>
-                      <p className="truncate text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--orbit-text-subtle)]">
-                        {existingConversation ? 'Open message' : 'Start message'}
+                      <p className="truncate text-[11px] leading-4 text-[var(--orbit-text-muted)]">
+                        {existingConversation
+                          ? 'In direct messages'
+                          : canOpenConversation
+                            ? 'Available to message'
+                            : 'Shared server required'}
                       </p>
                     </div>
                   </div>
 
-                  <p className="mt-2 truncate text-[11px] leading-4 text-[var(--orbit-text-muted)]">
-                    Shared in {contact.sharedServers?.[0] ?? 'Orbit'}
-                    {contact.sharedServers?.length > 1
-                      ? ` +${contact.sharedServers.length - 1}`
-                      : ''}
+                  <p className="mt-1 truncate text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--orbit-text-subtle)]">
+                    {getDirectoryContextLabel(contact)}
                   </p>
                 </button>
               )
             })
-          ) : (
+          ) : !isDirectoryLoading ? (
             <div className="mx-2 rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-              Join a server with friends and their profile cards will appear here.
+              People will appear here automatically.
             </div>
-          )}
+          ) : null}
         </div>
       </aside>
     )

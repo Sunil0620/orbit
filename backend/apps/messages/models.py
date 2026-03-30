@@ -114,3 +114,35 @@ class Message(models.Model):
         else:
             target = f'DM:{self.direct_conversation_id}'
         return f'{self.sender} in {target}: {preview}'
+
+    def get_realtime_group_name(self):
+        if self.direct_conversation_id:
+            return f'direct_{self.direct_conversation_id}'
+        return f'chat_{self.channel_id}'
+
+
+class MessageReaction(models.Model):
+    message = models.ForeignKey(
+        Message,
+        on_delete=models.CASCADE,
+        related_name='reactions',
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='message_reactions',
+    )
+    emoji = models.CharField(max_length=16)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ('created_at', 'id')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('message', 'user', 'emoji'),
+                name='unique_message_reaction',
+            ),
+        ]
+
+    def __str__(self):
+        return f'Reaction({self.emoji}) by {self.user_id} on message {self.message_id}'

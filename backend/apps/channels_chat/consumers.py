@@ -185,6 +185,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def typing_event(self, event):
         await self.send(text_data=json.dumps(event['message']))
 
+    async def reaction_event(self, event):
+        await self.send(text_data=json.dumps(event['message']))
+
     @database_sync_to_async
     def user_can_access_target(self):
         if self.is_direct_conversation:
@@ -234,6 +237,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             'conversation_type': 'direct' if self.is_direct_conversation else 'channel',
             'content': message.content,
             'attachments': attachments,
+            'reactions': [],
             'sender': {
                 'id': self.user.id,
                 'username': self.user.username,

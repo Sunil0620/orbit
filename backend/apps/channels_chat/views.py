@@ -4,6 +4,11 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from apps.servers.models import Server
+from apps.notifications.services import (
+    annotate_channels_with_unread_counts,
+    create_channel_read_states_for_members,
+    ensure_channel_read_states,
+)
 
 from .models import Channel
 from .serializers import ChannelSerializer
@@ -13,11 +18,12 @@ def ensure_default_channel(server):
     if server.channels.exists():
         return
 
-    Channel.objects.create(
+    channel = Channel.objects.create(
         server=server,
         name='general',
         channel_type=Channel.ChannelType.TEXT,
     )
+    create_channel_read_states_for_members(channel)
 
 
 class ChannelListCreateView(generics.ListCreateAPIView):
@@ -45,7 +51,9 @@ class ChannelListCreateView(generics.ListCreateAPIView):
     def get_queryset(self):
         server = self.get_server()
         ensure_default_channel(server)
-        return server.channels.order_by('created_at', 'id')
+        queryset = server.channels.order_by('created_at', 'id')
+        ensure_channel_read_states(self.request.user, queryset)
+        return annotate_channels_with_unread_counts(queryset, self.request.user)
 
     def perform_create(self, serializer):
         server = self.get_server()
@@ -53,7 +61,8 @@ class ChannelListCreateView(generics.ListCreateAPIView):
             raise PermissionDenied(
                 'Only the server owner or admins can create channels.'
             )
-        serializer.save(server=server)
+        channel = serializer.save(server=server)
+        create_channel_read_states_for_members(channel)
 
 
 class ChannelDeleteView(generics.DestroyAPIView):

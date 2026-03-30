@@ -35,9 +35,6 @@ services:
       DJANGO_SETTINGS_MODULE: core.settings.prod
       DB_HOST: postgres
       REDIS_HOST: redis
-      SECURE_SSL_REDIRECT: "False"
-      SESSION_COOKIE_SECURE: "False"
-      CSRF_COOKIE_SECURE: "False"
     expose:
       - "8000"
     volumes:

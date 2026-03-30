@@ -5,7 +5,7 @@ from rest_framework import serializers
 from apps.accounts.models import CustomUser
 from apps.utils import CloudinaryImageField
 
-from .models import DirectConversation, Message
+from .models import DirectConversation, Message, MessageReaction
 
 MAX_UPLOAD_SIZE = 10 * 1024 * 1024
 ALLOWED_UPLOAD_TYPES = {
@@ -103,15 +103,49 @@ def build_message_attachments(message):
     )
 
 
+def build_message_reaction_summary(message, current_user=None):
+    raw_reactions = getattr(message, '_prefetched_objects_cache', {}).get('reactions')
+    if raw_reactions is None:
+        raw_reactions = message.reactions.select_related('user').all()
+
+    current_user_id = getattr(current_user, 'id', None)
+    grouped_reactions = {}
+
+    for reaction in raw_reactions:
+        group = grouped_reactions.setdefault(
+            reaction.emoji,
+            {
+                'emoji': reaction.emoji,
+                'count': 0,
+                'reacted_by_current_user': False,
+                'reactor_ids': [],
+            },
+        )
+        group['count'] += 1
+        group['reactor_ids'].append(reaction.user_id)
+        if current_user_id and reaction.user_id == current_user_id:
+            group['reacted_by_current_user'] = True
+
+    return sorted(
+        grouped_reactions.values(),
+        key=lambda item: (-item['count'], item['emoji']),
+    )
+
+
 class MessageSerializer(serializers.ModelSerializer):
     sender = MessageSenderSerializer(read_only=True)
     attachments = serializers.SerializerMethodField()
+    reactions = serializers.SerializerMethodField()
     channel_id = serializers.IntegerField(read_only=True)
     direct_conversation_id = serializers.IntegerField(read_only=True)
     conversation_type = serializers.SerializerMethodField()
 
     def get_attachments(self, obj):
         return build_message_attachments(obj)
+
+    def get_reactions(self, obj):
+        request = self.context.get('request')
+        return build_message_reaction_summary(obj, current_user=getattr(request, 'user', None))
 
     def get_conversation_type(self, obj):
         return 'direct' if obj.direct_conversation_id else 'channel'
@@ -127,6 +161,7 @@ class MessageSerializer(serializers.ModelSerializer):
             'conversation_type',
             'content',
             'attachments',
+            'reactions',
             'file_url',
             'file_name',
             'file_type',
@@ -142,6 +177,12 @@ class DirectConversationSerializer(serializers.ModelSerializer):
     participant = serializers.SerializerMethodField()
     last_message_preview = serializers.SerializerMethodField()
     last_message_at = serializers.SerializerMethodField()
+    unread_count = serializers.SerializerMethodField()
+    last_read_message_id = serializers.SerializerMethodField()
+    message_count = serializers.SerializerMethodField()
+    last_message_sender_id = serializers.SerializerMethodField()
+    last_message_sender_username = serializers.SerializerMethodField()
+    last_message_has_attachments = serializers.SerializerMethodField()
 
     class Meta:
         model = DirectConversation
@@ -150,6 +191,12 @@ class DirectConversationSerializer(serializers.ModelSerializer):
             'participant',
             'last_message_preview',
             'last_message_at',
+            'unread_count',
+            'last_read_message_id',
+            'message_count',
+            'last_message_sender_id',
+            'last_message_sender_username',
+            'last_message_has_attachments',
             'created_at',
             'updated_at',
         )
@@ -196,9 +243,63 @@ class DirectConversationSerializer(serializers.ModelSerializer):
 
         return last_message.created_at if last_message else None
 
+    def get_unread_count(self, obj):
+        return int(getattr(obj, 'unread_count', 0) or 0)
+
+    def get_last_read_message_id(self, obj):
+        value = getattr(obj, 'last_read_message_id', None)
+        if value is not None:
+            return int(value)
+
+        request_user = self._get_request_user()
+        if request_user is None:
+            return None
+
+        state = obj.read_states.filter(user=request_user).only('last_read_message_id').first()
+        return getattr(state, 'last_read_message_id', None)
+
+    def get_message_count(self, obj):
+        value = getattr(obj, 'message_count', None)
+        if value is not None:
+            return int(value)
+        return obj.messages.count()
+
+    def _get_last_message(self, obj):
+        last_message = getattr(obj, '_last_message', None)
+        if last_message is None:
+            last_message = obj.messages.select_related('sender').order_by('-created_at', '-id').first()
+            obj._last_message = last_message
+        return last_message
+
+    def get_last_message_sender_id(self, obj):
+        last_message = self._get_last_message(obj)
+        return getattr(last_message, 'sender_id', None)
+
+    def get_last_message_sender_username(self, obj):
+        last_message = self._get_last_message(obj)
+        if last_message is None:
+            return ''
+        return getattr(last_message.sender, 'username', '')
+
+    def get_last_message_has_attachments(self, obj):
+        last_message = self._get_last_message(obj)
+        if last_message is None:
+            return False
+        return bool(build_message_attachments(last_message))
+
 
 class DirectConversationCreateSerializer(serializers.Serializer):
     recipient_id = serializers.IntegerField(min_value=1)
+
+
+class MessageReactionToggleSerializer(serializers.Serializer):
+    emoji = serializers.CharField(max_length=16)
+
+    def validate_emoji(self, value):
+        normalized_value = str(value).strip()
+        if not normalized_value:
+            raise serializers.ValidationError('Choose an emoji before reacting.')
+        return normalized_value
 
 
 class FileUploadSerializer(serializers.Serializer):

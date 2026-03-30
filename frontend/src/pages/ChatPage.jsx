@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { listUsersDirectory } from '../api/auth'
 import Sidebar from '../components/layout/Sidebar'
 import ChannelList from '../components/layout/ChannelList'
 import ChatWindow from '../components/chat/ChatWindow'
@@ -21,6 +22,9 @@ function ChatPage() {
   const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false)
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
   const [actionNotice, setActionNotice] = useState('')
+  const [directoryUsers, setDirectoryUsers] = useState([])
+  const [isDirectoryLoading, setIsDirectoryLoading] = useState(false)
+  const [directoryError, setDirectoryError] = useState('')
   const servers = useChatStore((state) => state.servers)
   const activeServerId = useChatStore((state) => state.activeServerId)
   const channels = useChatStore((state) => state.channels)
@@ -29,8 +33,6 @@ function ChatPage() {
   const activeDirectConversationId = useChatStore(
     (state) => state.activeDirectConversationId,
   )
-  const messagesByChannel = useChatStore((state) => state.messagesByChannel)
-  const lastReadMessageId = useChatStore((state) => state.lastReadMessageId)
   const isServersLoading = useChatStore((state) => state.isServersLoading)
   const isChannelsLoading = useChatStore((state) => state.isChannelsLoading)
   const isDirectConversationsLoading = useChatStore(
@@ -129,6 +131,24 @@ function ChatPage() {
       return leftContact.username.localeCompare(rightContact.username)
     })
   }, [servers, user?.id])
+  const friendContactsById = useMemo(
+    () =>
+      new Map(friendContacts.map((contact) => [Number(contact.id), contact])),
+    [friendContacts],
+  )
+  const directoryContacts = useMemo(
+    () =>
+      directoryUsers.map((directoryUser) => {
+        const sharedContact = friendContactsById.get(Number(directoryUser.id))
+
+        return {
+          ...sharedContact,
+          ...directoryUser,
+          sharedServers: sharedContact?.sharedServers ?? [],
+        }
+      }),
+    [directoryUsers, friendContactsById],
+  )
   const activeChannel = useMemo(
     () => channels.find((channel) => channel.id === activeChannelId) ?? null,
     [channels, activeChannelId],
@@ -137,20 +157,13 @@ function ChatPage() {
     () =>
       Object.fromEntries(
         channels.map((channel) => {
-          const channelMessages = messagesByChannel[channel.id] ?? []
-          const lastReadId = lastReadMessageId[channel.id]
-
-          if (lastReadId == null) {
-            return [channel.id, 0]
-          }
-
           return [
             channel.id,
-            channelMessages.filter((message) => message.id > lastReadId).length,
+            channel.id === activeChannelId ? 0 : Number(channel.unread_count ?? 0),
           ]
         }),
       ),
-    [channels, lastReadMessageId, messagesByChannel],
+    [activeChannelId, channels],
   )
 
   useEffect(() => {
@@ -161,6 +174,9 @@ function ChatPage() {
       setDirectConversations([])
       setDirectConversationsError('')
       setDirectConversationsLoading(false)
+      setDirectoryUsers([])
+      setDirectoryError('')
+      setIsDirectoryLoading(false)
       return undefined
     }
 
@@ -208,6 +224,64 @@ function ChatPage() {
     setServersLoading,
     user?.id,
   ])
+
+  useEffect(() => {
+    if (!user?.id) {
+      return undefined
+    }
+
+    let ignore = false
+
+    async function loadDirectory({ silent = false } = {}) {
+      if (!silent) {
+        setIsDirectoryLoading(true)
+      }
+      setDirectoryError('')
+
+      try {
+        const nextDirectoryUsers = await listUsersDirectory()
+
+        if (ignore) {
+          return
+        }
+
+        setDirectoryUsers(nextDirectoryUsers)
+      } catch {
+        if (ignore) {
+          return
+        }
+
+        setDirectoryError('People are unavailable right now.')
+        setDirectoryUsers([])
+      } finally {
+        if (!ignore && !silent) {
+          setIsDirectoryLoading(false)
+        }
+      }
+    }
+
+    loadDirectory()
+
+    const intervalId = window.setInterval(() => {
+      void loadDirectory({ silent: true })
+    }, 30000)
+
+    const handleRefresh = () => {
+      if (document.visibilityState === 'visible') {
+        void loadDirectory({ silent: true })
+      }
+    }
+
+    window.addEventListener('focus', handleRefresh)
+    document.addEventListener('visibilitychange', handleRefresh)
+
+    return () => {
+      ignore = true
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', handleRefresh)
+      document.removeEventListener('visibilitychange', handleRefresh)
+    }
+  }, [user?.id])
 
   useEffect(() => {
     if (!user?.id) {
@@ -290,8 +364,10 @@ function ChatPage() {
 
     let ignore = false
 
-    async function loadChannels() {
-      setChannelsLoading(true)
+    async function loadChannels({ silent = false } = {}) {
+      if (!silent) {
+        setChannelsLoading(true)
+      }
       setChannelsError('')
 
       try {
@@ -312,7 +388,7 @@ function ChatPage() {
         )
         setChannels([])
       } finally {
-        if (!ignore) {
+        if (!ignore && !silent) {
           setChannelsLoading(false)
         }
       }
@@ -320,8 +396,24 @@ function ChatPage() {
 
     loadChannels()
 
+    const intervalId = window.setInterval(() => {
+      void loadChannels({ silent: true })
+    }, 15000)
+
+    const handleRefresh = () => {
+      if (document.visibilityState === 'visible') {
+        void loadChannels({ silent: true })
+      }
+    }
+
+    window.addEventListener('focus', handleRefresh)
+    document.addEventListener('visibilitychange', handleRefresh)
+
     return () => {
       ignore = true
+      window.clearInterval(intervalId)
+      window.removeEventListener('focus', handleRefresh)
+      document.removeEventListener('visibilitychange', handleRefresh)
     }
   }, [
     activeDirectConversationId,
@@ -441,8 +533,8 @@ function ChatPage() {
             key={directMessageMode ? 'friends-home' : activeServer?.id ?? 'empty-server'}
             server={activeServer}
             homeMode={directMessageMode}
-            friendContacts={friendContacts}
             directConversations={directConversations}
+            directoryUsers={directoryContacts}
             activeDirectConversationId={activeDirectConversationId}
             channels={channels}
             activeChannelId={activeChannelId}
@@ -458,20 +550,24 @@ function ChatPage() {
             canInviteMembers={canInviteMembers}
             isLoading={directMessageMode ? isDirectConversationsLoading : isChannelsLoading}
             error={directMessageMode ? directConversationsError : channelsError}
+            isDirectoryLoading={isDirectoryLoading}
+            directoryError={directoryError}
           />
           <ChatWindow
             server={activeServer}
             channel={activeChannel}
             directConversation={activeDirectConversation}
+            directConversations={directConversations}
             homeMode={homeMode}
             friendContacts={friendContacts}
+            directoryUsers={directoryContacts}
             onOpenDirectConversation={handleOpenDirectConversation}
           />
           <MemberList
             server={activeServer}
             directConversation={activeDirectConversation}
             homeMode={homeMode}
-            contacts={friendContacts}
+            contacts={homeMode ? directoryContacts : friendContacts}
           />
         </div>
       </div>

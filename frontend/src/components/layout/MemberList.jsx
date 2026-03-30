@@ -86,7 +86,7 @@ function MemberList({
           </>
         ) : (
           <div className="rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-            No members to show yet.
+            {homeMode ? 'No people to show yet.' : 'No members to show yet.'}
           </div>
         )}
       </div>

@@ -169,7 +169,7 @@ orbit/
 | 18 | Persist messages to PostgreSQL inside consumer |
 | 19 | Frontend: `useWebSocket` hook with reconnection logic |
 | 20 | Frontend: ChatWindow — render message history, live incoming messages |
-| 21 | Typing indicators ("Sunil is typing...") via WebSocket events |
+| 21 | Typing indicators ("Someone is typing...") via WebSocket events |
 
 **Milestone:** Real-time messaging working end-to-end ✅
 

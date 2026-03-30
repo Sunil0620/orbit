@@ -23,6 +23,13 @@ export async function listMessages(channelId) {
   return unwrapMessages(response.data)
 }
 
+export async function toggleMessageReaction(messageId, emoji) {
+  const response = await axiosInstance.post(`/messages/${messageId}/reactions/`, {
+    emoji,
+  })
+  return response.data
+}
+
 export async function uploadMessageFile(file, onUploadProgress) {
   const payload = new FormData()
   payload.append('file', file)

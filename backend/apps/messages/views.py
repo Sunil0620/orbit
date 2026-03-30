@@ -1,5 +1,7 @@
 import cloudinary.uploader
-from django.db.models import Q
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.db.models import Count, Q
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, serializers, status
 from rest_framework.exceptions import APIException
@@ -8,15 +10,38 @@ from rest_framework.response import Response
 
 from apps.accounts.models import CustomUser
 from apps.channels_chat.models import Channel
+from apps.notifications.services import (
+    annotate_direct_conversations_with_unread_counts,
+    create_direct_conversation_read_states,
+    ensure_direct_conversation_read_states,
+)
 from apps.servers.models import Server
 
-from .models import DirectConversation, Message
+from .models import DirectConversation, Message, MessageReaction
 from .serializers import (
     DirectConversationCreateSerializer,
     DirectConversationSerializer,
     FileUploadSerializer,
     MessageSerializer,
+    MessageReactionToggleSerializer,
+    build_message_reaction_summary,
 )
+
+
+def build_direct_conversation_queryset(user):
+    queryset = (
+        DirectConversation.objects.filter(
+            Q(user_one=user) | Q(user_two=user)
+        )
+        .select_related('user_one', 'user_two')
+        .annotate(message_count=Count('messages', distinct=True))
+        .order_by('-updated_at', '-id')
+    )
+    ensure_direct_conversation_read_states(user, queryset)
+    return annotate_direct_conversations_with_unread_counts(
+        queryset,
+        user,
+    )
 
 
 class MessageListView(generics.ListAPIView):
@@ -71,7 +96,11 @@ class MessageListView(generics.ListAPIView):
 
     def get_queryset(self):
         conversation_type, target = self.get_conversation_target()
-        queryset = Message.objects.select_related('sender').order_by('-created_at', '-id')
+        queryset = (
+            Message.objects.select_related('sender')
+            .prefetch_related('reactions__user')
+            .order_by('-created_at', '-id')
+        )
 
         if conversation_type == 'channel':
             return queryset.filter(channel=target)
@@ -95,12 +124,8 @@ class DirectConversationListCreateView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return (
-            DirectConversation.objects.filter(
-                Q(user_one=self.request.user) | Q(user_two=self.request.user)
-            )
-            .select_related('user_one', 'user_two')
-            .order_by('-updated_at', '-id')
+        return build_direct_conversation_queryset(
+            self.request.user,
         )
 
     def get(self, request, *args, **kwargs):
@@ -150,12 +175,95 @@ class DirectConversationListCreateView(generics.GenericAPIView):
                 user_one_id=ordered_user_ids[0],
                 user_two_id=ordered_user_ids[1],
             )
+            create_direct_conversation_read_states(conversation)
             status_code = status.HTTP_201_CREATED
         else:
+            ensure_direct_conversation_read_states(request.user, [conversation])
             status_code = status.HTTP_200_OK
 
+        conversation = self.get_queryset().filter(pk=conversation.pk).first() or conversation
         serializer = self.get_serializer(conversation)
         return Response(serializer.data, status=status_code)
+
+
+class MessageReactionToggleView(generics.GenericAPIView):
+    serializer_class = MessageReactionToggleSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_message(self, message_id):
+        return get_object_or_404(
+            Message.objects.select_related('channel__server', 'direct_conversation').filter(
+                Q(channel__server__members=self.request.user)
+                | Q(direct_conversation__user_one=self.request.user)
+                | Q(direct_conversation__user_two=self.request.user)
+            ).distinct(),
+            pk=message_id,
+        )
+
+    def _build_payload(self, message, reactions, emoji, action):
+        return {
+            'type': 'reaction_update',
+            'message_id': message.id,
+            'channel_id': message.channel_id,
+            'direct_conversation_id': message.direct_conversation_id,
+            'conversation_type': 'direct'
+            if message.direct_conversation_id
+            else 'channel',
+            'emoji': emoji,
+            'action': action,
+            'reactions': reactions,
+        }
+
+    def _broadcast_update(self, message, payload):
+        channel_layer = get_channel_layer()
+        if channel_layer is None:
+            return
+
+        async_to_sync(channel_layer.group_send)(
+            message.get_realtime_group_name(),
+            {
+                'type': 'reaction_event',
+                'message': payload,
+            },
+        )
+
+    def post(self, request, message_id, *args, **kwargs):
+        message = self.get_message(message_id)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        emoji = serializer.validated_data['emoji']
+
+        reaction, created = MessageReaction.objects.get_or_create(
+            message=message,
+            user=request.user,
+            emoji=emoji,
+        )
+
+        if created:
+            action = 'added'
+        else:
+            reaction.delete()
+            action = 'removed'
+
+        refreshed_message = (
+            Message.objects.prefetch_related('reactions__user').only(
+                'id',
+                'channel_id',
+                'direct_conversation_id',
+            ).get(pk=message.pk)
+        )
+        reactions = build_message_reaction_summary(
+            refreshed_message,
+            current_user=request.user,
+        )
+        payload = self._build_payload(
+            refreshed_message,
+            reactions,
+            emoji,
+            action,
+        )
+        self._broadcast_update(refreshed_message, payload)
+        return Response(payload)
 
 
 class FileUploadView(generics.GenericAPIView):

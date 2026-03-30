@@ -7,10 +7,10 @@
 ## 🪐 What is Orbit?
 
 Orbit is a real-time team chat application inspired by Discord and Slack.
-It is built by a solo developer (Sunil) as a portfolio project over 1 month.
+It is built as a solo portfolio project over 1 month.
 
-**Live Demo Target:** https://orbit.sunil.dev (or similar)
-**GitHub:** https://github.com/Sunil0620/
+**Live Demo Target:** https://orbit.example.com (or similar)
+**GitHub:** https://github.com/<your-username>/
 
 ---
 

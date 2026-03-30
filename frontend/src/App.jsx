@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from 'react'
-import { Navigate, NavLink, Outlet, Route, Routes, useNavigate } from 'react-router-dom'
+import { Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import { fetchProfile, logoutUser } from './api/auth'
 import Login from './pages/Login'
@@ -18,18 +18,22 @@ const navItems = [
   { to: '/app', label: 'Workspace' },
 ]
 
-const overviewHighlights = [
+const overviewPreviewPoints = [
   {
-    label: 'Realtime',
-    value: 'Channels stay live with websocket updates and a persistent message history.',
+    label: 'Servers',
+    value: 'Keep team rooms, launches, and working groups in a stable left rail.',
   },
   {
-    label: 'Orbit Shell',
-    value: 'Servers, channels, chat, and members all live in one connected workspace.',
+    label: 'Direct messages',
+    value: 'Recent chats stay close without taking over the rest of the workspace.',
   },
   {
-    label: 'Attachments',
-    value: 'Images and files travel through the conversation without leaving the flow.',
+    label: 'People',
+    value: 'Profiles stay visible when you need to find someone quickly.',
+  },
+  {
+    label: 'Message flow',
+    value: 'Reactions, replies, and uploads add context without making chat noisy.',
   },
 ]
 
@@ -66,89 +70,253 @@ function Panel({ eyebrow, title, description, checklist, actions }) {
 
 function OrbitUniversePreview() {
   return (
-    <div className="orbit-panel orbit-cosmos orbit-grid relative overflow-hidden rounded-[2rem] p-6">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(92,166,255,0.14),transparent_46%)]" />
-      <div className="orbit-ring left-1/2 top-1/2 h-[14rem] w-[14rem] -translate-x-1/2 -translate-y-1/2" />
-      <div className="orbit-ring left-1/2 top-1/2 h-[20rem] w-[20rem] -translate-x-1/2 -translate-y-1/2" />
-      <div className="orbit-ring left-1/2 top-1/2 h-[26rem] w-[26rem] -translate-x-1/2 -translate-y-1/2" />
-      <div className="orbit-dot left-[26%] top-[24%] h-4 w-4" />
-      <div className="orbit-dot left-[68%] top-[34%] h-3.5 w-3.5" />
-      <div className="orbit-dot left-[56%] top-[70%] h-5 w-5" />
+    <div className="orbit-panel orbit-cosmos relative h-full overflow-hidden rounded-[2.6rem] p-6 sm:p-8 lg:p-10">
+      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,10,19,0.98),rgba(7,12,22,0.94))]" />
+      <div className="absolute inset-0 orbit-grid opacity-[0.07]" />
+      <div className="orbit-ring left-[-10%] top-[8%] h-[24rem] w-[24rem]" />
+      <div className="orbit-ring right-[6%] top-[12%] h-[14rem] w-[14rem]" />
+      <div className="orbit-dot left-[18%] top-[18%] h-3.5 w-3.5" />
+      <div className="orbit-dot bottom-[18%] right-[20%] h-3 w-3" />
+      <div className="absolute inset-x-0 top-0 h-48 bg-[linear-gradient(180deg,rgba(104,217,255,0.08),transparent)]" />
 
-      <div className="relative z-10 flex h-full flex-col justify-between">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
-              Orbit Universe
-            </p>
-            <h3 className="mt-3 text-3xl font-semibold text-[var(--orbit-text)]">
-              A calmer system for team conversation
-            </h3>
+      <div className="relative z-10 grid gap-8 xl:grid-cols-[minmax(340px,0.78fr)_minmax(0,1.22fr)] xl:items-center">
+        <div className="space-y-7">
+          <div className="space-y-5">
+            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-cyan-200">
+              <span>🪐</span>
+              <span>Meet Orbit</span>
+            </div>
+            <div className="space-y-4">
+              <h2 className="max-w-lg text-4xl font-semibold leading-[1.02] text-[var(--orbit-text)] sm:text-[3.45rem]">
+                Stay in orbit with your team.
+              </h2>
+              <p className="max-w-lg text-[15px] leading-7 text-slate-300/86 sm:text-base">
+                Organize servers, reopen direct messages, and keep the conversation easy
+                to follow without crowding the screen.
+              </p>
+            </div>
           </div>
 
-          <div className="orbit-pill rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-muted)]">
-            Live Signal
+          <div className="grid gap-3 sm:grid-cols-2">
+            {overviewPreviewPoints.map((item) => (
+              <div
+                key={item.label}
+                className="rounded-[1.2rem] border border-white/8 bg-white/[0.035] px-4 py-4"
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200">
+                  {item.label}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-300/84">{item.value}</p>
+              </div>
+            ))}
           </div>
         </div>
 
-        <div className="mt-12 grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
-          <div className="space-y-4">
-            <p className="max-w-xl text-sm leading-7 text-[var(--orbit-text-muted)] sm:text-base">
-              Orbit brings the structure of Slack and the energy of Discord into
-              one workspace: instant messages, channel navigation, presence, and
-              a workspace that feels made for long sessions.
-            </p>
+        <div className="relative overflow-hidden rounded-[2.15rem] border border-white/10 bg-[rgba(8,12,20,0.88)] p-4 shadow-[0_34px_70px_rgba(0,0,0,0.34)]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(104,217,255,0.08),transparent_28%),radial-gradient(circle_at_18%_88%,rgba(67,209,141,0.08),transparent_24%)]" />
 
-            <div className="grid gap-3 sm:grid-cols-3">
-              {overviewHighlights.map((item) => (
-                <article
-                  key={item.label}
-                  className="orbit-pill orbit-card-hover rounded-2xl px-4 py-4"
-                >
-                  <p className="text-[11px] uppercase tracking-[0.3em] text-[var(--orbit-text-subtle)]">
-                    {item.label}
-                  </p>
-                  <p className="mt-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                    {item.value}
-                  </p>
-                </article>
-              ))}
+          <div className="relative z-10 rounded-[1.65rem] border border-white/8 bg-[rgba(12,17,28,0.96)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
+            <div className="flex items-center gap-2 border-b border-white/6 pb-3">
+              <span className="h-2.5 w-2.5 rounded-full bg-rose-300/70" />
+              <span className="h-2.5 w-2.5 rounded-full bg-amber-300/70" />
+              <span className="h-2.5 w-2.5 rounded-full bg-emerald-300/70" />
+              <div className="ml-2 rounded-full border border-white/8 bg-white/[0.035] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--orbit-text-subtle)]">
+                Orbit workspace
+              </div>
             </div>
-          </div>
 
-          <div className="orbit-pill rounded-[1.5rem] p-4">
-            <div className="rounded-[1.3rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-0)] p-4 shadow-2xl shadow-black/20">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-400/10 text-sm font-semibold text-[var(--orbit-text)]">
+            <div className="mt-4 grid gap-4 lg:grid-cols-[56px_210px_minmax(0,1fr)]">
+              <div className="flex flex-col items-center gap-3 rounded-[1.25rem] bg-white/[0.03] px-2 py-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-400/12 text-[11px] font-semibold text-cyan-100">
                   O
                 </div>
-                <div>
-                  <p className="text-sm font-semibold text-[var(--orbit-text)]">Orbit Control</p>
-                  <p className="text-xs uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
-                    Universe map
-                  </p>
+                <div className="h-10 w-10 rounded-2xl bg-white/[0.06]" />
+                <div className="h-10 w-10 rounded-2xl bg-white/[0.06]" />
+                <div className="h-10 w-10 rounded-2xl bg-white/[0.06]" />
+              </div>
+
+              <div className="rounded-[1.25rem] bg-white/[0.03] px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--orbit-text-subtle)]">
+                  Channels
+                </p>
+                <div className="mt-3 space-y-2">
+                  <div className="rounded-xl bg-white/[0.07] px-3 py-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                      # product
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-[var(--orbit-text)]">
+                      Design review
+                    </p>
+                  </div>
+                  <div className="rounded-xl px-3 py-2.5">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+                      Direct messages
+                    </p>
+                    <p className="mt-1 text-sm font-medium text-[var(--orbit-text)]">Maya</p>
+                  </div>
+                  <div className="rounded-xl px-3 py-2.5">
+                    <p className="text-sm font-medium text-[var(--orbit-text)]">Jules</p>
+                  </div>
+                  <div className="rounded-xl px-3 py-2.5">
+                    <p className="text-sm font-medium text-[var(--orbit-text)]">Ops</p>
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-4 space-y-3">
-                <div className="rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-3">
-                  <p className="text-xs uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
-                    Cluster A
-                  </p>
-                  <p className="mt-2 text-sm text-[var(--orbit-text-muted)]">
-                    Product orbit, design orbit, and study orbit all stay in one lane.
-                  </p>
+              <div className="space-y-4 rounded-[1.25rem] bg-white/[0.03] px-3 py-3">
+                <div className="flex items-start justify-between gap-3 border-b border-white/6 pb-3">
+                  <div>
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-200">
+                      # Product
+                    </p>
+                    <p className="mt-1 text-[11px] text-[var(--orbit-text-muted)]">
+                      Clear layout, quicker replies
+                    </p>
+                  </div>
+                  <span className="rounded-full border border-white/8 bg-white/[0.05] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-text-subtle)]">
+                    Open
+                  </span>
                 </div>
-                <div className="rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-3">
-                  <p className="text-xs uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
-                    Signal path
-                  </p>
-                  <p className="mt-2 text-sm text-[var(--orbit-text-muted)]">
-                    Messages, typing, files, and members all travel through the same workspace.
-                  </p>
+
+                <div className="rounded-[1.15rem] border border-white/6 bg-white/[0.035] px-3 py-3">
+                  <div className="flex gap-3">
+                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/12 text-[12px] font-semibold text-cyan-100">
+                      A
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-[var(--orbit-text)]">Asha</p>
+                      <p className="mt-1 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
+                        Notes are updated. Reactions and uploads are ready for review.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="rounded-[1rem] border border-white/6 bg-white/[0.035] px-3 py-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-text-subtle)]">
+                      People
+                    </p>
+                    <p className="mt-2 text-sm text-[var(--orbit-text)]">See teammates without leaving the flow.</p>
+                  </div>
+                  <div className="rounded-[1rem] border border-white/6 bg-white/[0.035] px-3 py-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-text-subtle)]">
+                      Replies
+                    </p>
+                    <p className="mt-2 text-sm text-[var(--orbit-text)]">Keep context light and easy to scan.</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 rounded-[1rem] border border-white/8 bg-white/[0.04] px-3 py-2.5 text-[12px] text-[var(--orbit-text-muted)]">
+                  <span>Message input</span>
+                  <span className="rounded-full bg-white/[0.06] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[var(--orbit-text-subtle)]">
+                    +
+                  </span>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function AuthRoutePreview({ mode = 'login' }) {
+  const isLogin = mode === 'login'
+  const eyebrow = isLogin ? 'Return To Orbit' : 'New To Orbit'
+  const title = isLogin ? 'Sign back in and keep moving.' : 'Start clean and set up your account.'
+  const description = isLogin
+    ? 'Orbit should feel familiar the second you return, with recent spaces easy to reopen.'
+    : 'Create your account, open your workspace, and start from a layout that stays readable.'
+  const rows = isLogin
+    ? [
+        {
+          title: 'Recent spaces',
+          detail: 'Jump back into servers and direct messages without hunting for them.',
+        },
+        {
+          title: 'Clean structure',
+          detail: 'The same sidebar, people list, and chat flow are ready when you return.',
+        },
+      ]
+    : [
+        {
+          title: 'Simple setup',
+          detail: 'Choose a username, add your email, and confirm your password once.',
+        },
+        {
+          title: 'Ready after sign in',
+          detail: 'Your first server, people directory, and direct messages stay close by design.',
+        },
+      ]
+  const footerRows = isLogin
+    ? ['Open the same workspace', 'See recent people quickly', 'Continue without extra setup']
+    : ['Create your account', 'Sign in once', 'Open a clear workspace']
+
+  return (
+    <div className="orbit-panel relative h-full overflow-hidden rounded-[2.2rem] p-6 sm:p-8">
+      <div
+        className={[
+          'absolute inset-0',
+          isLogin
+            ? 'bg-[linear-gradient(180deg,rgba(9,13,23,0.98),rgba(14,20,32,0.96))]'
+            : 'bg-[linear-gradient(180deg,rgba(10,16,21,0.98),rgba(15,22,29,0.96))]',
+        ].join(' ')}
+      />
+      <div
+        className={[
+          'absolute inset-0 opacity-90',
+          isLogin
+            ? 'bg-[radial-gradient(circle_at_top_left,rgba(104,217,255,0.12),transparent_26%),radial-gradient(circle_at_80%_72%,rgba(63,167,255,0.08),transparent_28%)]'
+            : 'bg-[radial-gradient(circle_at_top_right,rgba(67,209,141,0.12),transparent_24%),radial-gradient(circle_at_12%_82%,rgba(104,217,255,0.09),transparent_30%)]',
+        ].join(' ')}
+      />
+
+      <div className="relative z-10 flex h-full flex-col justify-between gap-8">
+        <div className="space-y-6">
+          <div className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200">
+            {eyebrow}
+          </div>
+
+          <div className="space-y-4">
+            <h2 className="max-w-xl text-[2.2rem] font-semibold leading-[1.05] text-[var(--orbit-text)] sm:text-[2.6rem]">
+              {title}
+            </h2>
+            <p className="max-w-xl text-[15px] leading-7 text-slate-300/86">
+              {description}
+            </p>
+          </div>
+
+          <div className="grid gap-3">
+            {rows.map((row) => (
+              <div
+                key={row.title}
+                className="rounded-[1.15rem] border border-white/8 bg-white/[0.04] px-4 py-4"
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                  {row.title}
+                </p>
+                <p className="mt-2 text-sm leading-6 text-slate-300/84">{row.detail}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-[1.4rem] border border-white/8 bg-white/[0.04] p-4">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+            {isLogin ? 'Ready when you are' : 'What happens next'}
+          </p>
+          <div className="mt-4 grid gap-2.5">
+            {footerRows.map((row) => (
+              <div
+                key={row}
+                className="flex items-center gap-3 rounded-[1rem] border border-white/8 bg-black/10 px-3 py-2.5"
+              >
+                <span className="h-2 w-2 rounded-full bg-cyan-300" />
+                <p className="text-sm text-[var(--orbit-text)]">{row}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
@@ -159,74 +327,150 @@ function OrbitUniversePreview() {
 function OverviewPanel() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const user = useAuthStore((state) => state.user)
-  const tokens = useAuthStore((state) => state.tokens)
+  const overviewLabels = ['Servers', 'Channels', 'Direct messages', 'People', 'Reactions', 'Uploads']
 
   return (
-    <div className="orbit-panel orbit-cosmos rounded-[2rem] p-6">
-      <div className="space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
-          {isAuthenticated ? 'Ready To Launch' : 'Overview'}
-        </p>
-        <h2 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)]">
-          {isAuthenticated ? 'Your orbit is online' : 'Build a better rhythm for team chat'}
-        </h2>
-        <p className="max-w-xl text-sm leading-7 text-[var(--orbit-text-muted)] sm:text-base">
-          {isAuthenticated
-            ? `${user?.username ?? 'You'} can jump straight into the workspace, check live channels, and pick up the conversation without losing context.`
-            : 'Orbit is shaped around the workflows people actually use every day: a server rail, channel hierarchy, full-height conversation flow, and member presence all in one smooth workspace.'}
-        </p>
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)]">
+      <div className="orbit-panel rounded-[2rem] p-6 sm:p-8">
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,0.94fr)_minmax(240px,0.66fr)]">
+          <div className="space-y-6">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+                Overview
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)] sm:text-[2.45rem]">
+                🪐 Meet Orbit — Stay in orbit with your team.
+              </h2>
+              <p className="max-w-2xl text-sm leading-7 text-[var(--orbit-text-muted)] sm:text-base">
+                Orbit keeps the interface calm enough to scan quickly and structured
+                enough to trust when work gets busy.
+              </p>
+            </div>
+
+            <div className="flex flex-wrap gap-2.5">
+              {overviewLabels.map((label) => (
+                <span
+                  key={label}
+                  className="rounded-full border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3.5 py-2 text-sm text-[var(--orbit-text)]"
+                >
+                  {label}
+                </span>
+              ))}
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                  Clean layout
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                  One steady structure for team rooms, chat, and people.
+                </p>
+              </div>
+              <div className="rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                  Easy to reopen
+                </p>
+                <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                  Recent work stays close when you come back.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div className="rounded-[1.5rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-5 py-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                Orbit
+              </p>
+              <p className="mt-3 text-lg font-semibold text-[var(--orbit-text)]">
+                Made for everyday chat.
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                Familiar structure, fast navigation, and calmer message flow.
+              </p>
+            </div>
+
+            <div className="rounded-[1.5rem] border border-[color:var(--orbit-border)] bg-[linear-gradient(180deg,rgba(104,217,255,0.08),rgba(255,255,255,0.03))] px-5 py-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                Built for teams
+              </p>
+              <p className="mt-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                Keep rooms, direct messages, and people close without making the screen feel busy.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
-        <article className="orbit-pill rounded-2xl px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
-            Workspace Flow
+      <div className="orbit-panel flex h-full flex-col rounded-[2rem] p-6 sm:p-8">
+        <div className="space-y-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+            {isAuthenticated ? 'Ready' : 'Open Orbit'}
           </p>
-          <p className="mt-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
-            Move from servers to channels to messages without the UI breaking the rhythm.
+          <h2 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)]">
+            {isAuthenticated ? 'Continue with your team.' : 'Start with a clean workspace.'}
+          </h2>
+          <p className="text-sm leading-7 text-[var(--orbit-text-muted)] sm:text-base">
+            {isAuthenticated
+              ? `${user?.username ?? 'You'} are signed in. Your recent spaces are ready to reopen.`
+              : 'Create an account, sign in, and step into a layout that keeps the important parts close.'}
           </p>
-        </article>
-        <article className="orbit-pill rounded-2xl px-4 py-4">
-          <p className="text-[11px] uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
-            Session State
-          </p>
-          <p className="mt-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
-            {tokens?.access
-              ? 'Your current session is active, so the workspace can open immediately.'
-              : 'Sign in to unlock the live workspace.'}
-          </p>
-        </article>
-      </div>
+        </div>
 
-      <div className="mt-6 flex flex-wrap gap-3">
-        {isAuthenticated ? (
-          <NavLink
-            className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-            to="/app"
-          >
-            Enter workspace
-          </NavLink>
-        ) : (
-          <NavLink
-            className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
-            to="/login"
-          >
-            Sign in to continue
-          </NavLink>
-        )}
+        <div className="mt-6 space-y-3">
+          <div className="rounded-[1.25rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+              Meet Orbit
+            </p>
+            <p className="mt-2 text-lg font-semibold text-[var(--orbit-text)]">
+              🪐 Meet Orbit — Stay in orbit with your team.
+            </p>
+          </div>
 
-        <NavLink
-          className="orbit-pill rounded-full px-5 py-3 text-sm text-[var(--orbit-text-muted)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] hover:text-[var(--orbit-text)]"
-          to="/register"
-        >
-          Create an orbit account
-        </NavLink>
+          <div className="rounded-[1.25rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+              One clear system
+            </p>
+            <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+              Servers, direct messages, people, reactions, and uploads stay organized in
+              one readable system.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          {isAuthenticated ? (
+            <NavLink
+              className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+              to="/app"
+            >
+              Enter workspace
+            </NavLink>
+          ) : (
+            <NavLink
+              className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+              to="/register"
+            >
+              Create account
+            </NavLink>
+          )}
+
+          <NavLink
+            className="orbit-pill rounded-full px-5 py-3 text-sm text-[var(--orbit-text-muted)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] hover:text-[var(--orbit-text)]"
+            to={isAuthenticated ? '/' : '/login'}
+          >
+            {isAuthenticated ? 'Stay on overview' : 'Sign in'}
+          </NavLink>
+        </div>
       </div>
     </div>
   )
 }
 
 function NotFoundRoute() {
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
+
   return (
     <Panel
       eyebrow="Not Found"
@@ -245,12 +489,30 @@ function NotFoundRoute() {
           >
             Go to overview
           </NavLink>
-          <NavLink
-            className="orbit-pill rounded-full px-5 py-3 text-sm text-[var(--orbit-text-muted)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] hover:text-[var(--orbit-text)]"
-            to="/app"
-          >
-            Open workspace
-          </NavLink>
+          {isAuthenticated ? (
+            <NavLink
+              className="orbit-pill rounded-full px-5 py-3 text-sm text-[var(--orbit-text-muted)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] hover:text-[var(--orbit-text)]"
+              to="/app"
+            >
+              Open workspace
+            </NavLink>
+          ) : (
+            <NavLink
+              className="orbit-pill rounded-full px-5 py-3 text-sm text-[var(--orbit-text-muted)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] hover:text-[var(--orbit-text)]"
+              to="/login"
+              state={{
+                notice: 'Sign in or create an account to open the workspace.',
+                reason: 'workspace-required',
+                from: {
+                  pathname: '/app',
+                  search: '',
+                  hash: '',
+                },
+              }}
+            >
+              Sign in for workspace
+            </NavLink>
+          )}
         </>
       }
     />
@@ -262,9 +524,11 @@ function ShellBackground({ children }) {
     <div className="relative min-h-screen overflow-hidden bg-[var(--orbit-bg)] text-[var(--orbit-text)]">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute inset-0 orbit-grid opacity-20" />
-        <div className="absolute -left-8 top-0 h-72 w-72 rounded-full bg-cyan-500/20 blur-3xl" />
-        <div className="absolute right-0 top-16 h-80 w-80 rounded-full bg-sky-500/10 blur-3xl" />
-        <div className="absolute bottom-0 left-1/3 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="absolute -left-10 top-0 h-80 w-80 rounded-full bg-cyan-500/18 blur-3xl" />
+        <div className="absolute right-[-4rem] top-20 h-96 w-96 rounded-full bg-sky-500/12 blur-3xl" />
+        <div className="absolute bottom-[-3rem] left-1/3 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl" />
+        <div className="orbit-ring left-[4%] top-[9%] h-[28rem] w-[28rem] opacity-60" />
+        <div className="orbit-ring right-[8%] bottom-[8%] h-[20rem] w-[20rem] opacity-50" />
       </div>
 
       {children}
@@ -273,39 +537,83 @@ function ShellBackground({ children }) {
 }
 
 function MarketingLayout({ clearSession, isAuthenticated }) {
+  const location = useLocation()
+  const isOverviewRoute = location.pathname === '/'
+  const isLoginRoute = location.pathname === '/login'
+  const isRegisterRoute = location.pathname === '/register'
+  const isAuthRoute = isLoginRoute || isRegisterRoute
+  const workspacePromptState = {
+    notice: 'Sign in or create an account to open the workspace.',
+    reason: 'workspace-required',
+    from: {
+      pathname: '/app',
+      search: '',
+      hash: '',
+    },
+  }
+  const headerEyebrow = isOverviewRoute ? 'Meet Orbit' : isLoginRoute ? 'Sign In' : 'Create Account'
+  const headerTitle = isOverviewRoute
+    ? 'Stay in orbit with your team'
+    : isLoginRoute
+      ? 'Return to your workspace'
+      : 'Set up your Orbit account'
+  const headerDescription = isOverviewRoute
+    ? 'A clean team chat layout with servers, direct messages, people, and reactions in one clear system.'
+    : isLoginRoute
+      ? 'Sign in and pick up the same servers, chats, and people you were already working with.'
+      : 'Create an account and start from a layout that stays readable from the first server onward.'
+
   return (
     <ShellBackground>
       <div className="relative mx-auto flex min-h-screen max-w-[1540px] flex-col px-4 py-5 sm:px-6 lg:px-8">
         <header className="orbit-panel flex flex-col gap-4 rounded-[1.75rem] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
             <p className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-300">
-              Orbit
+              {headerEyebrow}
             </p>
             <h1 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)] sm:text-4xl">
-              Team chat with gravity
+              {headerTitle}
             </h1>
             <p className="text-sm text-[var(--orbit-text-muted)]">
-              Inspired by Discord and Slack, built as a connected universe for realtime conversation.
+              {headerDescription}
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
             <nav className="flex flex-wrap gap-3">
               {navItems.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className={({ isActive }) =>
-                    [
-                      'rounded-full border px-4 py-2 text-sm transition',
-                      isActive
-                        ? 'border-cyan-300/60 bg-cyan-400/10 text-cyan-100'
-                        : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:text-[var(--orbit-text)]',
-                    ].join(' ')
-                  }
-                >
-                  {item.label}
-                </NavLink>
+                item.to === '/app' && !isAuthenticated ? (
+                  <NavLink
+                    key={item.to}
+                    to="/login"
+                    state={workspacePromptState}
+                    className={({ isActive }) =>
+                      [
+                        'rounded-full border px-4 py-2 text-sm transition',
+                        isActive
+                          ? 'border-cyan-300/60 bg-cyan-400/10 text-cyan-100'
+                          : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:text-[var(--orbit-text)]',
+                      ].join(' ')
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                ) : (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    className={({ isActive }) =>
+                      [
+                        'rounded-full border px-4 py-2 text-sm transition',
+                        isActive
+                          ? 'border-cyan-300/60 bg-cyan-400/10 text-cyan-100'
+                          : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:text-[var(--orbit-text)]',
+                      ].join(' ')
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                )
               ))}
             </nav>
 
@@ -321,15 +629,60 @@ function MarketingLayout({ clearSession, isAuthenticated }) {
           </div>
         </header>
 
-        <main className="grid flex-1 gap-6 py-6 lg:grid-cols-[minmax(0,1.18fr)_minmax(360px,0.82fr)]">
-          <section className="space-y-8">
-            <OrbitUniversePreview />
-          </section>
+        {isOverviewRoute ? (
+          <main className="flex-1 space-y-6 py-6">
+            <section className="min-h-0">
+              <OrbitUniversePreview />
+            </section>
 
-          <section className="orbit-panel rounded-[2rem] p-6 sm:p-8">
-            <Outlet />
-          </section>
-        </main>
+            <section className="min-h-0">
+              <Outlet />
+            </section>
+          </main>
+        ) : isAuthRoute ? (
+          <main
+            className={[
+              'grid flex-1 items-stretch gap-6 py-6 xl:min-h-[calc(100vh-11rem)]',
+              isLoginRoute
+                ? 'xl:grid-cols-[minmax(360px,0.94fr)_minmax(0,1.06fr)]'
+                : 'xl:grid-cols-[minmax(0,1.06fr)_minmax(360px,0.94fr)]',
+            ].join(' ')}
+          >
+            {isLoginRoute ? (
+              <>
+                <section className="min-h-0">
+                  <AuthRoutePreview mode="login" />
+                </section>
+                <section className="flex min-h-0 items-center justify-center">
+                  <div className="w-full max-w-[40rem]">
+                    <Outlet />
+                  </div>
+                </section>
+              </>
+            ) : (
+              <>
+                <section className="flex min-h-0 items-center justify-center">
+                  <div className="w-full max-w-[42rem]">
+                    <Outlet />
+                  </div>
+                </section>
+                <section className="min-h-0">
+                  <AuthRoutePreview mode="register" />
+                </section>
+              </>
+            )}
+          </main>
+        ) : (
+          <main className="grid flex-1 items-stretch gap-6 py-6 xl:grid-cols-[minmax(0,1.06fr)_minmax(420px,0.94fr)]">
+            <section className="min-h-0">
+              <OrbitUniversePreview />
+            </section>
+
+            <section className="min-h-0">
+              <Outlet />
+            </section>
+          </main>
+        )}
       </div>
     </ShellBackground>
   )

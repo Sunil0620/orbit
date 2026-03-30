@@ -394,7 +394,7 @@ feat: add typing indicators via websocket events
 - Debounce: use `setTimeout` to send `{is_typing: false}` 2 seconds after last keypress, clear on each new keypress
 - `ChatConsumer.receive()`: handle `type == "typing"`, broadcast `{type: "typing", user_id, username, is_typing}` to group
 - Frontend: track `typingUsers` map in `useChatStore`; update on incoming typing events
-- Render "Sunil is typing..." below `MessageInput.jsx` (hide if `typingUsers` is empty)
+- Render "Someone is typing..." below `MessageInput.jsx` (hide if `typingUsers` is empty)
 
 ---
 

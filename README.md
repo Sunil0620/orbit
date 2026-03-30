@@ -10,7 +10,7 @@
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/Sunil0620/orbit.git
+git clone <your-repo-url>
 cd orbit
 
 # 2. Copy environment file
@@ -23,6 +23,16 @@ docker compose up --build
 # Frontend: http://localhost:5173
 # Backend API: http://localhost:8000
 # Django Admin: http://localhost:8000/admin
+```
+
+## Quick Checks
+
+```bash
+# Backend test suite
+.venv313/bin/python backend/manage.py test --settings=core.settings.test
+
+# Frontend test suite
+cd frontend && npm run test
 ```
 
 ---
@@ -41,4 +51,4 @@ See `PROJECT_PLAN.md` for the full folder structure and month roadmap.
 
 ---
 
-Built by [Sunil Saini](https://github.com/Sunil0620) · [Portfolio](https://sunil0620.github.io/Portfolio/)
+Built with Django, Channels, React, and Vite.

@@ -107,82 +107,118 @@ function Login() {
   }
 
   return (
-    <div className="orbit-panel w-full rounded-3xl p-6 shadow-2xl shadow-black/20 sm:p-8">
-      <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
-          Welcome Back
-        </p>
-        <h2 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)]">
-          Sign in to Orbit
-        </h2>
-        <p className="text-sm leading-7 text-[var(--orbit-text-muted)]">
-          Jump back into your servers, channels, and active conversations.
-        </p>
+    <div className="orbit-panel w-full overflow-hidden rounded-[2.2rem] shadow-2xl shadow-black/20">
+      <div className="grid min-h-full lg:grid-cols-[minmax(0,1fr)_280px]">
+        <div className="p-6 sm:p-8">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+              Sign In
+            </p>
+            <h2 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)]">
+              Open your workspace again.
+            </h2>
+            <p className="max-w-xl text-sm leading-7 text-[var(--orbit-text-muted)]">
+              Sign in and continue with the same servers, people, and direct messages.
+            </p>
+          </div>
+
+          <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
+            {location.state?.notice ? (
+              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+                {location.state.notice}
+              </div>
+            ) : null}
+
+            {errors.form ? (
+              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+                {errors.form}
+              </div>
+            ) : null}
+
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-[var(--orbit-text)]">Username</span>
+              <input
+                className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
+                name="username"
+                type="text"
+                value={formData.username}
+                onChange={updateField}
+                autoComplete="username"
+                placeholder="username"
+              />
+              {errors.username ? (
+                <p className="text-sm text-red-300">{errors.username}</p>
+              ) : null}
+            </label>
+
+            <label className="block space-y-2">
+              <span className="text-sm font-medium text-[var(--orbit-text)]">Password</span>
+              <input
+                className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
+                name="password"
+                type="password"
+                value={formData.password}
+                onChange={updateField}
+                autoComplete="current-password"
+                placeholder="••••••••"
+              />
+              {errors.password ? (
+                <p className="text-sm text-red-300">{errors.password}</p>
+              ) : null}
+            </label>
+
+            <button
+              className="w-full rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-70"
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Signing in...' : 'Sign in'}
+            </button>
+          </form>
+
+          <p className="mt-6 text-sm text-[var(--orbit-text-muted)]">
+            New to Orbit?{' '}
+            <Link className="font-medium text-cyan-300 hover:text-cyan-200" to="/register">
+              Create an account
+            </Link>
+          </p>
+        </div>
+
+        <aside className="border-t border-[color:var(--orbit-border)] bg-[linear-gradient(180deg,rgba(104,217,255,0.08),rgba(255,255,255,0.02))] p-6 lg:border-l lg:border-t-0">
+          <div className="space-y-5">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200">
+                Back to work
+              </p>
+              <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                Orbit keeps the structure familiar, so signing in feels like picking up
+                a conversation instead of starting over.
+              </p>
+            </div>
+
+            <div className="grid gap-3">
+              {[
+                'Reopen recent servers',
+                'See direct messages quickly',
+                'Continue with the same people',
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="rounded-[1rem] border border-[color:var(--orbit-border)] bg-black/10 px-3 py-3 text-sm text-[var(--orbit-text)]"
+                >
+                  {item}
+                </div>
+              ))}
+            </div>
+
+            {isSwitchUserFlow ? (
+              <div className="rounded-[1rem] border border-white/10 bg-white/[0.04] px-3 py-3 text-sm text-[var(--orbit-text-muted)]">
+                Sign in with another account and Orbit will load that workspace instead.
+              </div>
+            ) : null}
+          </div>
+        </aside>
       </div>
-
-      <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
-        {location.state?.notice ? (
-          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
-            {location.state.notice}
-          </div>
-        ) : null}
-
-        {errors.form ? (
-          <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
-            {errors.form}
-          </div>
-        ) : null}
-
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-[var(--orbit-text)]">Username</span>
-          <input
-            className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
-            name="username"
-            type="text"
-            value={formData.username}
-            onChange={updateField}
-            autoComplete="username"
-            placeholder="sunil"
-          />
-          {errors.username ? (
-            <p className="text-sm text-red-300">{errors.username}</p>
-          ) : null}
-        </label>
-
-        <label className="block space-y-2">
-          <span className="text-sm font-medium text-[var(--orbit-text)]">Password</span>
-          <input
-            className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
-            name="password"
-            type="password"
-            value={formData.password}
-            onChange={updateField}
-            autoComplete="current-password"
-            placeholder="••••••••"
-          />
-          {errors.password ? (
-            <p className="text-sm text-red-300">{errors.password}</p>
-          ) : null}
-        </label>
-
-        <button
-          className="w-full rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 focus:outline-none focus:ring-2 focus:ring-cyan-400/40 disabled:cursor-not-allowed disabled:opacity-70"
-          type="submit"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? 'Signing in...' : 'Sign in'}
-        </button>
-      </form>
-
-      <p className="mt-6 text-sm text-[var(--orbit-text-muted)]">
-        New to Orbit?{' '}
-        <Link
-          className="font-medium text-cyan-300 hover:text-cyan-200"
-          to="/register"
-        >
-          Create an account
-        </Link>
-      </p>
     </div>
   )
 }

@@ -11,6 +11,8 @@ function ProtectedRoute() {
         to="/login"
         replace
         state={{
+          notice: 'Sign in or create an account to open the workspace.',
+          reason: 'workspace-required',
           from: {
             pathname: location.pathname,
             search: location.search,

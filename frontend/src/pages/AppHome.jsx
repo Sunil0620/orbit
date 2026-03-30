@@ -2,7 +2,6 @@ import useAuthStore from '../store/useAuthStore'
 
 function AppHome() {
   const user = useAuthStore((state) => state.user)
-  const tokens = useAuthStore((state) => state.tokens)
 
   return (
     <div className="space-y-6 rounded-3xl border border-gray-700 bg-gray-800 p-6 shadow-2xl shadow-black/25 sm:p-8">
@@ -29,10 +28,10 @@ function AppHome() {
 
         <div className="rounded-2xl border border-gray-700 bg-gray-900 px-4 py-4">
           <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
-            Session Token
+            Workspace Status
           </p>
-          <p className="mt-3 break-all text-sm text-gray-200">
-            {tokens?.access ? `${tokens.access.slice(0, 32)}...` : 'Missing'}
+          <p className="mt-3 text-sm text-gray-200">
+            Realtime messaging, uploads, direct messages, and unread tracking are ready to use.
           </p>
         </div>
       </div>

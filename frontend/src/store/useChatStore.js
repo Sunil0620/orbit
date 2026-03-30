@@ -83,6 +83,24 @@ function upsertUniqueMessage(messages, message) {
   return messages.some((item) => item.id === message.id) ? messages : [...messages, message]
 }
 
+function updateMessageCollectionReactions(messages, messageId, reactions) {
+  let hasChanged = false
+
+  const nextMessages = messages.map((message) => {
+    if (message.id !== messageId) {
+      return message
+    }
+
+    hasChanged = true
+    return {
+      ...message,
+      reactions,
+    }
+  })
+
+  return hasChanged ? nextMessages : messages
+}
+
 const useChatStore = create((set) => ({
   ...initialState,
   setServers: (servers) =>
@@ -141,7 +159,14 @@ const useChatStore = create((set) => ({
     }),
   setChannels: (channels) =>
     set((state) => ({
-      channels,
+      channels: channels.map((channel) =>
+        channel.id === state.activeChannelId
+          ? {
+              ...channel,
+              unread_count: 0,
+            }
+          : channel,
+      ),
       activeChannelId: resolveActiveId(channels, state.activeChannelId),
       channelsError: '',
       typingUsers: {},
@@ -150,6 +175,14 @@ const useChatStore = create((set) => ({
     set((state) => ({
       activeChannelId: channelId,
       activeDirectConversationId: null,
+      channels: state.channels.map((channel) =>
+        channel.id === channelId
+          ? {
+              ...channel,
+              unread_count: 0,
+            }
+          : channel,
+      ),
       messages:
         state.activeChannelId === channelId
           ? state.messages
@@ -168,7 +201,16 @@ const useChatStore = create((set) => ({
     })),
   setDirectConversations: (directConversations) =>
     set((state) => ({
-      directConversations: sortDirectConversations(directConversations),
+      directConversations: sortDirectConversations(
+        directConversations.map((conversation) =>
+          conversation.id === state.activeDirectConversationId
+            ? {
+                ...conversation,
+                unread_count: 0,
+              }
+            : conversation,
+        ),
+      ),
       activeDirectConversationId: resolveActiveId(
         directConversations,
         state.activeDirectConversationId,
@@ -200,6 +242,16 @@ const useChatStore = create((set) => ({
       activeServerId: null,
       activeChannelId: null,
       activeDirectConversationId: conversationId,
+      directConversations: sortDirectConversations(
+        state.directConversations.map((conversation) =>
+          conversation.id === conversationId
+            ? {
+                ...conversation,
+                unread_count: 0,
+              }
+            : conversation,
+        ),
+      ),
       messages:
         state.activeDirectConversationId === conversationId
           ? state.messages
@@ -302,6 +354,14 @@ const useChatStore = create((set) => ({
               state.lastReadDirectMessageId[state.activeDirectConversationId] ??
               null,
           },
+          directConversations: state.directConversations.map((conversation) =>
+            conversation.id === state.activeDirectConversationId
+              ? {
+                  ...conversation,
+                  unread_count: 0,
+                }
+              : conversation,
+          ),
           messagesError: '',
           typingUsers: {},
         }
@@ -326,6 +386,17 @@ const useChatStore = create((set) => ({
                   state.lastReadMessageId[state.activeChannelId] ??
                   null,
               },
+        channels:
+          state.activeChannelId == null
+            ? state.channels
+            : state.channels.map((channel) =>
+                channel.id === state.activeChannelId
+                  ? {
+                      ...channel,
+                      unread_count: 0,
+                    }
+                  : channel,
+              ),
         messagesError: '',
         typingUsers: {},
       }
@@ -337,10 +408,12 @@ const useChatStore = create((set) => ({
       const channelId = message.channel_id ?? message.channel ?? null
 
       if (directConversationId != null) {
+        const existingMessages = state.messagesByDirectConversation[directConversationId] ?? []
         const nextMessages = upsertUniqueMessage(
-          state.messagesByDirectConversation[directConversationId] ?? [],
+          existingMessages,
           message,
         )
+        const didAppendNewMessage = nextMessages.length > existingMessages.length
         const nextDirectConversations = state.directConversations.map((conversation) =>
           conversation.id === directConversationId
             ? {
@@ -349,6 +422,9 @@ const useChatStore = create((set) => ({
                 last_message_at:
                   message.timestamp ?? message.created_at ?? conversation.last_message_at,
                 updated_at: message.timestamp ?? message.created_at ?? conversation.updated_at,
+                message_count: didAppendNewMessage
+                  ? Number(conversation.message_count ?? 0) + 1
+                  : conversation.message_count,
               }
             : conversation,
         )
@@ -369,7 +445,17 @@ const useChatStore = create((set) => ({
                   [directConversationId]: message.id,
                 }
               : state.lastReadDirectMessageId,
-          directConversations: sortDirectConversations(nextDirectConversations),
+          directConversations: sortDirectConversations(
+            nextDirectConversations.map((conversation) =>
+              conversation.id === directConversationId &&
+              state.activeDirectConversationId === directConversationId
+                ? {
+                    ...conversation,
+                    unread_count: 0,
+                  }
+                : conversation,
+            ),
+          ),
           typingUsers:
             message?.sender?.id == null
               ? state.typingUsers
@@ -404,6 +490,14 @@ const useChatStore = create((set) => ({
                 [channelId]: message.id,
               }
             : state.lastReadMessageId,
+        channels: state.channels.map((channel) =>
+          channel.id === channelId && state.activeChannelId === channelId
+            ? {
+                ...channel,
+                unread_count: 0,
+              }
+            : channel,
+        ),
         typingUsers:
           message?.sender?.id == null
             ? state.typingUsers
@@ -414,6 +508,24 @@ const useChatStore = create((set) => ({
               ),
       }
     }),
+  setMessageReactions: ({ messageId, reactions }) =>
+    set((state) => ({
+      messages: updateMessageCollectionReactions(state.messages, messageId, reactions),
+      messagesByChannel: Object.fromEntries(
+        Object.entries(state.messagesByChannel).map(([channelId, channelMessages]) => [
+          channelId,
+          updateMessageCollectionReactions(channelMessages, messageId, reactions),
+        ]),
+      ),
+      messagesByDirectConversation: Object.fromEntries(
+        Object.entries(state.messagesByDirectConversation).map(
+          ([conversationId, conversationMessages]) => [
+            conversationId,
+            updateMessageCollectionReactions(conversationMessages, messageId, reactions),
+          ],
+        ),
+      ),
+    })),
   setTypingState: ({ userId, username, isTyping }) =>
     set((state) => {
       if (!userId) {
@@ -476,6 +588,72 @@ const useChatStore = create((set) => ({
           : conversation,
       ),
     })),
+  markChannelRead: ({ channelId, lastReadMessageId = null }) =>
+    set((state) => ({
+      channels: state.channels.map((channel) =>
+        channel.id === channelId
+          ? {
+              ...channel,
+              unread_count: 0,
+            }
+          : channel,
+      ),
+      lastReadMessageId:
+        channelId == null
+          ? state.lastReadMessageId
+          : {
+              ...state.lastReadMessageId,
+              [channelId]: lastReadMessageId ?? state.lastReadMessageId[channelId] ?? null,
+            },
+    })),
+  markDirectConversationRead: ({ conversationId, lastReadMessageId = null }) =>
+    set((state) => ({
+      directConversations: sortDirectConversations(
+        state.directConversations.map((conversation) =>
+          conversation.id === conversationId
+            ? {
+                ...conversation,
+                unread_count: 0,
+              }
+            : conversation,
+        ),
+      ),
+      lastReadDirectMessageId:
+        conversationId == null
+          ? state.lastReadDirectMessageId
+          : {
+              ...state.lastReadDirectMessageId,
+              [conversationId]:
+                lastReadMessageId ??
+                state.lastReadDirectMessageId[conversationId] ??
+                null,
+            },
+    })),
+  syncDirectConversation: (conversation) =>
+    set((state) => {
+      const existingIndex = state.directConversations.findIndex(
+        (item) => item.id === conversation.id,
+      )
+
+      if (existingIndex === -1) {
+        return {
+          directConversations: sortDirectConversations([
+            ...state.directConversations,
+            conversation,
+          ]),
+        }
+      }
+
+      const nextDirectConversations = [...state.directConversations]
+      nextDirectConversations[existingIndex] = {
+        ...nextDirectConversations[existingIndex],
+        ...conversation,
+      }
+
+      return {
+        directConversations: sortDirectConversations(nextDirectConversations),
+      }
+    }),
   resetChatState: () =>
     set(() => ({
       ...initialState,

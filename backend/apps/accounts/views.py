@@ -1,8 +1,14 @@
+from django.db.models import Count, Q
 from rest_framework import generics, permissions, status
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
-from rest_framework.views import APIView
 from rest_framework.response import Response
-from .serializers import LogoutSerializer, RegisterSerializer, UserProfileSerializer
+from rest_framework.views import APIView
+from .serializers import (
+    LogoutSerializer,
+    RegisterSerializer,
+    UserDirectorySerializer,
+    UserProfileSerializer,
+)
 from .models import CustomUser
 
 
@@ -28,6 +34,29 @@ class ProfileView(APIView):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
+        return Response(serializer.data)
+
+
+class UserDirectoryView(generics.ListAPIView):
+    serializer_class = UserDirectorySerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return (
+            CustomUser.objects.exclude(pk=self.request.user.pk)
+            .annotate(
+                shared_server_count=Count(
+                    'servers',
+                    filter=Q(servers__members=self.request.user),
+                    distinct=True,
+                )
+            )
+            .distinct()
+            .order_by('-is_online', '-shared_server_count', 'username')
+        )
+
+    def list(self, request, *args, **kwargs):
+        serializer = self.get_serializer(self.get_queryset(), many=True)
         return Response(serializer.data)
 
 
