@@ -1,11 +1,39 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#020617" />
+    <meta name="theme-color" content="#f5f8fe" />
     <title>Orbit</title>
+    <script>
+      ;(() => {
+        const themeStorageKey = 'orbit-theme'
+        const validThemes = new Set(['dark', 'light'])
+        let storedTheme = null
+
+        try {
+          storedTheme = window.localStorage.getItem(themeStorageKey)
+        } catch {
+          storedTheme = null
+        }
+
+        const theme =
+          validThemes.has(storedTheme)
+            ? storedTheme
+            : window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light'
+
+        const root = document.documentElement
+        const themeColor = theme === 'dark' ? '#060814' : '#f5f8fe'
+        const themeColorMeta = document.querySelector('meta[name="theme-color"]')
+
+        root.dataset.theme = theme
+        root.style.colorScheme = theme
+        themeColorMeta?.setAttribute('content', themeColor)
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -1,6 +1,10 @@
 import { create } from 'zustand'
 
 export const THEME_STORAGE_KEY = 'orbit-theme'
+const THEME_META_COLORS = {
+  dark: '#060814',
+  light: '#f5f8fe',
+}
 
 const THEME_VALUES = new Set(['dark', 'light'])
 
@@ -49,9 +53,11 @@ function applyTheme(theme) {
   }
 
   const root = window.document.documentElement
-  root.classList.toggle('dark', theme === 'dark')
-  root.classList.toggle('light', theme === 'light')
+  const themeColorMeta = window.document.querySelector('meta[name="theme-color"]')
+
+  root.dataset.theme = theme
   root.style.colorScheme = theme
+  themeColorMeta?.setAttribute('content', THEME_META_COLORS[theme])
 }
 
 const initialTheme = readStoredTheme()

@@ -144,7 +144,7 @@ function MenuAction({ children, onClick, to, tone = 'default' }) {
   const className = [
     'flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left text-[13px] transition',
     tone === 'danger'
-      ? 'text-red-100 hover:bg-red-500/10'
+      ? 'text-[var(--orbit-danger-ink)] hover:bg-red-500/10'
       : 'text-[var(--orbit-text)] hover:bg-[var(--orbit-surface-soft)]',
   ].join(' ')
 
@@ -227,7 +227,7 @@ function ChannelList({
 
         <div className="orbit-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-2 py-3">
           {error ? (
-            <div className="mx-2 mb-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-4 text-sm leading-6 text-red-100">
+            <div className="orbit-danger-banner mx-2 mb-3 rounded-2xl border px-4 py-4 text-sm leading-6">
               {error}
             </div>
           ) : null}
@@ -311,7 +311,7 @@ function ChannelList({
           </div>
 
           {directoryError ? (
-            <div className="mx-2 mb-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-4 text-sm leading-6 text-red-100">
+            <div className="orbit-danger-banner mx-2 mb-3 rounded-2xl border px-4 py-4 text-sm leading-6">
               {directoryError}
             </div>
           ) : null}
@@ -483,7 +483,7 @@ function ChannelList({
 
       <div className="orbit-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-2 py-2.5">
         {error ? (
-          <div className="mx-2 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-4 text-sm leading-6 text-red-100">
+          <div className="orbit-danger-banner mx-2 rounded-2xl border px-4 py-4 text-sm leading-6">
             {error}
           </div>
         ) : null}
@@ -551,8 +551,8 @@ function ChannelList({
                     className={[
                       'rounded-[0.7rem] border border-transparent p-1.5 transition',
                       isActive
-                        ? 'text-red-200 hover:border-red-400/30 hover:bg-red-500/10'
-                        : 'text-[var(--orbit-text-subtle)] opacity-0 group-hover:opacity-100 hover:border-red-400/30 hover:bg-red-500/10 hover:text-red-200',
+                        ? 'text-[var(--orbit-danger-ink)] hover:border-red-400/30 hover:bg-red-500/10'
+                        : 'text-[var(--orbit-text-subtle)] opacity-0 group-hover:opacity-100 hover:border-red-400/30 hover:bg-red-500/10 hover:text-[var(--orbit-danger-ink)]',
                     ].join(' ')}
                     title={`Delete #${channel.name}`}
                     aria-label={`Delete ${channel.name}`}

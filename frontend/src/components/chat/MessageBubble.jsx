@@ -52,7 +52,7 @@ function ReactionChip({ reaction, disabled = false, onToggleReaction }) {
       className={[
         'inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
         isActive
-          ? 'border-cyan-300/40 bg-cyan-400/12 text-cyan-100'
+          ? 'orbit-accent-surface'
           : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:text-[var(--orbit-text)]',
         disabled ? 'cursor-not-allowed opacity-70' : '',
       ].join(' ')}

@@ -10,6 +10,7 @@ import usePresenceSocket from './hooks/usePresenceSocket'
 import useChatStore from './store/useChatStore'
 import useAuthStore from './store/useAuthStore'
 import useThemeStore from './store/useThemeStore'
+import ThemeToggle from './components/theme/ThemeToggle'
 
 const navItems = [
   { to: '/', label: 'Overview' },
@@ -41,7 +42,7 @@ function Panel({ eyebrow, title, description, checklist, actions }) {
   return (
     <div className="orbit-panel space-y-6 rounded-[2rem] p-6">
       <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+        <p className="orbit-accent-label text-xs font-semibold uppercase tracking-[0.35em]">
           {eyebrow}
         </p>
         <h2 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)]">
@@ -71,18 +72,18 @@ function Panel({ eyebrow, title, description, checklist, actions }) {
 function OrbitUniversePreview() {
   return (
     <div className="orbit-panel orbit-cosmos relative h-full overflow-hidden rounded-[2.6rem] p-6 sm:p-8 lg:p-10">
-      <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(6,10,19,0.98),rgba(7,12,22,0.94))]" />
+      <div className="absolute inset-0 bg-[var(--orbit-showcase-backdrop)]" />
       <div className="absolute inset-0 orbit-grid opacity-[0.07]" />
       <div className="orbit-ring left-[-10%] top-[8%] h-[24rem] w-[24rem]" />
       <div className="orbit-ring right-[6%] top-[12%] h-[14rem] w-[14rem]" />
       <div className="orbit-dot left-[18%] top-[18%] h-3.5 w-3.5" />
       <div className="orbit-dot bottom-[18%] right-[20%] h-3 w-3" />
-      <div className="absolute inset-x-0 top-0 h-48 bg-[linear-gradient(180deg,rgba(104,217,255,0.08),transparent)]" />
+      <div className="absolute inset-x-0 top-0 h-48 bg-[var(--orbit-showcase-top-glow)]" />
 
       <div className="relative z-10 grid gap-8 xl:grid-cols-[minmax(340px,0.78fr)_minmax(0,1.22fr)] xl:items-center">
         <div className="space-y-7">
           <div className="space-y-5">
-            <div className="inline-flex items-center gap-2 rounded-full border border-cyan-300/20 bg-cyan-400/10 px-3 py-1 text-[11px] font-semibold tracking-[0.18em] text-cyan-200">
+            <div className="orbit-accent-surface inline-flex items-center gap-2 rounded-full border px-3 py-1 text-[11px] font-semibold tracking-[0.18em]">
               <span>🪐</span>
               <span>Meet Orbit</span>
             </div>
@@ -90,7 +91,7 @@ function OrbitUniversePreview() {
               <h2 className="max-w-lg text-4xl font-semibold leading-[1.02] text-[var(--orbit-text)] sm:text-[3.45rem]">
                 Stay in orbit with your team.
               </h2>
-              <p className="max-w-lg text-[15px] leading-7 text-slate-300/86 sm:text-base">
+              <p className="orbit-showcase-copy-muted max-w-lg text-[15px] leading-7 sm:text-base">
                 Organize servers, reopen direct messages, and keep the conversation easy
                 to follow without crowding the screen.
               </p>
@@ -101,47 +102,47 @@ function OrbitUniversePreview() {
             {overviewPreviewPoints.map((item) => (
               <div
                 key={item.label}
-                className="rounded-[1.2rem] border border-white/8 bg-white/[0.035] px-4 py-4"
+                className="orbit-showcase-surface rounded-[1.2rem] border px-4 py-4"
               >
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200">
+                <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.22em]">
                   {item.label}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-slate-300/84">{item.value}</p>
+                <p className="orbit-showcase-copy-muted mt-2 text-sm leading-6">{item.value}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="relative overflow-hidden rounded-[2.15rem] border border-white/10 bg-[rgba(8,12,20,0.88)] p-4 shadow-[0_34px_70px_rgba(0,0,0,0.34)]">
+        <div className="orbit-showcase-frame relative overflow-hidden rounded-[2.15rem] border p-4">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(104,217,255,0.08),transparent_28%),radial-gradient(circle_at_18%_88%,rgba(67,209,141,0.08),transparent_24%)]" />
 
-          <div className="relative z-10 rounded-[1.65rem] border border-white/8 bg-[rgba(12,17,28,0.96)] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-            <div className="flex items-center gap-2 border-b border-white/6 pb-3">
+          <div className="orbit-showcase-surface-strong relative z-10 rounded-[1.65rem] border p-4">
+            <div className="orbit-showcase-divider flex items-center gap-2 border-b pb-3">
               <span className="h-2.5 w-2.5 rounded-full bg-rose-300/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-amber-300/70" />
               <span className="h-2.5 w-2.5 rounded-full bg-emerald-300/70" />
-              <div className="ml-2 rounded-full border border-white/8 bg-white/[0.035] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--orbit-text-subtle)]">
+              <div className="orbit-showcase-surface-elevated ml-2 rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--orbit-text-subtle)]">
                 Orbit workspace
               </div>
             </div>
 
             <div className="mt-4 grid gap-4 lg:grid-cols-[56px_210px_minmax(0,1fr)]">
-              <div className="flex flex-col items-center gap-3 rounded-[1.25rem] bg-white/[0.03] px-2 py-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-cyan-400/12 text-[11px] font-semibold text-cyan-100">
+              <div className="orbit-showcase-surface flex flex-col items-center gap-3 rounded-[1.25rem] border px-2 py-3">
+                <div className="orbit-accent-surface flex h-10 w-10 items-center justify-center rounded-2xl border text-[11px] font-semibold">
                   O
                 </div>
-                <div className="h-10 w-10 rounded-2xl bg-white/[0.06]" />
-                <div className="h-10 w-10 rounded-2xl bg-white/[0.06]" />
-                <div className="h-10 w-10 rounded-2xl bg-white/[0.06]" />
+                <div className="orbit-showcase-surface-elevated h-10 w-10 rounded-2xl border" />
+                <div className="orbit-showcase-surface-elevated h-10 w-10 rounded-2xl border" />
+                <div className="orbit-showcase-surface-elevated h-10 w-10 rounded-2xl border" />
               </div>
 
-              <div className="rounded-[1.25rem] bg-white/[0.03] px-3 py-3">
+              <div className="orbit-showcase-surface rounded-[1.25rem] border px-3 py-3">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--orbit-text-subtle)]">
                   Channels
                 </p>
                 <div className="mt-3 space-y-2">
-                  <div className="rounded-xl bg-white/[0.07] px-3 py-2.5">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                  <div className="orbit-showcase-surface-elevated rounded-xl border px-3 py-2.5">
+                    <p className="orbit-accent-label text-[10px] font-semibold uppercase tracking-[0.18em]">
                       # product
                     </p>
                     <p className="mt-1 text-sm font-medium text-[var(--orbit-text)]">
@@ -163,24 +164,24 @@ function OrbitUniversePreview() {
                 </div>
               </div>
 
-              <div className="space-y-4 rounded-[1.25rem] bg-white/[0.03] px-3 py-3">
-                <div className="flex items-start justify-between gap-3 border-b border-white/6 pb-3">
+              <div className="orbit-showcase-surface space-y-4 rounded-[1.25rem] border px-3 py-3">
+                <div className="orbit-showcase-divider flex items-start justify-between gap-3 border-b pb-3">
                   <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-cyan-200">
+                    <p className="orbit-accent-label text-[10px] font-semibold uppercase tracking-[0.22em]">
                       # Product
                     </p>
                     <p className="mt-1 text-[11px] text-[var(--orbit-text-muted)]">
                       Clear layout, quicker replies
                     </p>
                   </div>
-                  <span className="rounded-full border border-white/8 bg-white/[0.05] px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-text-subtle)]">
+                  <span className="orbit-showcase-surface-elevated rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-text-subtle)]">
                     Open
                   </span>
                 </div>
 
-                <div className="rounded-[1.15rem] border border-white/6 bg-white/[0.035] px-3 py-3">
+                <div className="orbit-showcase-surface-elevated rounded-[1.15rem] border px-3 py-3">
                   <div className="flex gap-3">
-                    <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl bg-cyan-400/12 text-[12px] font-semibold text-cyan-100">
+                    <div className="orbit-accent-surface mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border text-[12px] font-semibold">
                       A
                     </div>
                     <div className="min-w-0">
@@ -193,13 +194,13 @@ function OrbitUniversePreview() {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <div className="rounded-[1rem] border border-white/6 bg-white/[0.035] px-3 py-3">
+                  <div className="orbit-showcase-surface-elevated rounded-[1rem] border px-3 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-text-subtle)]">
                       People
                     </p>
                     <p className="mt-2 text-sm text-[var(--orbit-text)]">See teammates without leaving the flow.</p>
                   </div>
-                  <div className="rounded-[1rem] border border-white/6 bg-white/[0.035] px-3 py-3">
+                  <div className="orbit-showcase-surface-elevated rounded-[1rem] border px-3 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-text-subtle)]">
                       Replies
                     </p>
@@ -207,9 +208,9 @@ function OrbitUniversePreview() {
                   </div>
                 </div>
 
-                <div className="flex items-center justify-between gap-3 rounded-[1rem] border border-white/8 bg-white/[0.04] px-3 py-2.5 text-[12px] text-[var(--orbit-text-muted)]">
+                <div className="orbit-showcase-surface-elevated flex items-center justify-between gap-3 rounded-[1rem] border px-3 py-2.5 text-[12px] text-[var(--orbit-text-muted)]">
                   <span>Message input</span>
-                  <span className="rounded-full bg-white/[0.06] px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[var(--orbit-text-subtle)]">
+                  <span className="orbit-showcase-surface rounded-full border px-2 py-0.5 text-[10px] uppercase tracking-[0.14em] text-[var(--orbit-text-subtle)]">
                     +
                   </span>
                 </div>
@@ -260,22 +261,22 @@ function AuthRoutePreview({ mode = 'login' }) {
         className={[
           'absolute inset-0',
           isLogin
-            ? 'bg-[linear-gradient(180deg,rgba(9,13,23,0.98),rgba(14,20,32,0.96))]'
-            : 'bg-[linear-gradient(180deg,rgba(10,16,21,0.98),rgba(15,22,29,0.96))]',
+            ? 'bg-[var(--orbit-auth-preview-backdrop-login)]'
+            : 'bg-[var(--orbit-auth-preview-backdrop-register)]',
         ].join(' ')}
       />
       <div
         className={[
           'absolute inset-0 opacity-90',
           isLogin
-            ? 'bg-[radial-gradient(circle_at_top_left,rgba(104,217,255,0.12),transparent_26%),radial-gradient(circle_at_80%_72%,rgba(63,167,255,0.08),transparent_28%)]'
-            : 'bg-[radial-gradient(circle_at_top_right,rgba(67,209,141,0.12),transparent_24%),radial-gradient(circle_at_12%_82%,rgba(104,217,255,0.09),transparent_30%)]',
+            ? 'bg-[var(--orbit-auth-preview-glow-login)]'
+            : 'bg-[var(--orbit-auth-preview-glow-register)]',
         ].join(' ')}
       />
 
       <div className="relative z-10 flex h-full flex-col justify-between gap-8">
         <div className="space-y-6">
-          <div className="inline-flex rounded-full border border-white/10 bg-white/[0.04] px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-cyan-200">
+          <div className="orbit-showcase-surface orbit-accent-label inline-flex rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.2em]">
             {eyebrow}
           </div>
 
@@ -283,7 +284,7 @@ function AuthRoutePreview({ mode = 'login' }) {
             <h2 className="max-w-xl text-[2.2rem] font-semibold leading-[1.05] text-[var(--orbit-text)] sm:text-[2.6rem]">
               {title}
             </h2>
-            <p className="max-w-xl text-[15px] leading-7 text-slate-300/86">
+            <p className="orbit-showcase-copy-muted max-w-xl text-[15px] leading-7">
               {description}
             </p>
           </div>
@@ -292,26 +293,26 @@ function AuthRoutePreview({ mode = 'login' }) {
             {rows.map((row) => (
               <div
                 key={row.title}
-                className="rounded-[1.15rem] border border-white/8 bg-white/[0.04] px-4 py-4"
+                className="orbit-showcase-surface rounded-[1.15rem] border px-4 py-4"
               >
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+                <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.18em]">
                   {row.title}
                 </p>
-                <p className="mt-2 text-sm leading-6 text-slate-300/84">{row.detail}</p>
+                <p className="orbit-showcase-copy-muted mt-2 text-sm leading-6">{row.detail}</p>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="rounded-[1.4rem] border border-white/8 bg-white/[0.04] p-4">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+        <div className="orbit-showcase-surface rounded-[1.4rem] border p-4">
+          <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.18em]">
             {isLogin ? 'Ready when you are' : 'What happens next'}
           </p>
           <div className="mt-4 grid gap-2.5">
             {footerRows.map((row) => (
               <div
                 key={row}
-                className="flex items-center gap-3 rounded-[1rem] border border-white/8 bg-black/10 px-3 py-2.5"
+                className="orbit-showcase-surface-elevated flex items-center gap-3 rounded-[1rem] border px-3 py-2.5"
               >
                 <span className="h-2 w-2 rounded-full bg-cyan-300" />
                 <p className="text-sm text-[var(--orbit-text)]">{row}</p>
@@ -335,7 +336,7 @@ function OverviewPanel() {
         <div className="grid gap-6 lg:grid-cols-[minmax(0,0.94fr)_minmax(240px,0.66fr)]">
           <div className="space-y-6">
             <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+              <p className="orbit-accent-label text-xs font-semibold uppercase tracking-[0.35em]">
                 Overview
               </p>
               <h2 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)] sm:text-[2.45rem]">
@@ -360,17 +361,17 @@ function OverviewPanel() {
 
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
-                  Clean layout
-                </p>
+              <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.18em]">
+                Clean layout
+              </p>
                 <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
                   One steady structure for team rooms, chat, and people.
                 </p>
               </div>
               <div className="rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
-                  Easy to reopen
-                </p>
+              <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.18em]">
+                Easy to reopen
+              </p>
                 <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
                   Recent work stays close when you come back.
                 </p>
@@ -380,7 +381,7 @@ function OverviewPanel() {
 
           <div className="space-y-4">
             <div className="rounded-[1.5rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-5 py-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
+              <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.18em]">
                 Orbit
               </p>
               <p className="mt-3 text-lg font-semibold text-[var(--orbit-text)]">
@@ -391,8 +392,8 @@ function OverviewPanel() {
               </p>
             </div>
 
-            <div className="rounded-[1.5rem] border border-[color:var(--orbit-border)] bg-[linear-gradient(180deg,rgba(104,217,255,0.08),rgba(255,255,255,0.03))] px-5 py-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-200">
+            <div className="rounded-[1.5rem] border border-[color:var(--orbit-accent-border)] bg-[var(--orbit-accent-soft)] px-5 py-5">
+              <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.18em]">
                 Built for teams
               </p>
               <p className="mt-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
@@ -405,7 +406,7 @@ function OverviewPanel() {
 
       <div className="orbit-panel flex h-full flex-col rounded-[2rem] p-6 sm:p-8">
         <div className="space-y-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+          <p className="orbit-accent-label text-xs font-semibold uppercase tracking-[0.35em]">
             {isAuthenticated ? 'Ready' : 'Open Orbit'}
           </p>
           <h2 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)]">
@@ -440,6 +441,11 @@ function OverviewPanel() {
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
+          <ThemeToggle
+            className="h-12 rounded-full px-4 text-sm font-medium text-[var(--orbit-text)]"
+            showLabel
+          />
+
           {isAuthenticated ? (
             <NavLink
               className="rounded-full bg-cyan-400 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
@@ -568,7 +574,7 @@ function MarketingLayout({ clearSession, isAuthenticated }) {
       <div className="relative mx-auto flex min-h-screen max-w-[1540px] flex-col px-4 py-5 sm:px-6 lg:px-8">
         <header className="orbit-panel flex flex-col gap-4 rounded-[1.75rem] px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-[0.4em] text-cyan-300">
+            <p className="orbit-accent-label text-xs font-semibold uppercase tracking-[0.4em]">
               {headerEyebrow}
             </p>
             <h1 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)] sm:text-4xl">
@@ -580,6 +586,7 @@ function MarketingLayout({ clearSession, isAuthenticated }) {
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <ThemeToggle className="h-10 w-10 rounded-full" />
             <nav className="flex flex-wrap gap-3">
               {navItems.map((item) => (
                 item.to === '/app' && !isAuthenticated ? (
@@ -591,7 +598,7 @@ function MarketingLayout({ clearSession, isAuthenticated }) {
                       [
                         'rounded-full border px-4 py-2 text-sm transition',
                         isActive
-                          ? 'border-cyan-300/60 bg-cyan-400/10 text-cyan-100'
+                          ? 'orbit-accent-surface'
                           : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:text-[var(--orbit-text)]',
                       ].join(' ')
                     }
@@ -606,7 +613,7 @@ function MarketingLayout({ clearSession, isAuthenticated }) {
                       [
                         'rounded-full border px-4 py-2 text-sm transition',
                         isActive
-                          ? 'border-cyan-300/60 bg-cyan-400/10 text-cyan-100'
+                          ? 'orbit-accent-surface'
                           : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:text-[var(--orbit-text)]',
                       ].join(' ')
                     }
@@ -696,12 +703,12 @@ function WorkspaceLayout({ clearSession, user, accessToken }) {
       <div className="relative flex h-dvh min-h-dvh w-full flex-col overflow-hidden px-2 py-2 sm:px-3 sm:py-3">
         <header className="mb-1.5 shrink-0 flex items-center justify-between gap-3 rounded-[0.95rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-2.5 py-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.16)] backdrop-blur">
           <div className="flex min-w-0 items-center gap-2.5">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.9rem] bg-cyan-400/10 text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text)]">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.9rem] bg-[var(--orbit-accent-soft)] text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-accent-ink)]">
               O
             </div>
 
             <div className="flex min-w-0 items-center gap-2">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-300">
+              <p className="orbit-accent-label text-[10px] font-semibold uppercase tracking-[0.28em]">
                 Orbit
               </p>
               <p className="truncate text-[11px] text-[var(--orbit-text-muted)]">
@@ -711,13 +718,18 @@ function WorkspaceLayout({ clearSession, user, accessToken }) {
           </div>
 
           <div className="flex shrink-0 items-center gap-1.5">
+            <ThemeToggle
+              className="h-8 rounded-full px-3 text-[11px] font-medium"
+              showLabel
+            />
+
             <NavLink
               to="/"
               className={({ isActive }) =>
                 [
                   'rounded-full border px-2.5 py-1 text-[11px] font-medium transition',
                   isActive
-                    ? 'border-cyan-300/60 bg-cyan-400/10 text-cyan-100'
+                    ? 'orbit-accent-surface'
                     : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:text-[var(--orbit-text)]',
                 ].join(' ')
               }

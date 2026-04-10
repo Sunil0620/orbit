@@ -78,7 +78,7 @@ function JoinServerModal({ isOpen, onClose, onSuccess }) {
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+            <p className="orbit-accent-label text-xs uppercase tracking-[0.35em]">
               Join Server
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
@@ -100,7 +100,7 @@ function JoinServerModal({ isOpen, onClose, onSuccess }) {
 
         <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
           {errors.form ? (
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+            <div className="orbit-danger-banner rounded-2xl border px-4 py-3 text-sm">
               {errors.form}
             </div>
           ) : null}
@@ -122,7 +122,7 @@ function JoinServerModal({ isOpen, onClose, onSuccess }) {
               placeholder="b8f3d95a-2d3f-4e3f-9231-9c8d9b1fd321"
             />
             {errors.invite_code ? (
-              <p className="text-sm text-red-200">{errors.invite_code}</p>
+              <p className="orbit-danger-text text-sm">{errors.invite_code}</p>
             ) : null}
           </label>
 

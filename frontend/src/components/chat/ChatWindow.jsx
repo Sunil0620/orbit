@@ -52,7 +52,7 @@ function IconButton({ children, label, onClick, isActive = false }) {
       onClick={onClick}
       className={[
         'orbit-secondary-button rounded-lg p-2 transition',
-        isActive ? 'border-cyan-300/40 bg-cyan-400/10 text-cyan-100' : '',
+        isActive ? 'orbit-accent-surface' : '',
       ].join(' ')}
     >
       {children}
@@ -741,10 +741,10 @@ function ChatWindow({
       <div className="flex min-h-0 flex-1 flex-col justify-between bg-[var(--orbit-chat-bg)]">
         {homeMode ? (
           <div className="orbit-scrollbar min-h-0 flex-1 overflow-y-auto px-5 py-5">
-            <section className="overflow-hidden rounded-[1.55rem] border border-[color:var(--orbit-border)] bg-[linear-gradient(180deg,rgba(11,15,24,0.96),rgba(17,21,32,0.94))] px-5 py-5 shadow-[0_18px_42px_rgba(0,0,0,0.18)]">
+            <section className="orbit-showcase-frame overflow-hidden rounded-[1.55rem] border px-5 py-5">
               <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
                 <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-cyan-300">
+                  <p className="orbit-accent-label text-[10px] font-semibold uppercase tracking-[0.24em]">
                     Workspace
                   </p>
                   <h3 className="mt-2 text-[1.65rem] font-semibold leading-tight text-[var(--orbit-text)]">
@@ -752,13 +752,13 @@ function ChatWindow({
                       ? `Welcome back, ${currentUser.username}`
                       : 'Welcome back'}
                   </h3>
-                  <p className="mt-2 text-[13px] leading-6 text-slate-300/82">
+                  <p className="orbit-showcase-copy-muted mt-2 text-[13px] leading-6">
                     Recent chats, shared people, and unread messages in one place.
                   </p>
                 </div>
 
                 <div className="grid grid-cols-3 gap-2 sm:min-w-[20rem]">
-                  <div className="rounded-[1rem] border border-white/8 bg-white/[0.04] px-3 py-3">
+                  <div className="orbit-showcase-surface rounded-[1rem] border px-3 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
                       People
                     </p>
@@ -766,19 +766,19 @@ function ChatWindow({
                       {directoryUsers.length}
                     </p>
                   </div>
-                  <div className="rounded-[1rem] border border-white/8 bg-white/[0.04] px-3 py-3">
+                  <div className="orbit-showcase-surface rounded-[1rem] border px-3 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
                       Shared
                     </p>
-                    <p className="mt-2 text-xl font-semibold text-emerald-300">
+                    <p className="mt-2 text-xl font-semibold text-[var(--orbit-success)]">
                       {friendContacts.length}
                     </p>
                   </div>
-                  <div className="rounded-[1rem] border border-white/8 bg-white/[0.04] px-3 py-3">
+                  <div className="orbit-showcase-surface rounded-[1rem] border px-3 py-3">
                     <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
                       Unread
                     </p>
-                    <p className="mt-2 text-xl font-semibold text-amber-300">
+                    <p className="mt-2 text-xl font-semibold text-[var(--orbit-warning-ink)]">
                       {unreadDirectTotal}
                     </p>
                   </div>
@@ -812,7 +812,7 @@ function ChatWindow({
                           onClick={() => onOpenDirectConversation?.(conversation.participant)}
                           className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[var(--orbit-surface-hover)]"
                         >
-                          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[0.95rem] bg-cyan-400/15 text-sm font-semibold text-[var(--orbit-text)]">
+                          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[0.95rem] bg-[var(--orbit-accent-soft)] text-sm font-semibold text-[var(--orbit-accent-ink)]">
                             {getAvatarLabel(conversation.participant)}
                             <span className="absolute -bottom-0.5 -right-0.5">
                               <StatusDot isOnline={Boolean(conversation.participant?.is_online)} />
@@ -892,7 +892,7 @@ function ChatWindow({
                                 : 'cursor-not-allowed opacity-80',
                             ].join(' ')}
                           >
-                            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[0.95rem] bg-cyan-400/15 text-sm font-semibold text-[var(--orbit-text)]">
+                            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[0.95rem] bg-[var(--orbit-accent-soft)] text-sm font-semibold text-[var(--orbit-accent-ink)]">
                               {getAvatarLabel(contact)}
                               <span className="absolute -bottom-0.5 -right-0.5">
                                 <StatusDot isOnline={Boolean(contact.is_online)} />
@@ -935,7 +935,7 @@ function ChatWindow({
             ) : null}
 
             {messagesError ? (
-              <div className="rounded-3xl border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
+              <div className="orbit-danger-banner rounded-3xl border px-5 py-4 text-sm">
                 {messagesError}
               </div>
             ) : null}

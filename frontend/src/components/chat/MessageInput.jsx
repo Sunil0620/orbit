@@ -110,7 +110,7 @@ function MessageInput({
       onSubmit={handleSubmit}
     >
       {composerError ? (
-        <p className="mb-3 text-[11px] font-medium uppercase tracking-[0.14em] text-red-300">
+        <p className="orbit-danger-text mb-3 text-[11px] font-medium uppercase tracking-[0.14em]">
           {composerError}
         </p>
       ) : null}

@@ -108,7 +108,7 @@ function Register() {
       <div className="grid min-h-full xl:grid-cols-[minmax(0,1fr)_300px]">
         <div className="p-6 sm:p-8">
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+            <p className="orbit-accent-label text-xs font-semibold uppercase tracking-[0.35em]">
               Create Account
             </p>
             <h2 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)]">
@@ -122,7 +122,7 @@ function Register() {
 
           <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
             {errors.form ? (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              <div className="orbit-danger-banner rounded-2xl border px-4 py-3 text-sm">
                 {errors.form}
               </div>
             ) : null}
@@ -140,7 +140,7 @@ function Register() {
                   placeholder="username"
                 />
                 {errors.username ? (
-                  <p className="text-sm text-red-300">{errors.username}</p>
+                  <p className="orbit-danger-text text-sm">{errors.username}</p>
                 ) : null}
               </label>
 
@@ -156,7 +156,7 @@ function Register() {
                   placeholder="xyz@orbit.dev"
                 />
                 {errors.email ? (
-                  <p className="text-sm text-red-300">{errors.email}</p>
+                  <p className="orbit-danger-text text-sm">{errors.email}</p>
                 ) : null}
               </label>
             </div>
@@ -174,7 +174,7 @@ function Register() {
                   placeholder="••••••••"
                 />
                 {errors.password ? (
-                  <p className="text-sm text-red-300">{errors.password}</p>
+                  <p className="orbit-danger-text text-sm">{errors.password}</p>
                 ) : null}
               </label>
 
@@ -190,7 +190,7 @@ function Register() {
                   placeholder="••••••••"
                 />
                 {errors.password2 ? (
-                  <p className="text-sm text-red-300">{errors.password2}</p>
+                  <p className="orbit-danger-text text-sm">{errors.password2}</p>
                 ) : null}
               </label>
             </div>
@@ -206,16 +206,16 @@ function Register() {
 
           <p className="mt-6 text-sm text-[var(--orbit-text-muted)]">
             Already registered?{' '}
-            <Link className="font-medium text-cyan-300 hover:text-cyan-200" to="/login">
+            <Link className="orbit-accent-link font-medium" to="/login">
               Sign in
             </Link>
           </p>
         </div>
 
-        <aside className="border-t border-[color:var(--orbit-border)] bg-[linear-gradient(180deg,rgba(67,209,141,0.08),rgba(255,255,255,0.02))] p-6 xl:border-l xl:border-t-0">
+        <aside className="border-t border-[color:var(--orbit-border)] bg-[rgba(16,185,129,0.08)] p-6 xl:border-l xl:border-t-0">
           <div className="space-y-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[var(--orbit-success)]">
                 Start here
               </p>
               <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
@@ -231,9 +231,9 @@ function Register() {
               ].map(([step, label]) => (
                 <div
                   key={step}
-                  className="flex items-center gap-3 rounded-[1rem] border border-[color:var(--orbit-border)] bg-black/10 px-3 py-3"
+                  className="orbit-showcase-surface-elevated flex items-center gap-3 rounded-[1rem] border px-3 py-3"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-400/12 text-xs font-semibold text-emerald-200">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-2xl bg-emerald-400/12 text-xs font-semibold text-[var(--orbit-success)]">
                     {step}
                   </span>
                   <p className="text-sm text-[var(--orbit-text)]">{label}</p>
@@ -241,7 +241,7 @@ function Register() {
               ))}
             </div>
 
-            <div className="rounded-[1rem] border border-[color:var(--orbit-border)] bg-white/[0.04] px-3 py-3 text-sm text-[var(--orbit-text-muted)]">
+            <div className="orbit-showcase-surface rounded-[1rem] border px-3 py-3 text-sm text-[var(--orbit-text-muted)]">
               Keep the details simple now and Orbit handles the structure after sign in.
             </div>
           </div>

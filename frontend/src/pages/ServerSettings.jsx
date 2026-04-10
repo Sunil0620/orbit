@@ -46,11 +46,11 @@ function roleLabel(role) {
 
 function roleBadgeClass(role) {
   if (role === 'owner') {
-    return 'border-amber-300/30 bg-amber-400/10 text-amber-100'
+    return 'border-amber-300/30 bg-amber-400/10 text-[var(--orbit-warning-ink)]'
   }
 
   if (role === 'admin') {
-    return 'border-cyan-300/30 bg-cyan-400/10 text-cyan-100'
+    return 'orbit-accent-surface'
   }
 
   return 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)]'
@@ -99,7 +99,7 @@ function Avatar({ image, label, sizeClass = 'h-11 w-11 rounded-2xl' }) {
 
   return (
     <div
-      className={`flex items-center justify-center bg-cyan-400/15 text-sm font-semibold text-[var(--orbit-text)] ${sizeClass}`}
+      className={`flex items-center justify-center bg-[var(--orbit-accent-soft)] text-sm font-semibold text-[var(--orbit-accent-ink)] ${sizeClass}`}
     >
       {getInitials(label)}
     </div>
@@ -130,7 +130,7 @@ function SettingsCard({ title, description, children, actions = null }) {
 function StatCard({ label, value, tone = 'default' }) {
   const toneClass =
     tone === 'accent'
-      ? 'border-cyan-300/25 bg-cyan-400/10'
+      ? 'border-[color:var(--orbit-accent-border)] bg-[var(--orbit-accent-soft)]'
       : 'border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)]'
 
   return (
@@ -518,7 +518,7 @@ function ServerSettings() {
                 {roleLabel(member.role)}
               </span>
               {Number(member.id) === Number(server?.owner?.id) ? (
-                <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-100">
+                <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--orbit-warning-ink)]">
                   Server owner
                 </span>
               ) : null}
@@ -551,7 +551,7 @@ function ServerSettings() {
                 type="button"
                 onClick={() => handleRoleChange(member, 'admin')}
                 disabled={isRoleUpdating}
-                className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-100 transition hover:border-cyan-300/55 hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-60"
+                className="orbit-accent-surface rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] transition disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isRoleUpdating ? 'Updating...' : 'Make admin'}
               </button>
@@ -563,7 +563,7 @@ function ServerSettings() {
               type="button"
               onClick={() => handleRemoveMember(member)}
               disabled={isRemoving}
-              className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-red-100 transition hover:border-red-500/55 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--orbit-danger-ink)] transition hover:border-red-500/55 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isRemoving ? 'Removing...' : 'Remove'}
             </button>
@@ -661,19 +661,19 @@ function ServerSettings() {
             >
               <div className="grid gap-3 md:grid-cols-3">
                 <div className="rounded-[1.35rem] border border-amber-300/25 bg-amber-400/10 px-4 py-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-100">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-warning-ink)]">
                     Owner
                   </p>
-                  <p className="mt-3 text-sm leading-6 text-amber-50/90">
+                  <p className="mt-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
                     Can delete the server, assign admins, manage members, manage channels, and rename the server.
                   </p>
                 </div>
 
                 <div className="rounded-[1.35rem] border border-cyan-300/25 bg-cyan-400/10 px-4 py-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-100">
+                  <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.28em]">
                     Admin
                   </p>
-                  <p className="mt-3 text-sm leading-6 text-cyan-50/90">
+                  <p className="mt-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
                     Can rename the server, create and delete channels, invite people, and remove regular members.
                   </p>
                 </div>
@@ -781,10 +781,10 @@ function ServerSettings() {
           >
             <div className="grid gap-3 md:grid-cols-3">
               <div className="rounded-[1.35rem] border border-amber-300/25 bg-amber-400/10 px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-amber-100">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-warning-ink)]">
                   Owner
                 </p>
-                <ul className="mt-3 space-y-2 text-sm leading-6 text-amber-50/90">
+                <ul className="mt-3 space-y-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
                   <li>Delete the server</li>
                   <li>Promote or demote admins</li>
                   <li>Manage channels and members</li>
@@ -792,10 +792,10 @@ function ServerSettings() {
               </div>
 
               <div className="rounded-[1.35rem] border border-cyan-300/25 bg-cyan-400/10 px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-cyan-100">
+                <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.28em]">
                   Admin
                 </p>
-                <ul className="mt-3 space-y-2 text-sm leading-6 text-cyan-50/90">
+                <ul className="mt-3 space-y-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
                   <li>Rename the server</li>
                   <li>Create and delete channels</li>
                   <li>Invite people and remove regular members</li>
@@ -849,7 +849,7 @@ function ServerSettings() {
                   type="button"
                   onClick={handleCopyInvite}
                   disabled={!server.invite_code}
-                  className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-100 transition hover:border-cyan-300/55 hover:bg-cyan-400/15 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="orbit-accent-surface rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] transition disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Copy code
                 </button>
@@ -910,7 +910,7 @@ function ServerSettings() {
                 type="button"
                 onClick={handleLeave}
                 disabled={isSaving}
-                className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-100 transition hover:border-amber-500/55 hover:bg-amber-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-[var(--orbit-warning-ink)] transition hover:border-amber-500/55 hover:bg-amber-500/15 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSaving ? 'Working...' : 'Leave server'}
               </button>
@@ -931,7 +931,7 @@ function ServerSettings() {
                 type="button"
                 onClick={handleDelete}
                 disabled={isSaving}
-                className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-100 transition hover:border-red-500/55 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-[var(--orbit-danger-ink)] transition hover:border-red-500/55 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSaving ? 'Deleting...' : 'Delete server'}
               </button>
@@ -996,7 +996,7 @@ function ServerSettings() {
                   className={[
                     'min-w-max rounded-xl border px-4 py-3 text-left text-sm font-medium transition lg:w-full',
                     isActive
-                      ? 'border-cyan-300/30 bg-cyan-400/10 text-cyan-100'
+                      ? 'orbit-accent-surface'
                       : 'border-transparent text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border)] hover:bg-[var(--orbit-surface-soft)] hover:text-[var(--orbit-text)]',
                   ].join(' ')}
                 >
@@ -1009,7 +1009,7 @@ function ServerSettings() {
 
         <section className="flex min-h-0 min-w-0 flex-1 flex-col">
           <header className="shrink-0 border-b border-[color:var(--orbit-border)] px-4 py-4 sm:px-5">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+            <p className="orbit-accent-label text-xs font-semibold uppercase tracking-[0.35em]">
               {sectionMeta.eyebrow}
             </p>
             <h1 className="mt-2 text-2xl font-semibold text-[var(--orbit-text)]">
@@ -1023,13 +1023,13 @@ function ServerSettings() {
           <div className="orbit-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
             <div className="space-y-5">
               {error ? (
-                <div className="rounded-[1.5rem] border border-red-500/20 bg-red-500/10 px-5 py-4 text-sm text-red-100">
+                <div className="orbit-danger-banner rounded-[1.5rem] border px-5 py-4 text-sm">
                   {error}
                 </div>
               ) : null}
 
               {notice ? (
-                <div className="rounded-[1.5rem] border border-emerald-500/20 bg-emerald-500/10 px-5 py-4 text-sm text-emerald-100">
+                <div className="orbit-success-banner rounded-[1.5rem] border px-5 py-4 text-sm">
                   {notice}
                 </div>
               ) : null}

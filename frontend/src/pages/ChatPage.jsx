@@ -502,13 +502,13 @@ function ChatPage() {
       {actionNotice || serversError ? (
         <div className="pointer-events-none absolute right-3 top-3 z-20 space-y-2">
           {actionNotice ? (
-            <div className="w-[min(24rem,calc(100vw-2rem))] rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-100 shadow-[0_18px_32px_rgba(0,0,0,0.22)] backdrop-blur">
+            <div className="orbit-success-banner w-[min(24rem,calc(100vw-2rem))] rounded-2xl border px-4 py-3 text-sm shadow-[0_18px_32px_rgba(0,0,0,0.22)] backdrop-blur">
               {actionNotice}
             </div>
           ) : null}
 
           {serversError ? (
-            <div className="w-[min(24rem,calc(100vw-2rem))] rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100 shadow-[0_18px_32px_rgba(0,0,0,0.22)] backdrop-blur">
+            <div className="orbit-danger-banner w-[min(24rem,calc(100vw-2rem))] rounded-2xl border px-4 py-3 text-sm shadow-[0_18px_32px_rgba(0,0,0,0.22)] backdrop-blur">
               {serversError}
             </div>
           ) : null}

@@ -1,4 +1,4 @@
-import useThemeStore from '../../store/useThemeStore'
+import ThemeToggle from '../theme/ThemeToggle'
 
 function getInitials(name) {
   if (!name) {
@@ -28,48 +28,6 @@ function HomeIcon() {
       <path d="M6.25 8.5A2.25 2.25 0 0 1 8.5 6.25h7a2.25 2.25 0 0 1 2.25 2.25v5A2.25 2.25 0 0 1 15.5 15.75h-4.4l-2.85 2.4v-2.4H8.5a2.25 2.25 0 0 1-2.25-2.25Z" />
       <path d="M9.25 10.25h5.5" />
       <path d="M9.25 12.9h3.75" />
-    </svg>
-  )
-}
-
-function SunIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-4 w-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <circle cx="12" cy="12" r="4" />
-      <path d="M12 2v2.5" />
-      <path d="M12 19.5V22" />
-      <path d="m4.93 4.93 1.77 1.77" />
-      <path d="m17.3 17.3 1.77 1.77" />
-      <path d="M2 12h2.5" />
-      <path d="M19.5 12H22" />
-      <path d="m4.93 19.07 1.77-1.77" />
-      <path d="m17.3 6.7 1.77-1.77" />
-    </svg>
-  )
-}
-
-function MoonIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      viewBox="0 0 24 24"
-      className="h-4 w-4"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M21 12.8A9 9 0 1 1 11.2 3c-.1.4-.2.9-.2 1.4a8 8 0 0 0 8 8c.5 0 1-.1 1.5-.2Z" />
     </svg>
   )
 }
@@ -160,7 +118,7 @@ function RailButton({
         className={[
           'flex h-12 w-12 items-center justify-center rounded-[1rem] border text-[13px] font-semibold transition',
           isActive
-            ? 'border-cyan-300/60 bg-cyan-400/15 text-[var(--orbit-text)] shadow-lg shadow-cyan-900/20'
+            ? 'orbit-accent-surface shadow-[var(--orbit-accent-shadow)]'
             : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] hover:text-[var(--orbit-text)]',
         ].join(' ')}
       >
@@ -182,9 +140,6 @@ function Sidebar({
   isLoading = false,
   emptyMessage = 'No servers yet.',
 }) {
-  const theme = useThemeStore((state) => state.theme)
-  const toggleTheme = useThemeStore((state) => state.toggleTheme)
-
   return (
     <aside className="flex min-h-0 flex-row items-center gap-2.5 border-b border-[color:var(--orbit-border)] bg-[var(--orbit-sidebar-bg)] px-2.5 py-3 xl:h-full xl:flex-col xl:border-b-0 xl:border-r xl:px-2 xl:py-2 xl:overflow-hidden">
       <div className="flex min-h-0 min-w-0 flex-1 items-center gap-2.5 xl:w-full xl:flex-col xl:items-center xl:overflow-hidden">
@@ -234,7 +189,7 @@ function Sidebar({
         <button
           type="button"
           onClick={onOpenCreate}
-          className="flex h-9 w-9 items-center justify-center rounded-[0.9rem] border border-dashed border-cyan-300/25 bg-cyan-400/10 text-cyan-100 transition hover:border-cyan-300/60 hover:bg-cyan-400/15"
+          className="orbit-accent-surface flex h-9 w-9 items-center justify-center rounded-[0.9rem] border border-dashed transition"
           aria-label="Create server"
           title="Create server"
         >
@@ -253,15 +208,7 @@ function Sidebar({
 
         <div className="hidden h-px w-8 bg-[var(--orbit-border)] xl:block" />
 
-        <button
-          type="button"
-          onClick={toggleTheme}
-          className="hidden xl:flex h-9 w-9 items-center justify-center rounded-[0.9rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] hover:text-[var(--orbit-text)]"
-          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-          title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-        >
-          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-        </button>
+        <ThemeToggle className="hidden h-9 w-9 rounded-[0.9rem] xl:flex" />
 
         <div className="hidden xl:flex flex-col items-center gap-1.5">
           <div
@@ -281,7 +228,7 @@ function Sidebar({
         <div className="min-w-0 rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-2 py-2 xl:hidden xl:w-full">
           <div className="flex items-center gap-2">
             <div className="relative h-9 w-9 shrink-0">
-              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-[0.95rem] bg-cyan-400/15 text-[13px] font-semibold text-[var(--orbit-text)]">
+              <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-[0.95rem] bg-[var(--orbit-accent-soft)] text-[13px] font-semibold text-[var(--orbit-accent-ink)]">
                 {getAvatarLabel(user)}
               </div>
               <span
@@ -301,15 +248,7 @@ function Sidebar({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={toggleTheme}
-              className="orbit-secondary-button flex h-8 w-8 items-center justify-center rounded-[0.8rem]"
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-            >
-              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-            </button>
+            <ThemeToggle className="flex h-8 w-8 rounded-[0.8rem]" />
           </div>
         </div>
       </div>

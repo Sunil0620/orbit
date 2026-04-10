@@ -3,7 +3,75 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  :root,
+  html[data-theme='light'] {
+    color-scheme: light;
+    --orbit-bg: #edf3fb;
+    --orbit-body-background:
+      radial-gradient(circle at 15% 18%, rgba(14, 165, 233, 0.11), transparent 20%),
+      radial-gradient(circle at 82% 15%, rgba(56, 189, 248, 0.1), transparent 18%),
+      radial-gradient(circle at 54% 78%, rgba(147, 197, 253, 0.14), transparent 26%),
+      linear-gradient(180deg, #f5f8fe 0%, #ebf1fb 55%, #e5edf8 100%);
+    --orbit-panel-start: rgba(255, 255, 255, 0.94);
+    --orbit-panel-end: rgba(241, 246, 255, 0.94);
+    --orbit-shell-bg: rgba(248, 251, 255, 0.96);
+    --orbit-sidebar-bg: #f2f6fc;
+    --orbit-channel-bg: #edf2f9;
+    --orbit-chat-bg: #f8fbff;
+    --orbit-chat-footer-bg: #eef3f9;
+    --orbit-member-bg: #f1f4fa;
+    --orbit-composer-bg: #ffffff;
+    --orbit-surface-0: #ffffff;
+    --orbit-surface-1: #f7faff;
+    --orbit-surface-2: #edf3fa;
+    --orbit-surface-3: #e3ebf5;
+    --orbit-surface-soft: rgba(15, 23, 42, 0.04);
+    --orbit-surface-hover: rgba(14, 165, 233, 0.1);
+    --orbit-border: rgba(15, 23, 42, 0.09);
+    --orbit-border-strong: rgba(15, 23, 42, 0.16);
+    --orbit-text: #172234;
+    --orbit-text-muted: #5d6c81;
+    --orbit-text-subtle: #7b8899;
+    --orbit-accent: #0891b2;
+    --orbit-accent-2: #0ea5e9;
+    --orbit-accent-label: #0f6c8e;
+    --orbit-accent-ink: #155e75;
+    --orbit-accent-soft: rgba(14, 165, 233, 0.12);
+    --orbit-accent-soft-strong: rgba(14, 165, 233, 0.18);
+    --orbit-accent-border: rgba(14, 165, 233, 0.22);
+    --orbit-accent-border-strong: rgba(8, 145, 178, 0.38);
+    --orbit-accent-shadow: 0 16px 34px rgba(14, 116, 144, 0.12);
+    --orbit-link: #0f6c8e;
+    --orbit-link-hover: #155e75;
+    --orbit-success: #0f9f6e;
+    --orbit-success-ink: #0f766e;
+    --orbit-warning-ink: #92400e;
+    --orbit-danger-ink: #b91c1c;
+    --orbit-showcase-backdrop:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(235, 243, 252, 0.95));
+    --orbit-showcase-top-glow:
+      linear-gradient(180deg, rgba(14, 165, 233, 0.14), transparent);
+    --orbit-showcase-frame: rgba(255, 255, 255, 0.72);
+    --orbit-showcase-surface: rgba(255, 255, 255, 0.66);
+    --orbit-showcase-surface-strong: rgba(250, 252, 255, 0.9);
+    --orbit-showcase-surface-elevated: rgba(255, 255, 255, 0.84);
+    --orbit-showcase-border: rgba(15, 23, 42, 0.11);
+    --orbit-showcase-border-soft: rgba(15, 23, 42, 0.08);
+    --orbit-showcase-copy-muted: #526075;
+    --orbit-showcase-shadow: 0 30px 60px rgba(148, 163, 184, 0.24);
+    --orbit-auth-preview-backdrop-login:
+      linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(237, 246, 255, 0.95));
+    --orbit-auth-preview-backdrop-register:
+      linear-gradient(180deg, rgba(252, 255, 253, 0.92), rgba(240, 249, 244, 0.96));
+    --orbit-auth-preview-glow-login:
+      radial-gradient(circle at top left, rgba(14, 165, 233, 0.15), transparent 26%),
+      radial-gradient(circle at 80% 72%, rgba(56, 189, 248, 0.12), transparent 28%);
+    --orbit-auth-preview-glow-register:
+      radial-gradient(circle at top right, rgba(16, 185, 129, 0.14), transparent 24%),
+      radial-gradient(circle at 12% 82%, rgba(14, 165, 233, 0.1), transparent 30%);
+  }
+
+  html[data-theme='dark'] {
     color-scheme: dark;
     --orbit-bg: #060814;
     --orbit-body-background:
@@ -33,42 +101,47 @@
     --orbit-text-subtle: #6f7c95;
     --orbit-accent: #68d9ff;
     --orbit-accent-2: #3fa7ff;
+    --orbit-accent-label: #8de8ff;
+    --orbit-accent-ink: #d8f8ff;
+    --orbit-accent-soft: rgba(104, 217, 255, 0.1);
+    --orbit-accent-soft-strong: rgba(104, 217, 255, 0.16);
+    --orbit-accent-border: rgba(103, 232, 249, 0.32);
+    --orbit-accent-border-strong: rgba(103, 232, 249, 0.55);
+    --orbit-accent-shadow: 0 18px 36px rgba(8, 47, 73, 0.28);
+    --orbit-link: #67e8f9;
+    --orbit-link-hover: #a5f3fc;
     --orbit-success: #43d18d;
-  }
-
-  html.light {
-    color-scheme: light;
-    --orbit-bg: #edf3fb;
-    --orbit-body-background:
-      radial-gradient(circle at 15% 18%, rgba(14, 165, 233, 0.11), transparent 20%),
-      radial-gradient(circle at 82% 15%, rgba(56, 189, 248, 0.1), transparent 18%),
-      radial-gradient(circle at 54% 78%, rgba(147, 197, 253, 0.14), transparent 26%),
-      linear-gradient(180deg, #f5f8fe 0%, #ebf1fb 55%, #e5edf8 100%);
-    --orbit-panel-start: rgba(255, 255, 255, 0.94);
-    --orbit-panel-end: rgba(241, 246, 255, 0.94);
-    --orbit-shell-bg: rgba(248, 251, 255, 0.96);
-    --orbit-sidebar-bg: #f2f6fc;
-    --orbit-channel-bg: #edf2f9;
-    --orbit-chat-bg: #f8fbff;
-    --orbit-chat-footer-bg: #eef3f9;
-    --orbit-member-bg: #f1f4fa;
-    --orbit-composer-bg: #ffffff;
-    --orbit-surface-0: #ffffff;
-    --orbit-surface-1: #f7faff;
-    --orbit-surface-2: #edf3fa;
-    --orbit-surface-3: #e3ebf5;
-    --orbit-surface-soft: rgba(15, 23, 42, 0.04);
-    --orbit-surface-hover: rgba(14, 165, 233, 0.1);
-    --orbit-border: rgba(15, 23, 42, 0.09);
-    --orbit-border-strong: rgba(15, 23, 42, 0.16);
-    --orbit-text: #172234;
-    --orbit-text-muted: #5d6c81;
-    --orbit-text-subtle: #7b8899;
+    --orbit-success-ink: #bbf7d0;
+    --orbit-warning-ink: #fde68a;
+    --orbit-danger-ink: #fecaca;
+    --orbit-showcase-backdrop:
+      linear-gradient(180deg, rgba(6, 10, 19, 0.98), rgba(7, 12, 22, 0.94));
+    --orbit-showcase-top-glow:
+      linear-gradient(180deg, rgba(104, 217, 255, 0.08), transparent);
+    --orbit-showcase-frame: rgba(8, 12, 20, 0.88);
+    --orbit-showcase-surface: rgba(255, 255, 255, 0.03);
+    --orbit-showcase-surface-strong: rgba(12, 17, 28, 0.96);
+    --orbit-showcase-surface-elevated: rgba(255, 255, 255, 0.04);
+    --orbit-showcase-border: rgba(255, 255, 255, 0.1);
+    --orbit-showcase-border-soft: rgba(255, 255, 255, 0.06);
+    --orbit-showcase-copy-muted: rgba(226, 232, 240, 0.82);
+    --orbit-showcase-shadow: 0 34px 70px rgba(0, 0, 0, 0.34);
+    --orbit-auth-preview-backdrop-login:
+      linear-gradient(180deg, rgba(9, 13, 23, 0.98), rgba(14, 20, 32, 0.96));
+    --orbit-auth-preview-backdrop-register:
+      linear-gradient(180deg, rgba(10, 16, 21, 0.98), rgba(15, 22, 29, 0.96));
+    --orbit-auth-preview-glow-login:
+      radial-gradient(circle at top left, rgba(104, 217, 255, 0.12), transparent 26%),
+      radial-gradient(circle at 80% 72%, rgba(63, 167, 255, 0.08), transparent 28%);
+    --orbit-auth-preview-glow-register:
+      radial-gradient(circle at top right, rgba(67, 209, 141, 0.12), transparent 24%),
+      radial-gradient(circle at 12% 82%, rgba(104, 217, 255, 0.09), transparent 30%);
   }
 
   html {
     background: var(--orbit-bg);
     scrollbar-color: rgba(104, 217, 255, 0.35) rgba(255, 255, 255, 0.06);
+    transition: background-color 0.3s ease;
   }
 
   body {
@@ -76,6 +149,7 @@
     background: var(--orbit-body-background);
     color: var(--orbit-text);
     font-family: 'Avenir Next', 'Segoe UI Variable', 'Trebuchet MS', sans-serif;
+    transition: background 0.3s ease, color 0.3s ease;
   }
 
   #root {
@@ -222,6 +296,103 @@
     background: var(--orbit-surface-hover);
     color: var(--orbit-text);
     transform: translateY(-1px);
+  }
+
+  .orbit-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    border: 1px solid var(--orbit-border);
+    background: var(--orbit-surface-soft);
+    color: var(--orbit-text-muted);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    transition:
+      border-color 180ms ease,
+      background-color 180ms ease,
+      color 180ms ease,
+      transform 180ms ease;
+  }
+
+  .orbit-theme-toggle:hover {
+    border-color: var(--orbit-border-strong);
+    background: var(--orbit-surface-hover);
+    color: var(--orbit-text);
+    transform: translateY(-1px);
+  }
+
+  .orbit-accent-label {
+    color: var(--orbit-accent-label);
+  }
+
+  .orbit-accent-ink {
+    color: var(--orbit-accent-ink);
+  }
+
+  .orbit-accent-link {
+    color: var(--orbit-link);
+    transition: color 180ms ease;
+  }
+
+  .orbit-accent-link:hover {
+    color: var(--orbit-link-hover);
+  }
+
+  .orbit-accent-surface {
+    border-color: var(--orbit-accent-border);
+    background: var(--orbit-accent-soft);
+    color: var(--orbit-accent-ink);
+  }
+
+  .orbit-accent-surface:hover {
+    border-color: var(--orbit-accent-border-strong);
+    background: var(--orbit-accent-soft-strong);
+  }
+
+  .orbit-showcase-frame {
+    background: var(--orbit-showcase-frame);
+    border-color: var(--orbit-showcase-border);
+    box-shadow: var(--orbit-showcase-shadow);
+  }
+
+  .orbit-showcase-surface {
+    background: var(--orbit-showcase-surface);
+    border-color: var(--orbit-showcase-border-soft);
+  }
+
+  .orbit-showcase-surface-strong {
+    background: var(--orbit-showcase-surface-strong);
+    border-color: var(--orbit-showcase-border-soft);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .orbit-showcase-surface-elevated {
+    background: var(--orbit-showcase-surface-elevated);
+    border-color: var(--orbit-showcase-border-soft);
+  }
+
+  .orbit-showcase-divider {
+    border-color: var(--orbit-showcase-border-soft);
+  }
+
+  .orbit-showcase-copy-muted {
+    color: var(--orbit-showcase-copy-muted);
+  }
+
+  .orbit-success-banner {
+    border-color: rgba(16, 185, 129, 0.28);
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--orbit-success-ink);
+  }
+
+  .orbit-danger-banner {
+    border-color: rgba(239, 68, 68, 0.28);
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--orbit-danger-ink);
+  }
+
+  .orbit-danger-text {
+    color: var(--orbit-danger-ink);
   }
 
   .orbit-modal-surface {

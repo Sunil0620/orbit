@@ -118,7 +118,7 @@ function CreateServerModal({ isOpen, onClose, onSuccess }) {
       >
         <div className="flex items-start justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.35em] text-cyan-300">
+            <p className="orbit-accent-label text-xs uppercase tracking-[0.35em]">
               Create Server
             </p>
             <h2 className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
@@ -140,7 +140,7 @@ function CreateServerModal({ isOpen, onClose, onSuccess }) {
 
         <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
           {errors.form ? (
-            <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+            <div className="orbit-danger-banner rounded-2xl border px-4 py-3 text-sm">
               {errors.form}
             </div>
           ) : null}
@@ -155,7 +155,7 @@ function CreateServerModal({ isOpen, onClose, onSuccess }) {
               className="orbit-input w-full rounded-2xl px-4 py-3 text-sm transition"
               placeholder="Orbit crew"
             />
-            {errors.name ? <p className="text-sm text-red-200">{errors.name}</p> : null}
+            {errors.name ? <p className="orbit-danger-text text-sm">{errors.name}</p> : null}
           </label>
 
           <label className="block space-y-2">
@@ -166,7 +166,7 @@ function CreateServerModal({ isOpen, onClose, onSuccess }) {
               type="file"
               accept="image/*"
               onChange={updateIcon}
-              className="orbit-input block w-full rounded-2xl px-4 py-3 text-sm file:mr-4 file:rounded-xl file:border-0 file:bg-cyan-400/10 file:px-3 file:py-2 file:text-sm file:font-medium file:text-cyan-100"
+              className="orbit-input block w-full rounded-2xl px-4 py-3 text-sm file:mr-4 file:rounded-xl file:border-0 file:bg-[var(--orbit-accent-soft)] file:px-3 file:py-2 file:text-sm file:font-medium file:text-[var(--orbit-accent-ink)]"
             />
             <p className="text-xs uppercase tracking-[0.24em] text-[var(--orbit-text-subtle)]">
               {formData.icon ? formData.icon.name : 'No file selected'}

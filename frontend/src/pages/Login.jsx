@@ -111,7 +111,7 @@ function Login() {
       <div className="grid min-h-full lg:grid-cols-[minmax(0,1fr)_280px]">
         <div className="p-6 sm:p-8">
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-cyan-300">
+            <p className="orbit-accent-label text-xs font-semibold uppercase tracking-[0.35em]">
               Sign In
             </p>
             <h2 className="text-3xl font-semibold tracking-tight text-[var(--orbit-text)]">
@@ -124,13 +124,13 @@ function Login() {
 
           <form className="mt-8 space-y-5" onSubmit={handleSubmit} noValidate>
             {location.state?.notice ? (
-              <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">
+              <div className="orbit-success-banner rounded-2xl border px-4 py-3 text-sm">
                 {location.state.notice}
               </div>
             ) : null}
 
             {errors.form ? (
-              <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-200">
+              <div className="orbit-danger-banner rounded-2xl border px-4 py-3 text-sm">
                 {errors.form}
               </div>
             ) : null}
@@ -147,7 +147,7 @@ function Login() {
                 placeholder="username"
               />
               {errors.username ? (
-                <p className="text-sm text-red-300">{errors.username}</p>
+                <p className="orbit-danger-text text-sm">{errors.username}</p>
               ) : null}
             </label>
 
@@ -163,7 +163,7 @@ function Login() {
                 placeholder="••••••••"
               />
               {errors.password ? (
-                <p className="text-sm text-red-300">{errors.password}</p>
+                <p className="orbit-danger-text text-sm">{errors.password}</p>
               ) : null}
             </label>
 
@@ -178,16 +178,16 @@ function Login() {
 
           <p className="mt-6 text-sm text-[var(--orbit-text-muted)]">
             New to Orbit?{' '}
-            <Link className="font-medium text-cyan-300 hover:text-cyan-200" to="/register">
+            <Link className="orbit-accent-link font-medium" to="/register">
               Create an account
             </Link>
           </p>
         </div>
 
-        <aside className="border-t border-[color:var(--orbit-border)] bg-[linear-gradient(180deg,rgba(104,217,255,0.08),rgba(255,255,255,0.02))] p-6 lg:border-l lg:border-t-0">
+        <aside className="border-t border-[color:var(--orbit-border)] bg-[var(--orbit-accent-soft)] p-6 lg:border-l lg:border-t-0">
           <div className="space-y-5">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-cyan-200">
+              <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.22em]">
                 Back to work
               </p>
               <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
@@ -204,7 +204,7 @@ function Login() {
               ].map((item) => (
                 <div
                   key={item}
-                  className="rounded-[1rem] border border-[color:var(--orbit-border)] bg-black/10 px-3 py-3 text-sm text-[var(--orbit-text)]"
+                  className="orbit-showcase-surface-elevated rounded-[1rem] border px-3 py-3 text-sm text-[var(--orbit-text)]"
                 >
                   {item}
                 </div>
@@ -212,7 +212,7 @@ function Login() {
             </div>
 
             {isSwitchUserFlow ? (
-              <div className="rounded-[1rem] border border-white/10 bg-white/[0.04] px-3 py-3 text-sm text-[var(--orbit-text-muted)]">
+              <div className="orbit-showcase-surface rounded-[1rem] border px-3 py-3 text-sm text-[var(--orbit-text-muted)]">
                 Sign in with another account and Orbit will load that workspace instead.
               </div>
             ) : null}

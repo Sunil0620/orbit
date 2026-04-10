@@ -277,7 +277,7 @@ const FileUpload = forwardRef(function FileUpload(
                 ) : null}
 
                 {item.status === 'error' ? (
-                  <p className="mt-3 text-sm text-red-200">{item.error}</p>
+                  <p className="orbit-danger-text mt-3 text-sm">{item.error}</p>
                 ) : null}
               </div>
             ))}
