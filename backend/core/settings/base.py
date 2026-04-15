@@ -4,9 +4,11 @@ Dev and Prod settings import from here.
 """
 
 import re
-from decouple import config
 from datetime import timedelta
 from pathlib import Path
+from urllib.parse import parse_qsl, quote, unquote, urlparse
+
+from decouple import config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
@@ -14,6 +16,72 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 def read_env_text(name):
     raw_value = config(name, default='')
     return re.split(r'\s+#', raw_value, maxsplit=1)[0].strip()
+
+
+def build_database_config():
+    database_url = read_env_text('DATABASE_URL')
+    conn_max_age = config('DB_CONN_MAX_AGE', cast=int, default=60)
+    default_database = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': config('DB_NAME', default='orbit_db'),
+        'USER': config('DB_USER', default='orbit_user'),
+        'PASSWORD': config('DB_PASSWORD', default='orbit_pass'),
+        'HOST': config('DB_HOST', default='localhost'),
+        'PORT': config('DB_PORT', default='5432'),
+        'CONN_MAX_AGE': conn_max_age,
+        'CONN_HEALTH_CHECKS': True,
+    }
+    sslmode = read_env_text('DB_SSLMODE')
+    if sslmode:
+        default_database['OPTIONS'] = {'sslmode': sslmode}
+
+    if not database_url:
+        return default_database
+
+    parsed_url = urlparse(database_url)
+    if parsed_url.scheme not in {'postgres', 'postgresql'}:
+        return default_database
+
+    database_config = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': unquote(parsed_url.path.lstrip('/')) or default_database['NAME'],
+        'USER': unquote(parsed_url.username or default_database['USER']),
+        'PASSWORD': unquote(parsed_url.password or default_database['PASSWORD']),
+        'HOST': parsed_url.hostname or default_database['HOST'],
+        'PORT': str(parsed_url.port or default_database['PORT']),
+        'CONN_MAX_AGE': conn_max_age,
+        'CONN_HEALTH_CHECKS': True,
+    }
+    raw_options = dict(parse_qsl(parsed_url.query, keep_blank_values=True))
+    sslmode = raw_options.pop('sslmode', None) or sslmode
+    supported_option_keys = {'options', 'target_session_attrs'}
+    options = {
+        key: value
+        for key, value in raw_options.items()
+        if key in supported_option_keys and value
+    }
+    if sslmode or options:
+        database_config['OPTIONS'] = {}
+        if sslmode:
+            database_config['OPTIONS']['sslmode'] = sslmode
+        database_config['OPTIONS'].update(options)
+
+    return database_config
+
+
+def build_redis_hosts():
+    redis_url = read_env_text('REDIS_URL')
+    if redis_url:
+        return [redis_url]
+
+    redis_host = config('REDIS_HOST', default='redis')
+    redis_port = config('REDIS_PORT', cast=int, default=6379)
+    redis_password = read_env_text('REDIS_PASSWORD')
+
+    if redis_password:
+        return [f'redis://:{quote(redis_password)}@{redis_host}:{redis_port}/0']
+
+    return [(redis_host, redis_port)]
 
 SECRET_KEY = config('SECRET_KEY')
 
@@ -77,14 +145,7 @@ ASGI_APPLICATION = 'core.asgi.application'
 
 # Database — overridden in dev/prod
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': config('DB_NAME', default='orbit_db'),
-        'USER': config('DB_USER', default='orbit_user'),
-        'PASSWORD': config('DB_PASSWORD', default='orbit_pass'),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='5432'),
-    }
+    'default': build_database_config()
 }
 
 # Custom user model
@@ -138,15 +199,26 @@ CLOUDINARY_STORAGE = {
     'API_SECRET': read_env_text('CLOUDINARY_API_SECRET'),
 }
 
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'django.contrib.staticfiles.storage.StaticFilesStorage',
+    },
+}
+
 if all(CLOUDINARY_STORAGE.values()):
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    STORAGES['default'] = {
+        'BACKEND': 'cloudinary_storage.storage.MediaCloudinaryStorage',
+    }
 
 # Channel layers (Redis) — overridden in dev/prod
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels_redis.core.RedisChannelLayer',
         'CONFIG': {
-            'hosts': [(config('REDIS_HOST', default='redis'), 6379)],
+            'hosts': build_redis_hosts(),
         },
     },
 }

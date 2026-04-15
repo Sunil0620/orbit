@@ -1,4 +1,4 @@
-django>=5.2,<6.0
+django>=5.1,<5.2
 djangorestframework
 django-cors-headers
 channels[daphne]
@@ -8,3 +8,4 @@ cloudinary
 django-cloudinary-storage
 psycopg2-binary
 python-decouple
+whitenoise

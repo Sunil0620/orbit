@@ -8,7 +8,6 @@ export default defineConfig({
   },
   server: {
     host: '0.0.0.0',   // required for Docker
-    allowedHosts: ['unrevocable-countably-andre.ngrok-free.dev'],
     port: 5173,
     headers: {
       'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
