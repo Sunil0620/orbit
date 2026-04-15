@@ -12,6 +12,7 @@ import formatDate, { formatMessageDayLabel } from '../../utils/formatDate'
 import MessageBubble from './MessageBubble'
 import MessageInput from './MessageInput'
 import MessageSkeleton from './MessageSkeleton'
+import BauhausEmptyState from '../ui/BauhausEmptyState'
 
 const MESSAGE_GROUP_WINDOW_MS = 5 * 60 * 1000
 
@@ -85,21 +86,6 @@ function getAvatarLabel(contact) {
   }
 
   return getInitials(contact?.username)
-}
-
-function getDirectoryContextLabel(contact) {
-  if (Array.isArray(contact?.sharedServers) && contact.sharedServers.length > 0) {
-    return `Shared in ${contact.sharedServers[0]}${
-      contact.sharedServers.length > 1 ? ` +${contact.sharedServers.length - 1}` : ''
-    }`
-  }
-
-  const sharedServerCount = Number(contact?.shared_server_count ?? 0)
-  if (sharedServerCount > 0) {
-    return `Shared in ${sharedServerCount} server${sharedServerCount === 1 ? '' : 's'}`
-  }
-
-  return 'No shared server'
 }
 
 function toTimestamp(value) {
@@ -181,11 +167,10 @@ function ChannelIntro({ channel, server }) {
         #
       </div>
       <h3 className="mt-4 text-[1.75rem] font-semibold leading-none text-[var(--orbit-text)]">
-        Welcome to #{channel.name}
+        #{channel.name}
       </h3>
       <p className="mt-3 max-w-2xl text-[13px] leading-6 text-[var(--orbit-text-muted)]">
-        This is the start of the #{channel.name} channel
-        {server?.name ? ` in ${server.name}` : ''}. Share updates, drop context, and move the conversation forward.
+        {server?.name ? `${server.name} channel.` : 'Channel ready.'} Start the conversation here.
       </p>
     </div>
   )
@@ -205,8 +190,7 @@ function DirectMessageIntro({ participant }) {
         @{participant.username}
       </h3>
       <p className="mt-3 max-w-2xl text-[13px] leading-6 text-[var(--orbit-text-muted)]">
-        This is the start of your direct message history with {participant.username}.
-        Personal, simple, and easy to return to.
+        No messages yet. Start the conversation.
       </p>
     </div>
   )
@@ -218,11 +202,9 @@ function ChatWindow({
   directConversation = null,
   directConversations = [],
   homeMode = false,
-  friendContacts = [],
   directoryUsers = [],
-  onOpenDirectConversation,
+  isMobileVisible = true,
 }) {
-  const currentUser = useAuthStore((state) => state.user)
   const currentUserId = useAuthStore((state) => state.user?.id)
   const accessToken = useAuthStore((state) => state.tokens?.access)
   const messages = useChatStore((state) => state.messages)
@@ -591,7 +573,7 @@ function ChatWindow({
     }
 
     if (directConversation) {
-      return `No messages yet. Start the conversation with ${directParticipant?.username ?? 'this person'}.`
+      return `No messages yet with ${directParticipant?.username ?? 'this person'}.`
     }
 
     if (!server) {
@@ -638,27 +620,6 @@ function ChatWindow({
       ),
     [directConversations],
   )
-  const recentDirectConversations = useMemo(
-    () => directConversations.slice(0, 4),
-    [directConversations],
-  )
-  const featuredDirectoryUsers = useMemo(
-    () =>
-      [...directoryUsers]
-        .sort((leftContact, rightContact) => {
-          if (Boolean(leftContact.can_message) !== Boolean(rightContact.can_message)) {
-            return leftContact.can_message ? -1 : 1
-          }
-
-          if (leftContact.is_online !== rightContact.is_online) {
-            return leftContact.is_online ? -1 : 1
-          }
-
-          return leftContact.username.localeCompare(rightContact.username)
-        })
-        .slice(0, 6),
-    [directoryUsers],
-  )
   const headerMetaText = directConversation
     ? directParticipant?.is_online
       ? 'Active now'
@@ -668,9 +629,15 @@ function ChatWindow({
     : channel
       ? `${server?.name ?? 'Orbit'}${server?.members?.length ? ` • ${server.members.length} members` : ''}`
       : 'Choose a space to start talking'
+  const visibilityClass = isMobileVisible ? 'flex' : 'hidden'
 
   return (
-    <section className="flex h-full min-h-[32rem] min-w-0 flex-col overflow-hidden bg-[var(--orbit-chat-bg)] xl:min-h-0">
+    <section
+      className={[
+        visibilityClass,
+        'min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-[var(--orbit-chat-bg)] xl:flex xl:h-full',
+      ].join(' ')}
+    >
       <header className="flex items-center justify-between gap-4 border-b border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-4 py-3">
         <div className="min-w-0 space-y-1">
           <div className="flex items-center gap-2">
@@ -679,7 +646,7 @@ function ChatWindow({
             </span>
             <h2 className="truncate text-[15px] font-semibold text-[var(--orbit-text)]">
               {homeMode
-                ? 'Home'
+                ? 'Chat'
                 : directConversation
                   ? directParticipant?.username ?? 'Direct message'
                   : channel?.name ?? 'Select a channel'}
@@ -690,31 +657,26 @@ function ChatWindow({
           </div>
           <p className="truncate text-[11px] text-[var(--orbit-text-muted)]">
             {homeMode
-              ? 'Recent chats and people'
+              ? 'Use Inbox for conversations and People to start a new one.'
               : headerMetaText}
           </p>
         </div>
 
         <div className="flex shrink-0 items-center gap-2">
           {homeMode ? (
-            <span className="rounded-full border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-muted)]">
-              {unreadDirectTotal} unread
-            </span>
+            unreadDirectTotal > 0 ? (
+              <span className="rounded-full border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-muted)]">
+                {unreadDirectTotal} unread
+              </span>
+            ) : null
           ) : (
-            <>
-              {directConversation?.message_count ? (
-                <span className="hidden rounded-full border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[var(--orbit-text-muted)] lg:inline-flex">
-                  {directConversation.message_count} messages
-                </span>
-              ) : null}
-              <IconButton
-                label={isSearchOpen ? 'Close search' : 'Search'}
-                onClick={() => setIsSearchOpen((value) => !value)}
-                isActive={isSearchOpen}
-              >
-                <SearchIcon />
-              </IconButton>
-            </>
+            <IconButton
+              label={isSearchOpen ? 'Close search' : 'Search'}
+              onClick={() => setIsSearchOpen((value) => !value)}
+              isActive={isSearchOpen}
+            >
+              <SearchIcon />
+            </IconButton>
           )}
         </div>
       </header>
@@ -729,11 +691,11 @@ function ChatWindow({
               placeholder="Search this conversation"
               className="w-full rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-2.5 text-sm text-[var(--orbit-text)] outline-none transition focus:border-cyan-300/50"
             />
-            <p className="shrink-0 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-              {normalizedSearchQuery
-                ? `${visibleMessages.length} match${visibleMessages.length === 1 ? '' : 'es'}`
-                : 'Search ready'}
-            </p>
+            {normalizedSearchQuery ? (
+              <p className="shrink-0 text-[11px] font-medium uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+                {visibleMessages.length} match{visibleMessages.length === 1 ? '' : 'es'}
+              </p>
+            ) : null}
           </div>
         </div>
       ) : null}
@@ -741,185 +703,87 @@ function ChatWindow({
       <div className="flex min-h-0 flex-1 flex-col justify-between bg-[var(--orbit-chat-bg)]">
         {homeMode ? (
           <div className="orbit-scrollbar min-h-0 flex-1 overflow-y-auto px-5 py-5">
-            <section className="orbit-showcase-frame overflow-hidden rounded-[1.55rem] border px-5 py-5">
-              <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
-                <div className="min-w-0">
-                  <p className="orbit-accent-label text-[10px] font-semibold uppercase tracking-[0.24em]">
-                    Workspace
-                  </p>
-                  <h3 className="mt-2 text-[1.65rem] font-semibold leading-tight text-[var(--orbit-text)]">
-                    {currentUser?.username
-                      ? `Welcome back, ${currentUser.username}`
-                      : 'Welcome back'}
-                  </h3>
-                  <p className="orbit-showcase-copy-muted mt-2 text-[13px] leading-6">
-                    Recent chats, shared people, and unread messages in one place.
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-3 gap-2 sm:min-w-[20rem]">
-                  <div className="orbit-showcase-surface rounded-[1rem] border px-3 py-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                      People
-                    </p>
-                    <p className="mt-2 text-xl font-semibold text-[var(--orbit-text)]">
-                      {directoryUsers.length}
-                    </p>
-                  </div>
-                  <div className="orbit-showcase-surface rounded-[1rem] border px-3 py-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                      Shared
-                    </p>
-                    <p className="mt-2 text-xl font-semibold text-[var(--orbit-success)]">
-                      {friendContacts.length}
-                    </p>
-                  </div>
-                  <div className="orbit-showcase-surface rounded-[1rem] border px-3 py-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                      Unread
-                    </p>
-                    <p className="mt-2 text-xl font-semibold text-[var(--orbit-warning-ink)]">
-                      {unreadDirectTotal}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </section>
-
-            <div className="mt-4 grid gap-4 xl:grid-cols-[minmax(0,1.14fr)_minmax(300px,0.86fr)]">
-              <section className="rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)]">
-                <div className="flex items-center justify-between gap-3 border-b border-[color:var(--orbit-border)] px-4 py-3">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                      Direct Messages
-                    </p>
-                    <p className="mt-1 text-[12px] text-[var(--orbit-text-muted)]">
-                      Recent conversations
-                    </p>
-                  </div>
-                  <span className="rounded-full border border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-muted)]">
-                    {recentDirectConversations.length}
-                  </span>
-                </div>
-
-                <div className="p-2">
-                  {recentDirectConversations.length > 0 ? (
-                    <div className="space-y-0.5">
-                      {recentDirectConversations.map((conversation) => (
-                        <button
-                          key={conversation.id}
-                          type="button"
-                          onClick={() => onOpenDirectConversation?.(conversation.participant)}
-                          className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition hover:bg-[var(--orbit-surface-hover)]"
-                        >
-                          <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[0.95rem] bg-[var(--orbit-accent-soft)] text-sm font-semibold text-[var(--orbit-accent-ink)]">
-                            {getAvatarLabel(conversation.participant)}
-                            <span className="absolute -bottom-0.5 -right-0.5">
-                              <StatusDot isOnline={Boolean(conversation.participant?.is_online)} />
-                            </span>
-                          </div>
-
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center justify-between gap-3">
-                              <p className="truncate text-[14px] font-semibold text-[var(--orbit-text)]">
-                                {conversation.participant?.username ?? 'Unknown'}
-                              </p>
-                              {Number(conversation.unread_count ?? 0) > 0 ? (
-                                <span className="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-semibold text-white">
-                                  {conversation.unread_count}
-                                </span>
-                              ) : null}
-                            </div>
-                            <p className="mt-1 truncate text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-                              {conversation.last_message_sender_username
-                                ? `${conversation.last_message_sender_username}: `
-                                : ''}
-                              {conversation.last_message_preview || 'Open conversation'}
-                            </p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="rounded-[1rem] border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-5 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-                      No direct messages yet.
-                    </div>
-                  )}
-                </div>
+            <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
+              <section className="rounded-[1.45rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-5 py-5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+                  Direct Messages
+                </p>
+                <h3 className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
+                  Choose a conversation to start chatting.
+                </h3>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--orbit-text-muted)]">
+                  Inbox is for your existing direct messages. People is for starting a
+                  new one. Once you open a conversation, the chat appears here.
+                </p>
               </section>
 
-              <section className="rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)]">
-                <div className="flex items-center justify-between gap-3 border-b border-[color:var(--orbit-border)] px-4 py-3">
-                  <div>
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                      People
+              <div className="grid gap-4 sm:grid-cols-3">
+                <section className="rounded-[1.25rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+                    Inbox
+                  </p>
+                  <p className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
+                    {directConversations.length}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                    Conversation{directConversations.length === 1 ? '' : 's'} ready to open.
+                  </p>
+                </section>
+
+                <section className="rounded-[1.25rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+                    Unread
+                  </p>
+                  <p className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
+                    {unreadDirectTotal}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                    Messages waiting in your inbox.
+                  </p>
+                </section>
+
+                <section className="rounded-[1.25rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+                    People
+                  </p>
+                  <p className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
+                    {onlineDirectoryCount}
+                  </p>
+                  <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                    Teammate{onlineDirectoryCount === 1 ? '' : 's'} online right now.
+                  </p>
+                </section>
+              </div>
+
+              <section className="rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-5 py-5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+                  How It Works
+                </p>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-4 py-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+                      Inbox
                     </p>
-                    <p className="mt-1 text-[12px] text-[var(--orbit-text-muted)]">
-                      Available first
+                    <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                      Open your existing direct messages here.
                     </p>
                   </div>
-                  <span className="rounded-full border border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-muted)]">
-                    {onlineDirectoryCount} online
-                  </span>
-                </div>
-
-                <div className="p-2">
-                  {featuredDirectoryUsers.length > 0 ? (
-                    <div className="space-y-0.5">
-                      {featuredDirectoryUsers.map((contact) => {
-                        const existingConversation = directConversations.find(
-                          (conversation) =>
-                            Number(conversation.participant?.id) === Number(contact.id),
-                        )
-                        const canOpenConversation = Boolean(
-                          existingConversation || contact.can_message,
-                        )
-
-                        return (
-                          <button
-                            key={contact.id}
-                            type="button"
-                            onClick={() => {
-                              if (canOpenConversation) {
-                                onOpenDirectConversation?.(contact)
-                              }
-                            }}
-                            disabled={!canOpenConversation}
-                            className={[
-                              'flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition',
-                              canOpenConversation
-                                ? 'hover:bg-[var(--orbit-surface-hover)]'
-                                : 'cursor-not-allowed opacity-80',
-                            ].join(' ')}
-                          >
-                            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-[0.95rem] bg-[var(--orbit-accent-soft)] text-sm font-semibold text-[var(--orbit-accent-ink)]">
-                              {getAvatarLabel(contact)}
-                              <span className="absolute -bottom-0.5 -right-0.5">
-                                <StatusDot isOnline={Boolean(contact.is_online)} />
-                              </span>
-                            </div>
-
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate text-[14px] font-semibold text-[var(--orbit-text)]">
-                                {contact.username}
-                              </p>
-                              <p className="mt-1 truncate text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-                                {existingConversation
-                                  ? 'In direct messages'
-                                  : canOpenConversation
-                                    ? getDirectoryContextLabel(contact)
-                                    : 'Shared server required'}
-                              </p>
-                            </div>
-                          </button>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <div className="rounded-[1rem] border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-5 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-                      People will appear here automatically.
-                    </div>
-                  )}
+                  <div className="rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-4 py-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+                      Chat
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                      Read and send messages in the active conversation.
+                    </p>
+                  </div>
+                  <div className="rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-4 py-4">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+                      People
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                      Start a new direct message with someone on your team.
+                    </p>
+                  </div>
                 </div>
               </section>
             </div>
@@ -968,11 +832,9 @@ function ChatWindow({
                       />
                     ),
                   )
-                ) : !messagesError ? (
+                ) : !messagesError && !shouldShowChannelIntro && !shouldShowDirectIntro ? (
                   <div className="px-3 pb-4">
-                    <div className="rounded-[1.6rem] border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-5 py-5 text-[13px] leading-6 text-[var(--orbit-text-muted)]">
-                      {emptyStateText}
-                    </div>
+                    <BauhausEmptyState message={emptyStateText} className="py-12 px-6" />
                   </div>
                 ) : null}
               </div>

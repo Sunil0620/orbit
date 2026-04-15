@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import BauhausEmptyState from '../components/ui/BauhausEmptyState'
 import {
   deleteServer,
   getServer,
@@ -762,9 +763,7 @@ function ServerSettings() {
               {members.length > 0 ? (
                 members.map(renderMemberRow)
               ) : (
-                <div className="rounded-[1.3rem] border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-5 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                  No members are available to display right now.
-                </div>
+                <BauhausEmptyState message="No members are available to display right now." className="p-4" />
               )}
             </div>
           </SettingsCard>
@@ -827,9 +826,7 @@ function ServerSettings() {
               {members.length > 0 ? (
                 members.map(renderMemberRow)
               ) : (
-                <div className="rounded-[1.3rem] border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-5 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                  No members are available to manage right now.
-                </div>
+                <BauhausEmptyState message="No members are available to manage right now." className="p-4" />
               )}
             </div>
           </SettingsCard>
@@ -866,9 +863,7 @@ function ServerSettings() {
                 </p>
               </div>
             ) : (
-              <div className="rounded-[1.35rem] border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-5 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                Invite access is limited to admins and the server owner.
-              </div>
+              <BauhausEmptyState message="Invite access is limited to admins and the server owner." className="p-4" />
             )}
           </SettingsCard>
 

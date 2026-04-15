@@ -216,7 +216,7 @@ const FileUpload = forwardRef(function FileUpload(
       </label>
 
       {uploadItems.length > 0 ? (
-        <div className="space-y-3 sm:col-span-3 sm:row-start-2">
+        <div className="col-span-full space-y-3">
           <p className="text-xs uppercase tracking-[0.24em] text-[var(--orbit-text-subtle)]">
             {uploadItems.length} attachment{uploadItems.length === 1 ? '' : 's'} in composer
           </p>

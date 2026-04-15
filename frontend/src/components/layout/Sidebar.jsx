@@ -1,4 +1,4 @@
-import ThemeToggle from '../theme/ThemeToggle'
+import BauhausEmptyState from '../ui/BauhausEmptyState'
 
 function getInitials(name) {
   if (!name) {
@@ -141,9 +141,9 @@ function Sidebar({
   emptyMessage = 'No servers yet.',
 }) {
   return (
-    <aside className="flex min-h-0 flex-row items-center gap-2.5 border-b border-[color:var(--orbit-border)] bg-[var(--orbit-sidebar-bg)] px-2.5 py-3 xl:h-full xl:flex-col xl:border-b-0 xl:border-r xl:px-2 xl:py-2 xl:overflow-hidden">
-      <div className="flex min-h-0 min-w-0 flex-1 items-center gap-2.5 xl:w-full xl:flex-col xl:items-center xl:overflow-hidden">
-        <div className="flex shrink-0 items-center gap-2.5 xl:w-full xl:flex-col xl:gap-2.5">
+    <aside className="flex min-h-0 flex-row items-center gap-2 border-b border-[color:var(--orbit-border)] bg-[var(--orbit-sidebar-bg)] px-2 py-2.5 xl:h-full xl:flex-col xl:border-b-0 xl:border-r xl:px-2 xl:py-2 xl:overflow-hidden">
+      <div className="flex min-h-0 min-w-0 flex-1 items-center gap-2 xl:w-full xl:flex-col xl:items-center xl:overflow-hidden">
+        <div className="flex shrink-0 items-center gap-2 xl:w-full xl:flex-col xl:gap-2.5">
           <RailButton
             isActive={isHomeActive}
             label="Friends and messages"
@@ -155,11 +155,9 @@ function Sidebar({
 
         <div className="hidden h-px w-8 bg-[var(--orbit-border)] xl:block" />
 
-        <div className="orbit-scrollbar flex min-w-0 flex-1 items-center gap-2.5 overflow-x-auto pb-1 xl:min-h-0 xl:w-full xl:flex-col xl:overflow-x-visible xl:overflow-y-auto xl:justify-start xl:pb-1">
+        <div className="orbit-scrollbar flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-1 xl:min-h-0 xl:w-full xl:flex-col xl:overflow-x-visible xl:overflow-y-auto xl:justify-start xl:gap-2.5 xl:pb-1">
           {isLoading ? (
-            <div className="rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3 py-4 text-center text-[10px] font-medium uppercase tracking-[0.16em] text-[var(--orbit-text-muted)]">
-              Loading
-            </div>
+            <BauhausEmptyState message="Loading" className="p-2 text-xs" />
           ) : null}
 
           {!isLoading && servers.length === 0 ? (
@@ -185,11 +183,11 @@ function Sidebar({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2.5 xl:w-full xl:flex-col xl:items-center xl:gap-2 xl:pt-1.5">
+      <div className="flex shrink-0 items-center gap-2 xl:w-full xl:flex-col xl:items-center xl:gap-2 xl:pt-1.5">
         <button
           type="button"
           onClick={onOpenCreate}
-          className="orbit-accent-surface flex h-9 w-9 items-center justify-center rounded-[0.9rem] border border-dashed transition"
+          className="orbit-accent-surface flex h-8 w-8 items-center justify-center rounded-[0.85rem] border border-dashed transition sm:h-9 sm:w-9 sm:rounded-[0.9rem]"
           aria-label="Create server"
           title="Create server"
         >
@@ -199,7 +197,7 @@ function Sidebar({
         <button
           type="button"
           onClick={onOpenJoin}
-          className="orbit-secondary-button flex h-9 w-9 items-center justify-center rounded-[0.9rem]"
+          className="orbit-secondary-button flex h-8 w-8 items-center justify-center rounded-[0.85rem] sm:h-9 sm:w-9 sm:rounded-[0.9rem]"
           aria-label="Join server"
           title="Join server"
         >
@@ -207,8 +205,6 @@ function Sidebar({
         </button>
 
         <div className="hidden h-px w-8 bg-[var(--orbit-border)] xl:block" />
-
-        <ThemeToggle className="hidden h-9 w-9 rounded-[0.9rem] xl:flex" />
 
         <div className="hidden xl:flex flex-col items-center gap-1.5">
           <div
@@ -225,7 +221,7 @@ function Sidebar({
           </div>
         </div>
 
-        <div className="min-w-0 rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-2 py-2 xl:hidden xl:w-full">
+        <div className="min-w-0 max-w-[9.5rem] rounded-[0.95rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-1.5 py-1.5 sm:max-w-[11rem] sm:px-2 sm:py-2 xl:hidden xl:w-full">
           <div className="flex items-center gap-2">
             <div className="relative h-9 w-9 shrink-0">
               <div className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-[0.95rem] bg-[var(--orbit-accent-soft)] text-[13px] font-semibold text-[var(--orbit-accent-ink)]">
@@ -239,7 +235,7 @@ function Sidebar({
               />
             </div>
 
-            <div className="min-w-0 flex-1">
+            <div className="min-w-0 flex-1 hidden sm:block">
               <p className="truncate text-[12px] font-medium text-[var(--orbit-text)]">
                 {user?.username ?? 'Profile'}
               </p>
@@ -247,8 +243,6 @@ function Sidebar({
                 {user?.is_online ? 'Online' : 'Offline'}
               </p>
             </div>
-
-            <ThemeToggle className="flex h-8 w-8 rounded-[0.8rem]" />
           </div>
         </div>
       </div>

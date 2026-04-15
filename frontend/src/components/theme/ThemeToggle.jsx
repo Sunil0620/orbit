@@ -58,7 +58,7 @@ function ThemeToggle({ className = '', showLabel = false }) {
       title={label}
     >
       {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-      {showLabel ? <span>{textLabel}</span> : null}
+      {showLabel ? <span className="hidden sm:inline">{textLabel}</span> : null}
     </button>
   )
 }

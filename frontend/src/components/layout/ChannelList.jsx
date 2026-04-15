@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
+import BauhausEmptyState from '../ui/BauhausEmptyState'
 
 function getInitials(name) {
   if (!name) {
@@ -26,21 +27,6 @@ function getAvatarLabel(contact) {
   }
 
   return getInitials(contact?.username)
-}
-
-function getDirectoryContextLabel(contact) {
-  if (Array.isArray(contact?.sharedServers) && contact.sharedServers.length > 0) {
-    return `Shared in ${contact.sharedServers[0]}${
-      contact.sharedServers.length > 1 ? ` +${contact.sharedServers.length - 1}` : ''
-    }`
-  }
-
-  const sharedServerCount = Number(contact?.shared_server_count ?? 0)
-  if (sharedServerCount > 0) {
-    return `Shared in ${sharedServerCount} server${sharedServerCount === 1 ? '' : 's'}`
-  }
-
-  return 'No shared server'
 }
 
 function ChevronIcon({ isOpen = false }) {
@@ -167,14 +153,12 @@ function ChannelList({
   server,
   homeMode = false,
   directConversations = [],
-  directoryUsers = [],
   activeDirectConversationId = null,
   channels = [],
   activeChannelId,
   unreadCountByChannel = {},
   onSelectChannel,
   onSelectDirectConversation,
-  onOpenDirectConversation,
   onOpenCreateChannel,
   onDeleteChannel,
   onCopyInviteCode,
@@ -183,11 +167,15 @@ function ChannelList({
   canInviteMembers = false,
   isLoading = false,
   error = '',
-  isDirectoryLoading = false,
-  directoryError = '',
+  isMobileVisible = true,
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const menuRef = useRef(null)
+  const visibilityClass = isMobileVisible ? 'flex' : 'hidden'
+  const asideClass = [
+    visibilityClass,
+    'min-h-0 min-w-0 flex-1 flex-col bg-[var(--orbit-channel-bg)] xl:flex xl:h-full xl:border-r xl:border-[color:var(--orbit-border)]',
+  ].join(' ')
 
   useEffect(() => {
     function handlePointerDown(event) {
@@ -212,16 +200,16 @@ function ChannelList({
 
   if (homeMode) {
     return (
-      <aside className="flex h-full min-h-0 flex-col border-b border-[color:var(--orbit-border)] bg-[var(--orbit-channel-bg)] xl:border-b-0 xl:border-r">
+      <aside className={asideClass}>
         <div className="border-b border-[color:var(--orbit-border)] px-4 py-4 shadow-[0_1px_0_rgba(255,255,255,0.03)]">
           <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-            Home
+            Inbox
           </p>
           <h2 className="mt-2 text-[14px] font-semibold text-[var(--orbit-text)]">
-            Messages
+            Direct Messages
           </h2>
           <p className="mt-1 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-            Direct messages and people
+            Your recent conversations
           </p>
         </div>
 
@@ -239,13 +227,11 @@ function ChannelList({
           </div>
 
           {isLoading ? (
-            <div className="mx-2 mb-4 rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-              Loading your direct messages.
-            </div>
+            <BauhausEmptyState message="Loading your direct messages." className="mx-2 mb-4 p-4" />
           ) : null}
 
           {!isLoading && directConversations.length > 0 ? (
-            <div className="mb-4 space-y-0.5">
+            <div className="space-y-0.5">
               {directConversations.map((conversation) => {
                 const participant = conversation.participant
                 const isActive = conversation.id === activeDirectConversationId
@@ -296,96 +282,10 @@ function ChannelList({
               })}
             </div>
           ) : !isLoading ? (
-            <div className="mx-2 mb-4 rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-              No direct messages yet.
-            </div>
-          ) : null}
-
-          <div className="mb-3 flex items-center justify-between px-2">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-              People
-            </p>
-            <span className="text-[9px] font-semibold uppercase tracking-[0.14em] text-[var(--orbit-text-subtle)]">
-              {directoryUsers.length}
-            </span>
-          </div>
-
-          {directoryError ? (
-            <div className="orbit-danger-banner mx-2 mb-3 rounded-2xl border px-4 py-4 text-sm leading-6">
-              {directoryError}
-            </div>
-          ) : null}
-
-          {isDirectoryLoading && directoryUsers.length === 0 ? (
-            <div className="mx-2 mb-4 rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-              Loading people.
-            </div>
-          ) : null}
-
-          {!isDirectoryLoading && directoryUsers.length > 0 ? (
-            directoryUsers.map((contact) => {
-              const existingConversation = directConversations.find(
-                (conversation) => Number(conversation.participant?.id) === Number(contact.id),
-              )
-              const canOpenConversation = Boolean(existingConversation || contact.can_message)
-              const isActive =
-                existingConversation?.id != null &&
-                existingConversation.id === activeDirectConversationId
-
-              return (
-                <button
-                  key={contact.id}
-                  type="button"
-                  onClick={() => {
-                    if (canOpenConversation) {
-                      onOpenDirectConversation?.(contact)
-                    }
-                  }}
-                  disabled={!canOpenConversation}
-                  className={[
-                    'mb-0.5 w-full rounded-xl px-2.5 py-2 text-left transition',
-                    isActive
-                      ? 'bg-[var(--orbit-surface-hover)]'
-                      : canOpenConversation
-                        ? 'hover:bg-[var(--orbit-surface-soft)]'
-                        : 'cursor-not-allowed opacity-75',
-                  ].join(' ')}
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="relative flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-[0.9rem] bg-cyan-400/15 text-[12px] font-semibold text-[var(--orbit-text)]">
-                      {getAvatarLabel(contact)}
-                      <span
-                        className={[
-                          'absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[var(--orbit-channel-bg)]',
-                          contact.is_online ? 'bg-emerald-400' : 'bg-slate-500',
-                        ].join(' ')}
-                      />
-                    </div>
-
-                    <div className="min-w-0">
-                      <p className="truncate text-[13px] font-medium text-[var(--orbit-text)]">
-                        {contact.username}
-                      </p>
-                      <p className="truncate text-[11px] leading-4 text-[var(--orbit-text-muted)]">
-                        {existingConversation
-                          ? 'In direct messages'
-                          : canOpenConversation
-                            ? 'Available to message'
-                            : 'Shared server required'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <p className="mt-1 truncate text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--orbit-text-subtle)]">
-                    {getDirectoryContextLabel(contact)}
-                  </p>
-                </button>
-              )
-            })
-          ) : !isDirectoryLoading ? (
-            <div className="mx-2 rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-              People will appear here automatically.
-            </div>
+            <BauhausEmptyState
+              message="Your direct messages will appear here."
+              className="mx-2 p-4"
+            />
           ) : null}
         </div>
       </aside>
@@ -393,7 +293,7 @@ function ChannelList({
   }
 
   return (
-    <aside className="flex h-full min-h-0 flex-col border-b border-[color:var(--orbit-border)] bg-[var(--orbit-channel-bg)] xl:border-b-0 xl:border-r">
+    <aside className={asideClass}>
       <div
         ref={menuRef}
         className="relative border-b border-[color:var(--orbit-border)] shadow-[0_1px_0_rgba(255,255,255,0.03)]"
@@ -489,9 +389,7 @@ function ChannelList({
         ) : null}
 
         {isLoading ? (
-          <div className="mx-2 rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-sm leading-6 text-[var(--orbit-text-muted)]">
-            Loading channels for the selected server.
-          </div>
+          <BauhausEmptyState message="Loading channels for the selected server." className="mx-2 p-4" />
         ) : null}
 
         {channels.length > 0 ? (
@@ -564,13 +462,11 @@ function ChannelList({
             )
           })
         ) : !isLoading && !error ? (
-          <div className="mx-2 rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-sm leading-6 text-[var(--orbit-text-muted)]">
-            {server
+          <BauhausEmptyState message={server
               ? canManageChannels
                 ? 'No extra channels yet. Open the server menu to create one.'
                 : 'No channels yet.'
-              : 'Pick a server to see its channels.'}
-          </div>
+              : 'Pick a server to see its channels.'} className="mx-2 p-4" />
         ) : null}
       </div>
     </aside>

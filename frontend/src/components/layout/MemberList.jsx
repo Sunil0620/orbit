@@ -1,10 +1,23 @@
+import BauhausEmptyState from '../ui/BauhausEmptyState'
+
 function MemberList({
   server,
   directConversation = null,
   homeMode = false,
   contacts = [],
+  isLoading = false,
+  error = '',
+  onOpenContact,
+  isMobileVisible = true,
 }) {
   const dmMode = Boolean(directConversation)
+  const visibilityClass = isMobileVisible ? 'flex' : 'hidden'
+  const panelTitle = homeMode ? 'People' : dmMode ? 'Conversation' : 'Members'
+  const panelDescription = homeMode
+    ? 'Start a new direct message from here.'
+    : dmMode
+      ? 'Profile for this direct message.'
+      : `${server?.members?.length ?? 0} member${(server?.members?.length ?? 0) === 1 ? '' : 's'} in this server.`
   const members = homeMode
     ? contacts
     : dmMode
@@ -22,12 +35,20 @@ function MemberList({
         : member.role === 'admin'
           ? 'Admin'
           : 'Member'
-
-    return (
-      <div
-        key={member.id}
-        className="flex items-center gap-2.5 rounded-[0.8rem] px-2 py-1.5 transition hover:bg-[var(--orbit-surface-soft)]"
-      >
+    const canOpenConversation = Boolean(member.hasDirectConversation || member.can_message)
+    const memberMeta = homeMode
+      ? member.hasDirectConversation
+        ? 'In direct messages'
+        : canOpenConversation
+          ? 'Start conversation'
+          : 'Shared server required'
+      : dmMode
+        ? member.is_online
+          ? 'Online'
+          : 'Offline'
+        : roleLabel
+    const content = (
+      <>
         <div className="relative">
           {member.avatar ? (
             <img
@@ -54,17 +75,76 @@ function MemberList({
             {member.username}
           </p>
           <p className="text-[9px] font-medium uppercase tracking-[0.12em] text-[var(--orbit-text-subtle)]">
-            {homeMode || dmMode ? (member.is_online ? 'Online' : 'Offline') : roleLabel}
+            {memberMeta}
           </p>
         </div>
+      </>
+    )
+
+    if (homeMode) {
+      return (
+        <button
+          key={member.id}
+          type="button"
+          onClick={() => {
+            if (canOpenConversation) {
+              onOpenContact?.(member)
+            }
+          }}
+          disabled={!canOpenConversation}
+          className={[
+            'flex w-full items-center gap-2.5 rounded-[0.8rem] px-2 py-1.5 text-left transition',
+            canOpenConversation
+              ? 'hover:bg-[var(--orbit-surface-soft)]'
+              : 'cursor-not-allowed opacity-75',
+          ].join(' ')}
+        >
+          {content}
+        </button>
+      )
+    }
+
+    return (
+      <div
+        key={member.id}
+        className="flex items-center gap-2.5 rounded-[0.8rem] px-2 py-1.5 transition hover:bg-[var(--orbit-surface-soft)]"
+      >
+        {content}
       </div>
     )
   }
 
   return (
-    <aside className="hidden h-full min-h-0 flex-col bg-[var(--orbit-member-bg)] xl:flex xl:border-l xl:border-[color:var(--orbit-border)]">
+    <aside
+      className={[
+        visibilityClass,
+        'min-h-0 min-w-0 flex-1 flex-col bg-[var(--orbit-member-bg)] xl:flex xl:h-full xl:border-l xl:border-[color:var(--orbit-border)]',
+      ].join(' ')}
+    >
+      <div className="border-b border-[color:var(--orbit-border)] px-3 py-3">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
+          {panelTitle}
+        </p>
+        <p className="mt-2 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
+          {panelDescription}
+        </p>
+      </div>
+
       <div className="orbit-scrollbar flex-1 space-y-5 overflow-y-auto px-3 py-3">
-        {members.length > 0 ? (
+        {error ? (
+          <div className="orbit-danger-banner rounded-2xl border px-4 py-4 text-sm leading-6">
+            {error}
+          </div>
+        ) : null}
+
+        {isLoading && members.length === 0 ? (
+          <BauhausEmptyState
+            message={homeMode ? 'Loading people.' : 'Loading members.'}
+            className="p-4"
+          />
+        ) : null}
+
+        {!isLoading && members.length > 0 ? (
           <>
             <section>
               <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-text-subtle)]">
@@ -84,11 +164,9 @@ function MemberList({
               </div>
             </section>
           </>
-        ) : (
-          <div className="rounded-2xl border border-dashed border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-5 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-            {homeMode ? 'No people to show yet.' : 'No members to show yet.'}
-          </div>
-        )}
+        ) : !isLoading && !error ? (
+          <BauhausEmptyState message={homeMode ? 'No people to show yet.' : 'No members to show yet.'} className="p-4" />
+        ) : null}
       </div>
     </aside>
   )

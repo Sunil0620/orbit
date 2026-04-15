@@ -115,7 +115,7 @@ function MessageInput({
         </p>
       ) : null}
 
-      <div className="grid gap-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)] gap-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]">
         <FileUpload
           ref={fileUploadRef}
           channel={channel}
@@ -129,16 +129,16 @@ function MessageInput({
           onChange={handleChange}
           disabled={!hasConversationTarget}
           placeholder={
-          hasConversationTarget
+            hasConversationTarget
               ? `Message ${conversationLabel}`
               : 'Choose a conversation before sending messages'
           }
-          className="orbit-input w-full rounded-[0.95rem] px-4 py-2.5 text-[13px] transition disabled:cursor-not-allowed disabled:opacity-60"
+          className="orbit-input min-w-0 w-full rounded-[0.95rem] px-4 py-2.5 text-[13px] transition disabled:cursor-not-allowed disabled:opacity-60"
         />
         <button
           type="submit"
           disabled={!hasConversationTarget || !isConnectionReady || isUploadingAttachments}
-          className="rounded-[0.95rem] bg-cyan-500 px-4 py-2.5 text-[12px] font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
+          className="col-span-2 rounded-[0.95rem] bg-cyan-500 px-4 py-2.5 text-[12px] font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60 sm:col-auto"
         >
           Send
         </button>

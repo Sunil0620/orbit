@@ -16,12 +16,31 @@ import extractApiErrors from '../utils/extractApiErrors'
 import useAuthStore from '../store/useAuthStore'
 import useChatStore from '../store/useChatStore'
 
+function MobilePaneButton({ label, isActive = false, onClick }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={isActive}
+      className={[
+        'rounded-[0.95rem] border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition',
+        isActive
+          ? 'orbit-accent-surface'
+          : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] hover:text-[var(--orbit-text)]',
+      ].join(' ')}
+    >
+      {label}
+    </button>
+  )
+}
+
 function ChatPage() {
   const user = useAuthStore((state) => state.user)
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [isCreateChannelModalOpen, setIsCreateChannelModalOpen] = useState(false)
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false)
   const [actionNotice, setActionNotice] = useState('')
+  const [mobilePane, setMobilePane] = useState('browse')
   const [directoryUsers, setDirectoryUsers] = useState([])
   const [isDirectoryLoading, setIsDirectoryLoading] = useState(false)
   const [directoryError, setDirectoryError] = useState('')
@@ -99,6 +118,21 @@ function ChatPage() {
   const homeMode = directMessageMode && activeDirectConversation == null
   const canManageChannels = Boolean(activeServer?.permissions?.can_manage_channels)
   const canInviteMembers = Boolean(activeServer?.permissions?.can_invite_members)
+  const mobileBrowseLabel = directMessageMode ? 'Inbox' : 'Channels'
+  const mobileChatLabel = 'Chat'
+  const mobilePeopleLabel = directMessageMode ? 'People' : 'Members'
+
+  useEffect(() => {
+    if (activeDirectConversationId != null || activeChannelId != null) {
+      setMobilePane('chat')
+      return
+    }
+
+    if (activeServerId != null) {
+      setMobilePane('browse')
+    }
+  }, [activeChannelId, activeDirectConversationId, activeServerId])
+
   const friendContacts = useMemo(() => {
     const contactsById = new Map()
 
@@ -136,6 +170,13 @@ function ChatPage() {
       new Map(friendContacts.map((contact) => [Number(contact.id), contact])),
     [friendContacts],
   )
+  const directConversationIdsByParticipant = useMemo(
+    () =>
+      new Set(
+        directConversations.map((conversation) => Number(conversation.participant?.id)),
+      ),
+    [directConversations],
+  )
   const directoryContacts = useMemo(
     () =>
       directoryUsers.map((directoryUser) => {
@@ -145,9 +186,12 @@ function ChatPage() {
           ...sharedContact,
           ...directoryUser,
           sharedServers: sharedContact?.sharedServers ?? [],
+          hasDirectConversation: directConversationIdsByParticipant.has(
+            Number(directoryUser.id),
+          ),
         }
       }),
-    [directoryUsers, friendContactsById],
+    [directoryUsers, directConversationIdsByParticipant, friendContactsById],
   )
   const activeChannel = useMemo(
     () => channels.find((channel) => channel.id === activeChannelId) ?? null,
@@ -465,6 +509,26 @@ function ChatPage() {
     }
   }
 
+  const handleOpenHome = () => {
+    openHome()
+    setMobilePane('chat')
+  }
+
+  const handleSelectServer = (serverId) => {
+    setActiveServer(serverId)
+    setMobilePane('browse')
+  }
+
+  const handleSelectChannel = (channelId) => {
+    setActiveChannel(channelId)
+    setMobilePane('chat')
+  }
+
+  const handleSelectDirectConversation = (conversationId) => {
+    setActiveDirectConversation(conversationId)
+    setMobilePane('chat')
+  }
+
   const handleOpenDirectConversation = async (contact) => {
     if (!contact?.id) {
       return
@@ -476,6 +540,7 @@ function ChatPage() {
 
     if (existingConversation) {
       setActiveDirectConversation(existingConversation.id)
+      setMobilePane('chat')
       return
     }
 
@@ -486,6 +551,7 @@ function ChatPage() {
       const conversation = await createOrOpenDirectConversation(contact.id)
       upsertDirectConversation(conversation)
       setActiveDirectConversation(conversation.id)
+      setMobilePane('chat')
       setActionNotice(`Opened a direct message with ${contact.username}.`)
     } catch (error) {
       setDirectConversationsError(
@@ -516,32 +582,51 @@ function ChatPage() {
       ) : null}
 
       <div className="flex h-full min-h-0 flex-1 overflow-hidden rounded-[1.2rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
-        <div className="grid h-full w-full min-w-0 bg-[var(--orbit-shell-bg)] xl:grid-cols-[64px_236px_minmax(0,1fr)_220px] 2xl:grid-cols-[68px_248px_minmax(0,1fr)_228px]">
-          <Sidebar
-            servers={servers}
-            activeServerId={activeServerId}
-            user={user}
-            isHomeActive={directMessageMode}
-            onOpenHome={openHome}
-            onSelectServer={setActiveServer}
-            onOpenCreate={() => setIsCreateModalOpen(true)}
-            onOpenJoin={() => setIsJoinModalOpen(true)}
-            isLoading={isServersLoading}
-            emptyMessage="No servers yet. Create or join one next."
-          />
+        <div className="flex h-full w-full min-w-0 flex-col bg-[var(--orbit-shell-bg)] xl:grid xl:grid-cols-[64px_236px_minmax(0,1fr)_220px] xl:grid-rows-1 2xl:grid-cols-[68px_248px_minmax(0,1fr)_228px]">
+          <div className="sticky top-0 z-20 flex shrink-0 flex-col bg-[var(--orbit-shell-bg)] shadow-[0_8px_18px_rgba(0,0,0,0.08)] xl:contents xl:shadow-none">
+            <Sidebar
+              servers={servers}
+              activeServerId={activeServerId}
+              user={user}
+              isHomeActive={directMessageMode}
+              onOpenHome={handleOpenHome}
+              onSelectServer={handleSelectServer}
+              onOpenCreate={() => setIsCreateModalOpen(true)}
+              onOpenJoin={() => setIsJoinModalOpen(true)}
+              isLoading={isServersLoading}
+              emptyMessage="No servers yet. Create or join one next."
+            />
+            <div className="border-b border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-2.5 py-2 backdrop-blur xl:hidden">
+              <div className="grid grid-cols-3 gap-2">
+                <MobilePaneButton
+                  label={mobileBrowseLabel}
+                  isActive={mobilePane === 'browse'}
+                  onClick={() => setMobilePane('browse')}
+                />
+                <MobilePaneButton
+                  label={mobileChatLabel}
+                  isActive={mobilePane === 'chat'}
+                  onClick={() => setMobilePane('chat')}
+                />
+                <MobilePaneButton
+                  label={mobilePeopleLabel}
+                  isActive={mobilePane === 'people'}
+                  onClick={() => setMobilePane('people')}
+                />
+              </div>
+            </div>
+          </div>
           <ChannelList
-            key={directMessageMode ? 'friends-home' : activeServer?.id ?? 'empty-server'}
+            key={directMessageMode ? 'direct-inbox' : activeServer?.id ?? 'empty-server'}
             server={activeServer}
             homeMode={directMessageMode}
             directConversations={directConversations}
-            directoryUsers={directoryContacts}
             activeDirectConversationId={activeDirectConversationId}
             channels={channels}
             activeChannelId={activeChannelId}
             unreadCountByChannel={unreadCountByChannel}
-            onSelectChannel={setActiveChannel}
-            onSelectDirectConversation={setActiveDirectConversation}
-            onOpenDirectConversation={handleOpenDirectConversation}
+            onSelectChannel={handleSelectChannel}
+            onSelectDirectConversation={handleSelectDirectConversation}
             onOpenCreateChannel={() => setIsCreateChannelModalOpen(true)}
             onDeleteChannel={handleDeleteChannel}
             onCopyInviteCode={handleCopyInviteCode}
@@ -550,8 +635,7 @@ function ChatPage() {
             canInviteMembers={canInviteMembers}
             isLoading={directMessageMode ? isDirectConversationsLoading : isChannelsLoading}
             error={directMessageMode ? directConversationsError : channelsError}
-            isDirectoryLoading={isDirectoryLoading}
-            directoryError={directoryError}
+            isMobileVisible={mobilePane === 'browse'}
           />
           <ChatWindow
             server={activeServer}
@@ -559,15 +643,18 @@ function ChatPage() {
             directConversation={activeDirectConversation}
             directConversations={directConversations}
             homeMode={homeMode}
-            friendContacts={friendContacts}
             directoryUsers={directoryContacts}
-            onOpenDirectConversation={handleOpenDirectConversation}
+            isMobileVisible={mobilePane === 'chat'}
           />
           <MemberList
             server={activeServer}
             directConversation={activeDirectConversation}
             homeMode={homeMode}
             contacts={homeMode ? directoryContacts : friendContacts}
+            isLoading={homeMode ? isDirectoryLoading : false}
+            error={homeMode ? directoryError : ''}
+            onOpenContact={handleOpenDirectConversation}
+            isMobileVisible={mobilePane === 'people'}
           />
         </div>
       </div>
@@ -577,7 +664,7 @@ function ChatPage() {
         onClose={() => setIsCreateModalOpen(false)}
         onSuccess={(server) => {
           upsertServer(server)
-          setActiveServer(server.id)
+          handleSelectServer(server.id)
           setActionNotice(`Created ${server.name} and set it as your active server.`)
         }}
       />
@@ -588,7 +675,7 @@ function ChatPage() {
         server={activeServer}
         onSuccess={(channel) => {
           setChannels([...channels, channel])
-          setActiveChannel(channel.id)
+          handleSelectChannel(channel.id)
           setActionNotice(`Created #${channel.name} in ${activeServer?.name ?? 'your server'}.`)
         }}
       />
@@ -598,7 +685,7 @@ function ChatPage() {
         onClose={() => setIsJoinModalOpen(false)}
         onSuccess={(server) => {
           upsertServer(server)
-          setActiveServer(server.id)
+          handleSelectServer(server.id)
           setActionNotice(`Joined ${server.name} and switched into it.`)
         }}
       />
