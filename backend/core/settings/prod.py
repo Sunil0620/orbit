@@ -55,6 +55,9 @@ CSRF_COOKIE_SECURE = config('CSRF_COOKIE_SECURE', cast=bool, default=True)
 
 MIDDLEWARE.insert(1, 'whitenoise.middleware.WhiteNoiseMiddleware')
 
+WHITENOISE_USE_FINDERS = True
+WHITENOISE_AUTOREFRESH = True
+
 STORAGES['staticfiles'] = {
     'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
 }
