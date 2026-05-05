@@ -158,19 +158,30 @@ const useChatStore = create((set) => ({
       }
     }),
   setChannels: (channels) =>
-    set((state) => ({
-      channels: channels.map((channel) =>
-        channel.id === state.activeChannelId
-          ? {
-              ...channel,
-              unread_count: 0,
-            }
-          : channel,
-      ),
-      activeChannelId: resolveActiveId(channels, state.activeChannelId),
-      channelsError: '',
-      typingUsers: {},
-    })),
+    set((state) => {
+      const nextActiveChannelId =
+        resolveActiveId(channels, state.activeChannelId) ?? channels[0]?.id ?? null
+
+      return {
+        channels: channels.map((channel) =>
+          channel.id === nextActiveChannelId
+            ? {
+                ...channel,
+                unread_count: 0,
+              }
+            : channel,
+        ),
+        activeChannelId: nextActiveChannelId,
+        messages:
+          nextActiveChannelId == null
+            ? []
+            : state.activeChannelId === nextActiveChannelId
+              ? state.messages
+              : state.messagesByChannel[nextActiveChannelId] ?? [],
+        channelsError: '',
+        typingUsers: {},
+      }
+    }),
   setActiveChannel: (channelId) =>
     set((state) => ({
       activeChannelId: channelId,

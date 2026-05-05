@@ -11,14 +11,15 @@ function isLoopbackHost(hostname = '') {
 }
 
 function normalizeApiBaseUrl(value) {
-  const fallbackUrl = '/api'
+  const productionFallbackUrl = 'https://orbit-y1jo.onrender.com/api'
+  const currentHostname =
+    typeof window !== 'undefined' ? window.location.hostname : 'localhost'
+  const fallbackUrl = isLoopbackHost(currentHostname) ? '/api' : productionFallbackUrl
   const rawValue = value ?? fallbackUrl
 
   try {
     const currentOrigin =
       typeof window !== 'undefined' ? window.location.origin : 'http://localhost'
-    const currentHostname =
-      typeof window !== 'undefined' ? window.location.hostname : 'localhost'
     let parsedUrl = new URL(rawValue, currentOrigin)
 
     if (!isLoopbackHost(currentHostname) && isLoopbackHost(parsedUrl.hostname)) {

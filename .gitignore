@@ -1,6 +1,7 @@
 # Environment
 .env
 *.env
+admin.gitignore
 
 # Python
 __pycache__/
