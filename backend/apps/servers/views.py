@@ -4,6 +4,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.channels_chat.services import ensure_default_channel
 from apps.notifications.models import ChannelReadState
 from apps.notifications.services import ensure_channel_read_states
 
@@ -19,6 +20,13 @@ def get_server_queryset():
     return Server.objects.select_related('owner').prefetch_related('members', 'admins')
 
 
+def ensure_default_channels_for_servers(servers):
+    server_list = list(servers)
+    for server in server_list:
+        ensure_default_channel(server)
+    return server_list
+
+
 class ServerListCreateView(generics.ListCreateAPIView):
     serializer_class = ServerSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -30,9 +38,15 @@ class ServerListCreateView(generics.ListCreateAPIView):
             .order_by('name', 'id')
         )
 
+    def list(self, request, *args, **kwargs):
+        servers = ensure_default_channels_for_servers(self.filter_queryset(self.get_queryset()))
+        serializer = self.get_serializer(servers, many=True)
+        return Response(serializer.data)
+
     def perform_create(self, serializer):
         server = serializer.save(owner=self.request.user)
         server.members.add(self.request.user)
+        ensure_default_channel(server)
 
 
 class ServerJoinView(generics.GenericAPIView):
@@ -48,6 +62,7 @@ class ServerJoinView(generics.GenericAPIView):
             invite_code=serializer.validated_data['invite_code'],
         )
         server.members.add(request.user)
+        ensure_default_channel(server)
         ensure_channel_read_states(request.user, server.channels.all())
 
         refreshed_server = get_server_queryset().get(pk=server.pk)
@@ -65,11 +80,13 @@ class ServerDetailView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
-        return get_object_or_404(
+        server = get_object_or_404(
             get_server_queryset(),
             pk=self.kwargs['pk'],
             members=self.request.user,
         )
+        ensure_default_channel(server)
+        return server
 
     def _ensure_owner(self, server):
         if server.owner_id != self.request.user.id:

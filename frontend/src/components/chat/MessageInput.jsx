@@ -14,6 +14,7 @@ function MessageInput({
   const [composerError, setComposerError] = useState('')
   const fileUploadRef = useRef(null)
   const typingTimeoutRef = useRef(null)
+  const isTypingRef = useRef(false)
   const hasConversationTarget = Boolean(channel || directConversation)
   const conversationLabel = directConversation
     ? `@${directConversation.participant?.username ?? 'direct-message'}`
@@ -36,16 +37,35 @@ function MessageInput({
     }
   }
 
+  const sendTypingStart = () => {
+    if (isTypingRef.current) {
+      return
+    }
+
+    isTypingRef.current = true
+    onSendTypingState(true)
+  }
+
+  const sendTypingStop = () => {
+    if (!isTypingRef.current) {
+      return
+    }
+
+    isTypingRef.current = false
+    onSendTypingState(false)
+  }
+
   useEffect(() => {
     return () => {
       clearTypingTimeout()
+      sendTypingStop()
     }
   }, [])
 
   const scheduleTypingStop = () => {
     clearTypingTimeout()
     typingTimeoutRef.current = window.setTimeout(() => {
-      onSendTypingState(false)
+      sendTypingStop()
       typingTimeoutRef.current = null
     }, 2000)
   }
@@ -59,14 +79,13 @@ function MessageInput({
       return
     }
 
-    onSendTypingState(true)
-
     if (!nextValue.trim()) {
       clearTypingTimeout()
-      onSendTypingState(false)
+      sendTypingStop()
       return
     }
 
+    sendTypingStart()
     scheduleTypingStop()
   }
 
@@ -96,7 +115,7 @@ function MessageInput({
     }
 
     clearTypingTimeout()
-    onSendTypingState(false)
+    sendTypingStop()
     setDraft('')
     setAttachedFiles([])
     setIsUploadingAttachments(false)

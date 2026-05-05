@@ -205,6 +205,7 @@ function ChatWindow({
   directoryUsers = [],
   isMobileVisible = true,
 }) {
+  const currentUser = useAuthStore((state) => state.user)
   const currentUserId = useAuthStore((state) => state.user?.id)
   const accessToken = useAuthStore((state) => state.tokens?.access)
   const messages = useChatStore((state) => state.messages)
@@ -240,6 +241,56 @@ function ChatWindow({
     activeConversationId,
     accessToken,
   )
+
+  const buildClientId = () => {
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+      return crypto.randomUUID()
+    }
+
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  }
+
+  const handleSendMessage = (message) => {
+    if (!activeConversationId || !conversationType || !currentUser?.id) {
+      return false
+    }
+
+    const clientId = buildClientId()
+    const sent = sendMessage({
+      type: 'chat_message',
+      client_id: clientId,
+      ...message,
+    })
+
+    if (!sent) {
+      return false
+    }
+
+    appendMessage({
+      type: 'chat_message',
+      id: `pending-${clientId}`,
+      client_id: clientId,
+      channel_id: conversationType === 'channel' ? activeConversationId : null,
+      direct_conversation_id:
+        conversationType === 'direct' ? activeConversationId : null,
+      conversation_type: conversationType,
+      content: message.content,
+      attachments: message.attachments ?? [],
+      reactions: [],
+      sender: {
+        id: currentUser.id,
+        username: currentUser.username,
+        avatar: currentUser.avatar,
+      },
+      timestamp: new Date().toISOString(),
+      file_url: message.file_url ?? '',
+      file_name: message.file_name ?? '',
+      file_type: message.file_type ?? '',
+      is_pending: true,
+    })
+
+    return true
+  }
 
   useEffect(() => {
     return () => {
@@ -852,12 +903,7 @@ function ChatWindow({
               channel={channel}
               directConversation={directConversation}
               connectionStatus={connectionStatus}
-              onSendMessage={(message) =>
-                sendMessage({
-                  type: 'chat_message',
-                  ...message,
-                })
-              }
+              onSendMessage={handleSendMessage}
               onSendTypingState={(isTyping) =>
                 sendMessage({
                   type: 'typing',

@@ -128,6 +128,10 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         message_type = payload.get('type', 'chat_message')
 
+        if message_type == 'ping':
+            await self.send(text_data=json.dumps({'type': 'pong'}))
+            return
+
         if message_type == 'typing':
             await self.channel_layer.group_send(
                 self.group_name,
@@ -155,6 +159,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if message_type != 'chat_message':
             return
 
+        client_id = str(payload.get('client_id', '')).strip()
         content = str(payload.get('content', '')).strip()
         file_url = str(payload.get('file_url', '')).strip()
         file_name = str(payload.get('file_name', '')).strip()
@@ -172,7 +177,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not content and not attachments:
             return
 
-        message = await self.create_message(content, attachments)
+        message = await self.create_message(content, attachments, client_id)
 
         await self.channel_layer.group_send(
             self.group_name,
@@ -203,7 +208,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         ).exists()
 
     @database_sync_to_async
-    def create_message(self, content, attachments=None):
+    def create_message(self, content, attachments=None, client_id=''):
         attachments = attachments or []
         primary_attachment = attachments[0] if attachments else {}
         message_kwargs = {
@@ -230,6 +235,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         return {
             'type': 'chat_message',
             'id': message.id,
+            'client_id': client_id,
             'channel_id': int(self.channel_id) if self.channel_id else None,
             'direct_conversation_id': (
                 int(self.direct_conversation_id) if self.direct_conversation_id else None

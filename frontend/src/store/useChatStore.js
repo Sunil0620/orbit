@@ -80,7 +80,24 @@ function buildMessagePreview(message) {
 }
 
 function upsertUniqueMessage(messages, message) {
-  return messages.some((item) => item.id === message.id) ? messages : [...messages, message]
+  const clientId = message?.client_id
+  const existingIndex = messages.findIndex(
+    (item) =>
+      item.id === message.id ||
+      (clientId && item.client_id === clientId),
+  )
+
+  if (existingIndex === -1) {
+    return [...messages, message]
+  }
+
+  const nextMessages = [...messages]
+  nextMessages[existingIndex] = {
+    ...nextMessages[existingIndex],
+    ...message,
+    is_pending: false,
+  }
+  return nextMessages
 }
 
 function updateMessageCollectionReactions(messages, messageId, reactions) {
@@ -159,6 +176,17 @@ const useChatStore = create((set) => ({
     }),
   setChannels: (channels) =>
     set((state) => {
+      if (
+        channels.length === 0 &&
+        state.activeServerId != null &&
+        state.channels.length > 0
+      ) {
+        return {
+          channelsError: '',
+          typingUsers: {},
+        }
+      }
+
       const nextActiveChannelId =
         resolveActiveId(channels, state.activeChannelId) ?? channels[0]?.id ?? null
 

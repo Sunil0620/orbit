@@ -269,6 +269,11 @@ function MessageRow({
             <p className="pt-px text-[10px] leading-none text-[var(--orbit-text-subtle)]">
               {formatDate(message.timestamp ?? message.created_at)}
             </p>
+            {message.is_pending ? (
+              <p className="pt-px text-[10px] font-medium leading-none text-[var(--orbit-text-subtle)]">
+                Sending...
+              </p>
+            ) : null}
           </div>
         ) : null}
 

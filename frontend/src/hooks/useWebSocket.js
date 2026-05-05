@@ -4,6 +4,7 @@ import useAuthStore from '../store/useAuthStore'
 import useChatStore from '../store/useChatStore'
 
 const RECONNECT_DELAYS = [1000, 2000, 4000, 8000, 16000]
+const HEARTBEAT_INTERVAL_MS = 25000
 
 function isLoopbackHost(hostname = '') {
   return (
@@ -41,6 +42,7 @@ export default function useWebSocket(conversationType, conversationId, accessTok
   const reconnectTimerRef = useRef(null)
   const reconnectAttemptRef = useRef(0)
   const closedByEffectRef = useRef(false)
+  const heartbeatIntervalRef = useRef(null)
   const [lastMessage, setLastMessage] = useState(null)
   const [connectionStatus, setConnectionStatus] = useState('idle')
 
@@ -65,9 +67,20 @@ export default function useWebSocket(conversationType, conversationId, accessTok
     }
   }, [])
 
+  const clearHeartbeatInterval = useCallback(() => {
+    if (heartbeatIntervalRef.current) {
+      window.clearInterval(heartbeatIntervalRef.current)
+      heartbeatIntervalRef.current = null
+    }
+  }, [])
+
   const handleMessage = useCallback((event) => {
     try {
       const parsedMessage = JSON.parse(event.data)
+
+      if (parsedMessage.type === 'pong') {
+        return
+      }
 
       if (parsedMessage.type === 'presence') {
         useChatStore.getState().updateMemberPresence({
@@ -93,6 +106,7 @@ export default function useWebSocket(conversationType, conversationId, accessTok
     }
 
     clearReconnectTimer()
+    clearHeartbeatInterval()
     setConnectionStatus(
       reconnectAttemptRef.current > 0 ? 'reconnecting' : 'connecting',
     )
@@ -103,6 +117,12 @@ export default function useWebSocket(conversationType, conversationId, accessTok
     socket.onopen = () => {
       reconnectAttemptRef.current = 0
       setConnectionStatus('open')
+      clearHeartbeatInterval()
+      heartbeatIntervalRef.current = window.setInterval(() => {
+        if (socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify({ type: 'ping' }))
+        }
+      }, HEARTBEAT_INTERVAL_MS)
     }
 
     socket.onmessage = handleMessage
@@ -112,6 +132,7 @@ export default function useWebSocket(conversationType, conversationId, accessTok
     }
 
     socket.onclose = () => {
+      clearHeartbeatInterval()
       if (closedByEffectRef.current) {
         setConnectionStatus('closed')
         return
@@ -129,7 +150,7 @@ export default function useWebSocket(conversationType, conversationId, accessTok
         connectRef.current?.()
       }, nextDelay)
     }
-  }, [clearReconnectTimer, handleMessage, socketUrl])
+  }, [clearHeartbeatInterval, clearReconnectTimer, handleMessage, socketUrl])
 
   useEffect(() => {
     connectRef.current = connect
@@ -152,10 +173,11 @@ export default function useWebSocket(conversationType, conversationId, accessTok
       window.clearTimeout(initialConnectTimer)
       closedByEffectRef.current = true
       clearReconnectTimer()
+      clearHeartbeatInterval()
       socketRef.current?.close()
       socketRef.current = null
     }
-  }, [clearReconnectTimer, connect, socketUrl])
+  }, [clearHeartbeatInterval, clearReconnectTimer, connect, socketUrl])
 
   const sendMessage = useCallback((payload) => {
     if (socketRef.current?.readyState !== WebSocket.OPEN) {

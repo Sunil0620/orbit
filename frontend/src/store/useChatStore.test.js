@@ -26,6 +26,33 @@ describe('useChatStore unread behavior', () => {
     expect(state.lastReadMessageId[1]).toBe(42)
   })
 
+  it('opens the first channel when a server channel list arrives', () => {
+    useChatStore.getState().setActiveServer(4)
+    useChatStore.getState().setChannels([
+      { id: 10, name: 'general', unread_count: 0 },
+      { id: 11, name: 'random', unread_count: 0 },
+    ])
+
+    const state = useChatStore.getState()
+
+    expect(state.activeChannelId).toBe(10)
+    expect(state.messages).toEqual([])
+  })
+
+  it('keeps current channels when a stale empty channel refresh arrives', () => {
+    useChatStore.getState().setActiveServer(4)
+    useChatStore.getState().setChannels([
+      { id: 10, name: 'general', unread_count: 0 },
+    ])
+    useChatStore.getState().setChannels([])
+
+    const state = useChatStore.getState()
+
+    expect(state.activeChannelId).toBe(10)
+    expect(state.channels).toHaveLength(1)
+    expect(state.channels[0].name).toBe('general')
+  })
+
   it('clears a direct conversation unread badge and stores the last read message id', () => {
     useChatStore.getState().setDirectConversations([
       {
@@ -103,5 +130,31 @@ describe('useChatStore unread behavior', () => {
 
     expect(state.messages[0].reactions[0].emoji).toBe('🔥')
     expect(state.messagesByChannel[3][0].reactions[0].count).toBe(2)
+  })
+
+  it('replaces an optimistic message when the server echo returns the same client id', () => {
+    useChatStore.getState().setActiveChannel(3)
+    useChatStore.getState().appendMessage({
+      id: 'pending-abc',
+      client_id: 'abc',
+      channel_id: 3,
+      content: 'Sending',
+      is_pending: true,
+      sender: { id: 1, username: 'maya' },
+    })
+    useChatStore.getState().appendMessage({
+      id: 44,
+      client_id: 'abc',
+      channel_id: 3,
+      content: 'Sending',
+      is_pending: false,
+      sender: { id: 1, username: 'maya' },
+    })
+
+    const state = useChatStore.getState()
+
+    expect(state.messages).toHaveLength(1)
+    expect(state.messages[0].id).toBe(44)
+    expect(state.messages[0].is_pending).toBe(false)
   })
 })

@@ -12,18 +12,7 @@ from apps.notifications.services import (
 
 from .models import Channel
 from .serializers import ChannelSerializer
-
-
-def ensure_default_channel(server):
-    if server.channels.exists():
-        return
-
-    channel = Channel.objects.create(
-        server=server,
-        name='general',
-        channel_type=Channel.ChannelType.TEXT,
-    )
-    create_channel_read_states_for_members(channel)
+from .services import ensure_default_channel
 
 
 class ChannelListCreateView(generics.ListCreateAPIView):

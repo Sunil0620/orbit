@@ -38,8 +38,41 @@ class ServerApiTests(APITestCase):
         server = Server.objects.get(name='Orbit HQ')
         self.assertEqual(server.owner, self.owner)
         self.assertTrue(server.members.filter(pk=self.owner.pk).exists())
+        self.assertTrue(
+            Channel.objects.filter(
+                server=server,
+                name='general',
+                channel_type=Channel.ChannelType.TEXT,
+            ).exists()
+        )
         self.assertEqual(response.data['current_user_role'], Server.Role.OWNER)
         self.assertTrue(response.data['permissions']['can_manage_roles'])
+
+    def test_listing_servers_repairs_missing_default_channel(self):
+        server = Server.objects.create(name='Crew', owner=self.owner)
+        server.members.add(self.owner)
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.get(reverse('server_list_create'))
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data[0]['name'], 'Crew')
+        self.assertTrue(Channel.objects.filter(server=server, name='general').exists())
+
+    def test_join_server_repairs_missing_default_channel(self):
+        server = Server.objects.create(name='Crew', owner=self.owner)
+        server.members.add(self.owner)
+        self.client.force_authenticate(self.member)
+
+        response = self.client.post(
+            reverse('server_join'),
+            {'invite_code': str(server.invite_code)},
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertTrue(server.members.filter(pk=self.member.pk).exists())
+        self.assertTrue(Channel.objects.filter(server=server, name='general').exists())
 
     def test_only_owner_can_change_member_roles(self):
         server = Server.objects.create(name='Orbit HQ', owner=self.owner)
@@ -116,6 +149,23 @@ class ChannelApiTests(APITestCase):
         )
 
         self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_owner_can_create_channel_and_read_states_are_created_for_members(self):
+        self.client.force_authenticate(self.owner)
+
+        response = self.client.post(
+            reverse('channel_list_create'),
+            {
+                'server': self.server.pk,
+                'name': 'announcements',
+                'channel_type': Channel.ChannelType.ANNOUNCEMENT,
+            },
+            format='json',
+        )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        channel = Channel.objects.get(server=self.server, name='announcements')
+        self.assertEqual(channel.read_states.count(), 2)
 
     def test_last_channel_cannot_be_deleted(self):
         channel = Channel.objects.create(
