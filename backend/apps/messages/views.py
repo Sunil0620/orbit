@@ -1,7 +1,15 @@
 import cloudinary.uploader
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
-from django.db.models import Count, Q
+from django.db.models import (
+    CharField,
+    Count,
+    DateTimeField,
+    IntegerField,
+    OuterRef,
+    Q,
+    Subquery,
+)
 from django.shortcuts import get_object_or_404
 from rest_framework import generics, permissions, serializers, status
 from rest_framework.exceptions import APIException
@@ -29,12 +37,41 @@ from .serializers import (
 
 
 def build_direct_conversation_queryset(user):
+    latest_message_queryset = Message.objects.filter(
+        direct_conversation=OuterRef('pk'),
+    ).order_by('-created_at', '-id')
     queryset = (
         DirectConversation.objects.filter(
             Q(user_one=user) | Q(user_two=user)
         )
         .select_related('user_one', 'user_two')
         .annotate(message_count=Count('messages', distinct=True))
+        .annotate(
+            latest_message_content=Subquery(
+                latest_message_queryset.values('content')[:1],
+                output_field=CharField(),
+            ),
+            latest_message_file_name=Subquery(
+                latest_message_queryset.values('file_name')[:1],
+                output_field=CharField(),
+            ),
+            latest_message_file_url=Subquery(
+                latest_message_queryset.values('file_url')[:1],
+                output_field=CharField(),
+            ),
+            latest_message_created_at=Subquery(
+                latest_message_queryset.values('created_at')[:1],
+                output_field=DateTimeField(),
+            ),
+            latest_message_sender_id=Subquery(
+                latest_message_queryset.values('sender_id')[:1],
+                output_field=IntegerField(),
+            ),
+            latest_message_sender_username=Subquery(
+                latest_message_queryset.values('sender__username')[:1],
+                output_field=CharField(),
+            ),
+        )
         .order_by('-updated_at', '-id')
     )
     ensure_direct_conversation_read_states(user, queryset)
@@ -78,7 +115,9 @@ class MessageListView(generics.ListAPIView):
         if channel and direct_conversation:
             raise serializers.ValidationError(
                 {
-                    'detail': 'Choose either a channel or a direct conversation, not both.',
+                    'detail': (
+                        'Choose either a channel or a direct conversation, not both.'
+                    ),
                 }
             )
 
@@ -90,7 +129,9 @@ class MessageListView(generics.ListAPIView):
 
         raise serializers.ValidationError(
             {
-                'detail': 'A channel or direct_conversation query parameter is required.',
+                'detail': (
+                    'A channel or direct_conversation query parameter is required.'
+                ),
             }
         )
 
@@ -138,7 +179,13 @@ class DirectConversationListCreateView(generics.GenericAPIView):
         input_serializer.is_valid(raise_exception=True)
 
         recipient = get_object_or_404(
-            CustomUser.objects.only('id', 'username', 'avatar', 'is_online', 'last_seen'),
+            CustomUser.objects.only(
+                'id',
+                'username',
+                'avatar',
+                'is_online',
+                'last_seen',
+            ),
             pk=input_serializer.validated_data['recipient_id'],
         )
 
@@ -167,7 +214,10 @@ class DirectConversationListCreateView(generics.GenericAPIView):
             if not shares_server:
                 raise serializers.ValidationError(
                     {
-                        'recipient_id': 'You can only start a direct message with someone who shares a server with you.',
+                        'recipient_id': (
+                            'You can only start a direct message with someone who '
+                            'shares a server with you.'
+                        ),
                     }
                 )
 
@@ -181,7 +231,10 @@ class DirectConversationListCreateView(generics.GenericAPIView):
             ensure_direct_conversation_read_states(request.user, [conversation])
             status_code = status.HTTP_200_OK
 
-        conversation = self.get_queryset().filter(pk=conversation.pk).first() or conversation
+        conversation = (
+            self.get_queryset().filter(pk=conversation.pk).first()
+            or conversation
+        )
         serializer = self.get_serializer(conversation)
         return Response(serializer.data, status=status_code)
 
@@ -192,7 +245,10 @@ class MessageReactionToggleView(generics.GenericAPIView):
 
     def get_message(self, message_id):
         return get_object_or_404(
-            Message.objects.select_related('channel__server', 'direct_conversation').filter(
+            Message.objects.select_related(
+                'channel__server',
+                'direct_conversation',
+            ).filter(
                 Q(channel__server__members=self.request.user)
                 | Q(direct_conversation__user_one=self.request.user)
                 | Q(direct_conversation__user_two=self.request.user)

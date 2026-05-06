@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import useAuthStore from '../store/useAuthStore'
 
-function ProtectedRoute() {
+function ProtectedRoute({ isReady = true, fallback = null }) {
   const location = useLocation()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
 
@@ -21,6 +21,10 @@ function ProtectedRoute() {
         }}
       />
     )
+  }
+
+  if (!isReady) {
+    return fallback
   }
 
   return <Outlet />

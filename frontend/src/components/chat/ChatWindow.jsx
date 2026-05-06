@@ -202,7 +202,6 @@ function ChatWindow({
   directConversation = null,
   directConversations = [],
   homeMode = false,
-  directoryUsers = [],
   isMobileVisible = true,
 }) {
   const currentUser = useAuthStore((state) => state.user)
@@ -659,10 +658,6 @@ function ChatWindow({
     visibleMessages.length === 0 &&
     !normalizedSearchQuery
 
-  const onlineDirectoryCount = useMemo(
-    () => directoryUsers.filter((contact) => contact.is_online).length,
-    [directoryUsers],
-  )
   const unreadDirectTotal = useMemo(
     () =>
       directConversations.reduce(
@@ -677,9 +672,9 @@ function ChatWindow({
       : directParticipant?.last_seen
         ? `Last seen ${formatDate(directParticipant.last_seen)}`
         : 'Offline'
-    : channel
-      ? `${server?.name ?? 'Orbit'}${server?.members?.length ? ` • ${server.members.length} members` : ''}`
-      : 'Choose a space to start talking'
+      : channel
+        ? `${server?.name ?? 'Orbit'}${server?.members?.length ? ` • ${server.members.length} members` : ''}`
+      : 'No conversation selected'
   const visibilityClass = isMobileVisible ? 'flex' : 'hidden'
 
   return (
@@ -697,7 +692,7 @@ function ChatWindow({
             </span>
             <h2 className="truncate text-[15px] font-semibold text-[var(--orbit-text)]">
               {homeMode
-                ? 'Chat'
+                ? 'Direct messages'
                 : directConversation
                   ? directParticipant?.username ?? 'Direct message'
                   : channel?.name ?? 'Select a channel'}
@@ -707,9 +702,7 @@ function ChatWindow({
             ) : null}
           </div>
           <p className="truncate text-[11px] text-[var(--orbit-text-muted)]">
-            {homeMode
-              ? 'Use Inbox for conversations and People to start a new one.'
-              : headerMetaText}
+            {homeMode ? 'No conversation selected' : headerMetaText}
           </p>
         </div>
 
@@ -753,90 +746,17 @@ function ChatWindow({
 
       <div className="flex min-h-0 flex-1 flex-col justify-between bg-[var(--orbit-chat-bg)]">
         {homeMode ? (
-          <div className="orbit-scrollbar min-h-0 flex-1 overflow-y-auto px-5 py-5">
-            <div className="mx-auto flex w-full max-w-3xl flex-col gap-4">
-              <section className="rounded-[1.45rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-5 py-5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                  Direct Messages
-                </p>
-                <h3 className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
-                  Choose a conversation to start chatting.
-                </h3>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--orbit-text-muted)]">
-                  Inbox is for your existing direct messages. People is for starting a
-                  new one. Once you open a conversation, the chat appears here.
-                </p>
-              </section>
-
-              <div className="grid gap-4 sm:grid-cols-3">
-                <section className="rounded-[1.25rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                    Inbox
-                  </p>
-                  <p className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
-                    {directConversations.length}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                    Conversation{directConversations.length === 1 ? '' : 's'} ready to open.
-                  </p>
-                </section>
-
-                <section className="rounded-[1.25rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                    Unread
-                  </p>
-                  <p className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
-                    {unreadDirectTotal}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                    Messages waiting in your inbox.
-                  </p>
-                </section>
-
-                <section className="rounded-[1.25rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-4 py-4">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                    People
-                  </p>
-                  <p className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
-                    {onlineDirectoryCount}
-                  </p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                    Teammate{onlineDirectoryCount === 1 ? '' : 's'} online right now.
-                  </p>
-                </section>
+          <div className="flex min-h-0 flex-1 items-center justify-center px-4 py-8">
+            <div className="flex max-w-sm flex-col items-center text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-[1.15rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[22px] font-semibold text-[var(--orbit-text-subtle)]">
+                @
               </div>
-
-              <section className="rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-5 py-5">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                  How It Works
-                </p>
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-4 py-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                      Inbox
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                      Open your existing direct messages here.
-                    </p>
-                  </div>
-                  <div className="rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-4 py-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                      Chat
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                      Read and send messages in the active conversation.
-                    </p>
-                  </div>
-                  <div className="rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-chat-bg)] px-4 py-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
-                      People
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                      Start a new direct message with someone on your team.
-                    </p>
-                  </div>
-                </div>
-              </section>
+              <h3 className="mt-4 text-lg font-semibold text-[var(--orbit-text)]">
+                No conversation selected
+              </h3>
+              <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
+                Open a direct message to continue.
+              </p>
             </div>
           </div>
         ) : (

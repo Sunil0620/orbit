@@ -208,9 +208,6 @@ function ChannelList({
           <h2 className="mt-2 text-[14px] font-semibold text-[var(--orbit-text)]">
             Direct Messages
           </h2>
-          <p className="mt-1 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-            Your recent conversations
-          </p>
         </div>
 
         <div className="orbit-scrollbar flex min-h-0 flex-1 flex-col overflow-y-auto px-2 py-3">
@@ -283,7 +280,7 @@ function ChannelList({
             </div>
           ) : !isLoading ? (
             <BauhausEmptyState
-              message="Your direct messages will appear here."
+              message="No direct messages yet."
               className="mx-2 p-4"
             />
           ) : null}

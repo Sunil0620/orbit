@@ -23,7 +23,9 @@
       )
 
       window.localStorage.setItem('orbit-theme', 'dark')
-      window.location.replace('/app')
+      const params = new URLSearchParams(window.location.search)
+      const nextPath = params.get('next') || '/app'
+      window.location.replace(nextPath.startsWith('/') ? nextPath : '/app')
     </script>
   </body>
 </html>

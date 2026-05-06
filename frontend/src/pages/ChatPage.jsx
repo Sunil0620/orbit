@@ -23,7 +23,7 @@ function MobilePaneButton({ label, isActive = false, onClick }) {
       onClick={onClick}
       aria-pressed={isActive}
       className={[
-        'rounded-[0.95rem] border px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] transition',
+        'min-w-0 truncate rounded-[0.95rem] border px-2 py-2 text-[10px] font-semibold uppercase tracking-[0.12em] transition sm:px-3 sm:text-[11px] sm:tracking-[0.18em]',
         isActive
           ? 'orbit-accent-surface'
           : 'border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] hover:text-[var(--orbit-text)]',
@@ -596,8 +596,8 @@ function ChatPage() {
               isLoading={isServersLoading}
               emptyMessage="No servers yet. Create or join one next."
             />
-            <div className="border-b border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-2.5 py-2 backdrop-blur xl:hidden">
-              <div className="grid grid-cols-3 gap-2">
+            <div className="min-w-0 border-b border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-2.5 py-2 backdrop-blur xl:hidden">
+              <div className="grid min-w-0 grid-cols-3 gap-2">
                 <MobilePaneButton
                   label={mobileBrowseLabel}
                   isActive={mobilePane === 'browse'}
@@ -643,7 +643,6 @@ function ChatPage() {
             directConversation={activeDirectConversation}
             directConversations={directConversations}
             homeMode={homeMode}
-            directoryUsers={directoryContacts}
             isMobileVisible={mobilePane === 'chat'}
           />
           <MemberList

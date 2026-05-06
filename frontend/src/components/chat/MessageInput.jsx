@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import FileUpload from './FileUpload'
 
 function MessageInput({
@@ -23,44 +23,44 @@ function MessageInput({
       : ''
   const isConnectionReady = connectionStatus === 'open'
   const helperText = !hasConversationTarget
-    ? 'Pick a conversation to start chatting.'
+    ? 'Select a conversation.'
     : isUploadingAttachments
       ? 'Finish uploading attachments before sending.'
     : !isConnectionReady
       ? 'Reconnecting to this conversation...'
       : ''
 
-  const clearTypingTimeout = () => {
+  const clearTypingTimeout = useCallback(() => {
     if (typingTimeoutRef.current) {
       window.clearTimeout(typingTimeoutRef.current)
       typingTimeoutRef.current = null
     }
-  }
+  }, [])
 
-  const sendTypingStart = () => {
+  const sendTypingStart = useCallback(() => {
     if (isTypingRef.current) {
       return
     }
 
     isTypingRef.current = true
     onSendTypingState(true)
-  }
+  }, [onSendTypingState])
 
-  const sendTypingStop = () => {
+  const sendTypingStop = useCallback(() => {
     if (!isTypingRef.current) {
       return
     }
 
     isTypingRef.current = false
     onSendTypingState(false)
-  }
+  }, [onSendTypingState])
 
   useEffect(() => {
     return () => {
       clearTypingTimeout()
       sendTypingStop()
     }
-  }, [])
+  }, [clearTypingTimeout, sendTypingStop])
 
   const scheduleTypingStop = () => {
     clearTypingTimeout()
@@ -150,7 +150,7 @@ function MessageInput({
           placeholder={
             hasConversationTarget
               ? `Message ${conversationLabel}`
-              : 'Choose a conversation before sending messages'
+              : 'Select a conversation'
           }
           className="orbit-input min-w-0 w-full rounded-[0.95rem] px-4 py-2.5 text-[13px] transition disabled:cursor-not-allowed disabled:opacity-60"
         />

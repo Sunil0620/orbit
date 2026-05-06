@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import BauhausEmptyState from '../components/ui/BauhausEmptyState'
 import {
   deleteServer,
   getServer,
@@ -61,28 +60,28 @@ function sectionDetails(serverName) {
   return {
     overview: {
       eyebrow: 'Overview',
-      title: 'Server overview',
-      description: `Shape how ${serverName} looks, review the membership snapshot, and keep the workspace identity tidy.`,
+      title: serverName,
+      description: 'Server settings',
     },
     members: {
       eyebrow: 'Members',
-      title: 'Member management',
-      description: 'Review everyone in the server, spot role levels quickly, and remove members when needed.',
+      title: 'Members',
+      description: 'Manage server members',
     },
     roles: {
       eyebrow: 'Roles',
-      title: 'Roles and permissions',
-      description: 'Owners can assign admins. Admins can manage the server, channels, invites, and regular members.',
+      title: 'Roles',
+      description: 'Review permissions',
     },
     invites: {
       eyebrow: 'Invites',
-      title: 'Invite access',
-      description: 'Share the server safely with the people you want to bring into the workspace.',
+      title: 'Invites',
+      description: 'Share invite access',
     },
     danger: {
       eyebrow: 'Danger Zone',
-      title: 'Leave or delete server',
-      description: 'These actions have lasting effects, so the workspace calls them out clearly.',
+      title: 'Danger Zone',
+      description: 'Leave or delete this server',
     },
   }
 }
@@ -109,12 +108,12 @@ function Avatar({ image, label, sizeClass = 'h-11 w-11 rounded-2xl' }) {
 
 function SettingsCard({ title, description, children, actions = null }) {
   return (
-    <article className="min-w-0 rounded-[1.75rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] p-5 shadow-[0_16px_40px_rgba(0,0,0,0.12)]">
+    <article className="min-w-0 max-w-full overflow-hidden rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="text-lg font-semibold text-[var(--orbit-text)]">{title}</h2>
+          <h2 className="text-[15px] font-semibold text-[var(--orbit-text)]">{title}</h2>
           {description ? (
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-[var(--orbit-text-muted)]">
+            <p className="mt-1 max-w-2xl break-words text-[13px] leading-5 text-[var(--orbit-text-muted)]">
               {description}
             </p>
           ) : null}
@@ -123,7 +122,7 @@ function SettingsCard({ title, description, children, actions = null }) {
         {actions ? <div className="flex shrink-0 flex-wrap gap-2">{actions}</div> : null}
       </div>
 
-      <div className="mt-5">{children}</div>
+      <div className="mt-4">{children}</div>
     </article>
   )
 }
@@ -135,11 +134,11 @@ function StatCard({ label, value, tone = 'default' }) {
       : 'border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)]'
 
   return (
-    <div className={`rounded-[1.35rem] border px-4 py-4 ${toneClass}`}>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
+    <div className={`rounded-xl border px-3 py-3 ${toneClass}`}>
+      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
         {label}
       </p>
-      <p className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">{value}</p>
+      <p className="mt-2 truncate text-xl font-semibold text-[var(--orbit-text)]">{value}</p>
     </div>
   )
 }
@@ -181,7 +180,6 @@ function ServerSettings() {
   )
   const currentUserRole = server?.current_user_role ?? 'member'
   const canManageServer = Boolean(permissions.can_manage_server)
-  const canManageChannels = Boolean(permissions.can_manage_channels)
   const canManageMembers = Boolean(permissions.can_manage_members)
   const canManageRoles = Boolean(permissions.can_manage_roles)
   const canInviteMembers = Boolean(permissions.can_invite_members)
@@ -190,10 +188,6 @@ function ServerSettings() {
   const ownerName = server?.owner?.username ?? 'Unknown owner'
   const adminMembers = useMemo(
     () => members.filter((member) => member.role === 'admin'),
-    [members],
-  )
-  const regularMembers = useMemo(
-    () => members.filter((member) => member.role === 'member'),
     [members],
   )
   const onlineMembers = useMemo(
@@ -490,7 +484,7 @@ function ServerSettings() {
     return (
       <div
         key={member.id}
-        className="flex flex-col gap-4 rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-4 lg:flex-row lg:items-center lg:justify-between"
+        className="flex flex-col gap-3 rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-3 py-3 lg:flex-row lg:items-center lg:justify-between"
       >
         <div className="flex min-w-0 items-center gap-3">
           <div className="relative shrink-0">
@@ -514,24 +508,24 @@ function ServerSettings() {
                 {member.username}
               </p>
               <span
-                className={`rounded-full border px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] ${roleBadgeClass(member.role)}`}
+                className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] ${roleBadgeClass(member.role)}`}
               >
                 {roleLabel(member.role)}
               </span>
               {Number(member.id) === Number(server?.owner?.id) ? (
-                <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--orbit-warning-ink)]">
-                  Server owner
+                <span className="rounded-full border border-amber-300/30 bg-amber-400/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-warning-ink)]">
+                  Owner
                 </span>
               ) : null}
               {Number(member.id) === Number(user?.id) ? (
-                <span className="rounded-full border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em] text-[var(--orbit-text-subtle)]">
+                <span className="rounded-full border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--orbit-text-subtle)]">
                   You
                 </span>
               ) : null}
             </div>
 
             <p className="mt-1 text-sm text-[var(--orbit-text-muted)]">
-              {member.is_online ? 'Online right now' : 'Currently offline'}
+              {member.is_online ? 'Online' : 'Offline'}
             </p>
           </div>
         </div>
@@ -543,7 +537,7 @@ function ServerSettings() {
                 type="button"
                 onClick={() => handleRoleChange(member, 'member')}
                 disabled={isRoleUpdating}
-                className="rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--orbit-text)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3 py-2 text-xs font-semibold text-[var(--orbit-text)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)] disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isRoleUpdating ? 'Updating...' : 'Remove admin'}
               </button>
@@ -552,7 +546,7 @@ function ServerSettings() {
                 type="button"
                 onClick={() => handleRoleChange(member, 'admin')}
                 disabled={isRoleUpdating}
-                className="orbit-accent-surface rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] transition disabled:cursor-not-allowed disabled:opacity-60"
+                className="orbit-accent-surface rounded-lg border px-3 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isRoleUpdating ? 'Updating...' : 'Make admin'}
               </button>
@@ -564,7 +558,7 @@ function ServerSettings() {
               type="button"
               onClick={() => handleRemoveMember(member)}
               disabled={isRemoving}
-              className="rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--orbit-danger-ink)] transition hover:border-red-500/55 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-[var(--orbit-danger-ink)] transition hover:border-red-500/55 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isRemoving ? 'Removing...' : 'Remove'}
             </button>
@@ -592,9 +586,9 @@ function ServerSettings() {
         >
           <Link
             to="/app"
-            className="inline-flex rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-3 text-sm font-semibold text-[var(--orbit-text)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)]"
+            className="inline-flex rounded-lg border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-2.5 text-sm font-semibold text-[var(--orbit-text)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)]"
           >
-            Back to workspace
+            Back to chat
           </Link>
         </SettingsCard>
       )
@@ -602,141 +596,56 @@ function ServerSettings() {
 
     if (activeSection === 'overview') {
       return (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="space-y-4">
-            <SettingsCard
-              title="Server profile"
-              description="Discord-like servers feel grounded when the identity, admin controls, and membership snapshot all live in one place."
-            >
-              <form className="space-y-5" onSubmit={handleRename}>
-                <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-start">
-                  <Avatar
-                    image={server.icon}
-                    label={server.name}
-                    sizeClass="h-16 w-16 rounded-[1.4rem]"
+        <div className="space-y-4">
+          <SettingsCard title="Server profile">
+            <form className="space-y-4" onSubmit={handleRename}>
+              <div className="grid gap-4 md:grid-cols-[auto_minmax(0,1fr)] md:items-start">
+                <Avatar
+                  image={server.icon}
+                  label={server.name}
+                  sizeClass="h-14 w-14 rounded-xl"
+                />
+
+                <label className="block space-y-2">
+                  <span className="text-sm font-medium text-[var(--orbit-text)]">
+                    Server name
+                  </span>
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(event) => setName(event.target.value)}
+                    disabled={!canManageServer || isSaving}
+                    className="w-full rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-3 py-2.5 text-sm text-[var(--orbit-text)] outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                   />
-
-                  <div className="space-y-4">
-                    <label className="block space-y-2">
-                      <span className="text-sm font-medium text-[var(--orbit-text)]">
-                        Server name
-                      </span>
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(event) => setName(event.target.value)}
-                        disabled={!canManageServer || isSaving}
-                        className="w-full rounded-2xl border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-3 text-sm text-[var(--orbit-text)] outline-none transition focus:border-cyan-400 focus:ring-2 focus:ring-cyan-500/20 disabled:cursor-not-allowed disabled:opacity-60"
-                      />
-                    </label>
-
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <StatCard label="Owner" value={ownerName} />
-                      <StatCard label="Created" value={createdAtLabel} />
-                      <StatCard label="Your role" value={roleLabel(currentUserRole)} tone="accent" />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-wrap gap-3">
-                  {canManageServer ? (
-                    <button
-                      type="submit"
-                      disabled={isSaving}
-                      className="rounded-2xl bg-cyan-500 px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {isSaving ? 'Saving...' : 'Save changes'}
-                    </button>
-                  ) : (
-                    <p className="text-sm text-[var(--orbit-text-muted)]">
-                      Members can view this section, but only admins and the owner can rename the server.
-                    </p>
-                  )}
-                </div>
-              </form>
-            </SettingsCard>
-
-            <SettingsCard
-              title="Permission summary"
-              description="This keeps the admin/member expectations aligned with the rest of the workspace."
-            >
-              <div className="grid gap-3 md:grid-cols-3">
-                <div className="rounded-[1.35rem] border border-amber-300/25 bg-amber-400/10 px-4 py-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-warning-ink)]">
-                    Owner
-                  </p>
-                  <p className="mt-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                    Can delete the server, assign admins, manage members, manage channels, and rename the server.
-                  </p>
-                </div>
-
-                <div className="rounded-[1.35rem] border border-cyan-300/25 bg-cyan-400/10 px-4 py-4">
-                  <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.28em]">
-                    Admin
-                  </p>
-                  <p className="mt-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                    Can rename the server, create and delete channels, invite people, and remove regular members.
-                  </p>
-                </div>
-
-                <div className="rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
-                    Member
-                  </p>
-                  <p className="mt-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                    Can join channels, chat, and view the workspace, but cannot manage server structure or roles.
-                  </p>
-                </div>
+                </label>
               </div>
-            </SettingsCard>
-          </div>
 
-          <div className="space-y-4">
-            <SettingsCard
-              title="Workspace snapshot"
-              description="A quick read on the current state of the server."
-            >
-              <div className="grid gap-3">
-                <StatCard label="Members" value={String(members.length)} tone="accent" />
-                <StatCard label="Admins" value={String(adminMembers.length)} />
-                <StatCard label="Regular members" value={String(regularMembers.length)} />
-                <StatCard label="Online" value={String(onlineMembers.length)} />
+              <div className="grid gap-3 sm:grid-cols-4">
+                <StatCard label="Owner" value={ownerName} />
+                <StatCard label="Created" value={createdAtLabel} />
+                <StatCard label="Members" value={String(members.length)} />
+                <StatCard label="Role" value={roleLabel(currentUserRole)} tone="accent" />
               </div>
-            </SettingsCard>
 
-            <SettingsCard
-              title="Quick actions"
-              description="Keep the most common server controls close by."
-              actions={
-                <Link
-                  to="/app"
-                  className="rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--orbit-text)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)]"
+              {canManageServer ? (
+                <button
+                  type="submit"
+                  disabled={isSaving}
+                  className="rounded-xl bg-cyan-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  Back to chat
-                </Link>
-              }
-            >
-              <div className="space-y-3">
-                <div className="rounded-[1.3rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-4">
-                  <p className="text-sm font-semibold text-[var(--orbit-text)]">Create channels</p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                    {canManageChannels
-                      ? 'Open the server dropdown in chat to create or clean up channels.'
-                      : 'Channel creation is limited to admins and the server owner.'}
-                  </p>
-                </div>
+                  {isSaving ? 'Saving...' : 'Save changes'}
+                </button>
+              ) : null}
+            </form>
+          </SettingsCard>
 
-                <div className="rounded-[1.3rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-4">
-                  <p className="text-sm font-semibold text-[var(--orbit-text)]">Invite access</p>
-                  <p className="mt-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                    {canInviteMembers
-                      ? 'You can copy the invite code from the Invites tab or the server dropdown.'
-                      : 'Invite codes stay hidden for regular members.'}
-                  </p>
-                </div>
-              </div>
-            </SettingsCard>
-          </div>
+          <SettingsCard title="Permissions">
+            <div className="grid gap-3 md:grid-cols-3">
+              <StatCard label="Admins" value={String(adminMembers.length)} />
+              <StatCard label="Online" value={String(onlineMembers.length)} />
+              <StatCard label="Can invite" value={canInviteMembers ? 'Yes' : 'No'} />
+            </div>
+          </SettingsCard>
         </div>
       )
     }
@@ -744,26 +653,22 @@ function ServerSettings() {
     if (activeSection === 'members') {
       return (
         <div className="space-y-4">
-          <SettingsCard
-            title="Membership overview"
-            description="Everyone in the server appears here with role and presence indicators, similar to the live member rail in chat."
-          >
+          <SettingsCard title="Overview">
             <div className="grid gap-3 sm:grid-cols-3">
               <StatCard label="Total members" value={String(members.length)} tone="accent" />
               <StatCard label="Admins" value={String(adminMembers.length)} />
-              <StatCard label="Online now" value={String(onlineMembers.length)} />
+              <StatCard label="Online" value={String(onlineMembers.length)} />
             </div>
           </SettingsCard>
 
-          <SettingsCard
-            title="Member list"
-            description="Owners can manage roles. Admins can remove regular members. Members stay read-only here."
-          >
+          <SettingsCard title="Member list">
             <div className="space-y-3">
               {members.length > 0 ? (
                 members.map(renderMemberRow)
               ) : (
-                <BauhausEmptyState message="No members are available to display right now." className="p-4" />
+                <div className="rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-6 text-sm text-[var(--orbit-text-muted)]">
+                  No members.
+                </div>
               )}
             </div>
           </SettingsCard>
@@ -774,13 +679,10 @@ function ServerSettings() {
     if (activeSection === 'roles') {
       return (
         <div className="space-y-4">
-          <SettingsCard
-            title="Role definitions"
-            description="Orbit keeps the role model intentionally simple so the Discord-style permission flow stays easy to understand."
-          >
+          <SettingsCard title="Role definitions">
             <div className="grid gap-3 md:grid-cols-3">
-              <div className="rounded-[1.35rem] border border-amber-300/25 bg-amber-400/10 px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-warning-ink)]">
+              <div className="rounded-xl border border-amber-300/25 bg-amber-400/10 px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-warning-ink)]">
                   Owner
                 </p>
                 <ul className="mt-3 space-y-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
@@ -790,8 +692,8 @@ function ServerSettings() {
                 </ul>
               </div>
 
-              <div className="rounded-[1.35rem] border border-cyan-300/25 bg-cyan-400/10 px-4 py-4">
-                <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.28em]">
+              <div className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-4">
+                <p className="orbit-accent-label text-[11px] font-semibold uppercase tracking-[0.18em]">
                   Admin
                 </p>
                 <ul className="mt-3 space-y-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
@@ -801,8 +703,8 @@ function ServerSettings() {
                 </ul>
               </div>
 
-              <div className="rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-4">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
+              <div className="rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-4">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
                   Member
                 </p>
                 <ul className="mt-3 space-y-2 text-sm leading-6 text-[var(--orbit-text-muted)]">
@@ -818,7 +720,7 @@ function ServerSettings() {
             title="Admin roster"
             description={
               canManageRoles
-                ? 'Use this section to promote trusted members or remove admin access.'
+                ? 'Promote or remove admins.'
                 : 'Only the server owner can change admin access.'
             }
           >
@@ -826,7 +728,9 @@ function ServerSettings() {
               {members.length > 0 ? (
                 members.map(renderMemberRow)
               ) : (
-                <BauhausEmptyState message="No members are available to manage right now." className="p-4" />
+                <div className="rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-6 text-sm text-[var(--orbit-text-muted)]">
+                  No members.
+                </div>
               )}
             </div>
           </SettingsCard>
@@ -836,17 +740,16 @@ function ServerSettings() {
 
     if (activeSection === 'invites') {
       return (
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <div className="space-y-4">
           <SettingsCard
             title="Invite code"
-            description="Discord-inspired servers feel smoother when invite access is easy for admins but hidden from members."
             actions={
               canInviteMembers ? (
                 <button
                   type="button"
                   onClick={handleCopyInvite}
                   disabled={!server.invite_code}
-                  className="orbit-accent-surface rounded-xl border px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] transition disabled:cursor-not-allowed disabled:opacity-60"
+                  className="orbit-accent-surface rounded-lg border px-3 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   Copy code
                 </button>
@@ -855,41 +758,16 @@ function ServerSettings() {
           >
             {canInviteMembers ? (
               <div className="space-y-4">
-                <div className="break-all rounded-[1.35rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-5 text-sm font-medium text-[var(--orbit-text)]">
+                <div className="break-all rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-4 text-sm font-medium text-[var(--orbit-text)]">
                   {server.invite_code ?? 'Unavailable'}
                 </div>
-                <p className="text-sm leading-6 text-[var(--orbit-text-muted)]">
-                  Share this code with trusted people. Anyone who uses it can join the server immediately.
-                </p>
               </div>
             ) : (
-              <BauhausEmptyState message="Invite access is limited to admins and the server owner." className="p-4" />
+              <div className="rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-4 py-6 text-sm text-[var(--orbit-text-muted)]">
+                Invite access is limited to admins and the owner.
+              </div>
             )}
           </SettingsCard>
-
-          <div className="space-y-4">
-            <SettingsCard
-              title="Access notes"
-              description="Keep invite handling clear for the whole team."
-            >
-              <div className="space-y-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
-                <p>Admins and the owner can see and copy the invite code.</p>
-                <p>Regular members can still browse the settings UI, but the active code stays private.</p>
-                <p>Use the chat workspace dropdown when you want faster access while talking with your team.</p>
-              </div>
-            </SettingsCard>
-
-            <SettingsCard
-              title="Current role"
-              description="Your access level determines what actions appear here."
-            >
-              <span
-                className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.24em] ${roleBadgeClass(currentUserRole)}`}
-              >
-                {roleLabel(currentUserRole)}
-              </span>
-            </SettingsCard>
-          </div>
         </div>
       )
     }
@@ -898,14 +776,13 @@ function ServerSettings() {
       <div className="space-y-4">
         <SettingsCard
           title="Leave server"
-          description="Members and admins can leave a server they no longer need. Owners must delete it instead."
           actions={
             !canDeleteServer ? (
               <button
                 type="button"
                 onClick={handleLeave}
                 disabled={isSaving}
-                className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-[var(--orbit-warning-ink)] transition hover:border-amber-500/55 hover:bg-amber-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-sm font-semibold text-[var(--orbit-warning-ink)] transition hover:border-amber-500/55 hover:bg-amber-500/15 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSaving ? 'Working...' : 'Leave server'}
               </button>
@@ -919,14 +796,13 @@ function ServerSettings() {
 
         <SettingsCard
           title="Delete server"
-          description="Only the owner can permanently delete the server and all of its current structure."
           actions={
             canDeleteServer ? (
               <button
                 type="button"
                 onClick={handleDelete}
                 disabled={isSaving}
-                className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-[var(--orbit-danger-ink)] transition hover:border-red-500/55 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
+                className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2.5 text-sm font-semibold text-[var(--orbit-danger-ink)] transition hover:border-red-500/55 hover:bg-red-500/15 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSaving ? 'Deleting...' : 'Delete server'}
               </button>
@@ -934,7 +810,7 @@ function ServerSettings() {
           }
         >
           <p className="text-sm leading-6 text-[var(--orbit-text-muted)]">
-            This action cannot be undone. If you only want to step away personally, use leave server instead.
+            This action cannot be undone.
           </p>
         </SettingsCard>
       </div>
@@ -942,36 +818,36 @@ function ServerSettings() {
   }
 
   return (
-    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-[1.2rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
-      <div className="grid h-full w-full min-w-0 lg:grid-cols-[272px_minmax(0,1fr)]">
-        <aside className="flex min-h-0 flex-col border-b border-[color:var(--orbit-border)] bg-[var(--orbit-channel-bg)] lg:border-b-0 lg:border-r">
-          <div className="border-b border-[color:var(--orbit-border)] px-4 py-4">
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-1 overflow-hidden rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] shadow-[0_18px_60px_rgba(0,0,0,0.28)]">
+      <div className="grid h-full w-full min-w-0 overflow-hidden grid-rows-[auto_minmax(0,1fr)] lg:grid-cols-[240px_minmax(0,1fr)] lg:grid-rows-1">
+        <aside className="flex min-h-0 w-full min-w-0 max-w-full flex-col overflow-hidden border-b border-[color:var(--orbit-border)] bg-[var(--orbit-channel-bg)] lg:border-b-0 lg:border-r">
+          <div className="border-b border-[color:var(--orbit-border)] px-3 py-3">
             <Link
               to="/app"
-              className="inline-flex rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-[var(--orbit-text)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)]"
+              className="inline-flex rounded-lg border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] px-3 py-2 text-xs font-semibold text-[var(--orbit-text)] transition hover:border-[color:var(--orbit-border-strong)] hover:bg-[var(--orbit-surface-hover)]"
             >
-              Back to chat
+              Back
             </Link>
 
-            <div className="mt-4 rounded-[1.5rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] p-4">
+            <div className="mt-3 rounded-xl border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)] p-3">
               <div className="flex items-center gap-3">
                 <Avatar
                   image={server?.icon}
                   label={server?.name ?? 'Server'}
-                  sizeClass="h-12 w-12 rounded-[1.1rem]"
+                  sizeClass="h-10 w-10 rounded-lg"
                 />
 
                 <div className="min-w-0">
                   <p className="truncate text-base font-semibold text-[var(--orbit-text)]">
                     {server?.name ?? 'Loading server'}
                   </p>
-                  <p className="mt-1 text-xs uppercase tracking-[0.28em] text-[var(--orbit-text-subtle)]">
+                  <p className="mt-0.5 text-[10px] uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
                     {roleLabel(currentUserRole)}
                   </p>
                 </div>
               </div>
 
-              <div className="mt-4 grid gap-2 text-sm text-[var(--orbit-text-muted)]">
+              <div className="mt-3 hidden gap-1.5 text-xs text-[var(--orbit-text-muted)] lg:grid">
                 <p>Owner: {ownerName}</p>
                 <p>{members.length} members</p>
                 <p>{adminMembers.length} admins</p>
@@ -979,7 +855,7 @@ function ServerSettings() {
             </div>
           </div>
 
-          <nav className="orbit-scrollbar flex min-h-0 flex-1 gap-2 overflow-x-auto px-3 py-3 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto">
+          <nav className="orbit-scrollbar flex w-full min-w-0 max-w-full shrink-0 flex-nowrap gap-2 overflow-x-auto px-3 py-2 lg:min-h-0 lg:flex-1 lg:flex-col lg:overflow-x-visible lg:overflow-y-auto lg:py-3">
             {availableSections.map((section) => {
               const isActive = section.id === activeSection
 
@@ -989,7 +865,7 @@ function ServerSettings() {
                   type="button"
                   onClick={() => setActiveSection(section.id)}
                   className={[
-                    'min-w-max rounded-xl border px-4 py-3 text-left text-sm font-medium transition lg:w-full',
+                    'shrink-0 rounded-lg border px-3 py-2 text-left text-sm font-medium transition lg:w-full',
                     isActive
                       ? 'orbit-accent-surface'
                       : 'border-transparent text-[var(--orbit-text-muted)] hover:border-[color:var(--orbit-border)] hover:bg-[var(--orbit-surface-soft)] hover:text-[var(--orbit-text)]',
@@ -1002,21 +878,21 @@ function ServerSettings() {
           </nav>
         </aside>
 
-        <section className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <header className="shrink-0 border-b border-[color:var(--orbit-border)] px-4 py-4 sm:px-5">
-            <p className="orbit-accent-label text-xs font-semibold uppercase tracking-[0.35em]">
+        <section className="flex min-h-0 min-w-0 max-w-full flex-1 flex-col overflow-hidden">
+          <header className="shrink-0 border-b border-[color:var(--orbit-border)] px-3 py-3 sm:px-4">
+            <p className="orbit-accent-label text-[10px] font-semibold uppercase tracking-[0.24em]">
               {sectionMeta.eyebrow}
             </p>
-            <h1 className="mt-2 text-2xl font-semibold text-[var(--orbit-text)]">
+            <h1 className="mt-1 text-xl font-semibold text-[var(--orbit-text)]">
               {sectionMeta.title}
             </h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[var(--orbit-text-muted)]">
+            <p className="mt-1 max-w-3xl text-[13px] leading-5 text-[var(--orbit-text-muted)]">
               {sectionMeta.description}
             </p>
           </header>
 
-          <div className="orbit-scrollbar min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
-            <div className="space-y-5">
+          <div className="orbit-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto px-3 py-3 sm:px-4">
+            <div className="min-w-0 space-y-4">
               {error ? (
                 <div className="orbit-danger-banner rounded-[1.5rem] border px-5 py-4 text-sm">
                   {error}

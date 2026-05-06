@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Navigate, NavLink, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import ProtectedRoute from './components/ProtectedRoute'
 import { fetchProfile, logoutUser } from './api/auth'
@@ -334,8 +334,8 @@ function WorkspaceLayout({ clearSession, user, accessToken }) {
   return (
     <ShellBackground>
       <div className="relative flex h-dvh min-h-dvh w-full flex-col overflow-hidden px-1.5 pb-[calc(env(safe-area-inset-bottom)+0.35rem)] pt-[calc(env(safe-area-inset-top)+0.35rem)] sm:px-3 sm:py-3">
-        <header className="mb-1.5 flex shrink-0 items-center justify-between gap-2 rounded-[0.95rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-2 py-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.16)] backdrop-blur sm:px-2.5">
-          <div className="flex min-w-0 items-center gap-2">
+        <header className="mb-1.5 flex shrink-0 items-center justify-between gap-2 overflow-hidden rounded-[0.95rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-shell-bg)] px-2 py-1.5 shadow-[0_10px_24px_rgba(0,0,0,0.16)] backdrop-blur sm:px-2.5">
+          <div className="flex min-w-0 shrink items-center gap-2">
             <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.9rem] bg-[var(--orbit-accent-soft)] text-[11px] font-semibold uppercase tracking-[0.28em] text-[var(--orbit-accent-ink)]">
               O
             </div>
@@ -350,7 +350,7 @@ function WorkspaceLayout({ clearSession, user, accessToken }) {
             </div>
           </div>
 
-          <div className="orbit-scrollbar flex min-w-0 items-center justify-end gap-1.5 overflow-x-auto pb-0.5 sm:overflow-visible sm:pb-0">
+          <div className="orbit-scrollbar flex min-w-0 flex-1 items-center justify-end gap-1.5 overflow-x-auto pb-0.5 sm:overflow-visible sm:pb-0">
             <ThemeToggle
               className="h-8 rounded-full px-2 text-[11px] font-medium sm:px-3"
               showLabel
@@ -388,6 +388,39 @@ function WorkspaceLayout({ clearSession, user, accessToken }) {
   )
 }
 
+function WorkspaceGateFallback({ status, onSwitchUser }) {
+  const isFailed = status === 'failed'
+
+  return (
+    <ShellBackground>
+      <div className="flex min-h-screen min-h-dvh items-center justify-center px-4">
+        <div className="orbit-panel w-full max-w-md rounded-[1.5rem] p-6 text-center shadow-2xl shadow-black/20">
+          <p className="orbit-accent-label text-xs font-semibold uppercase tracking-[0.28em]">
+            Orbit
+          </p>
+          <h2 className="mt-3 text-2xl font-semibold text-[var(--orbit-text)]">
+            {isFailed ? 'Session check failed.' : 'Opening workspace.'}
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-[var(--orbit-text-muted)]">
+            {isFailed
+              ? 'Sign in again so Orbit can reload your chat session cleanly.'
+              : 'Checking your session before loading conversations.'}
+          </p>
+          {isFailed ? (
+            <button
+              type="button"
+              className="mt-5 rounded-full bg-cyan-400 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-cyan-300"
+              onClick={onSwitchUser}
+            >
+              Sign in again
+            </button>
+          ) : null}
+        </div>
+      </div>
+    </ShellBackground>
+  )
+}
+
 function App() {
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
@@ -397,6 +430,20 @@ function App() {
   const setUser = useAuthStore((state) => state.setUser)
   const resetChatState = useChatStore((state) => state.resetChatState)
   const hydrateTheme = useThemeStore((state) => state.hydrateTheme)
+  const [failedProfileSessionKey, setFailedProfileSessionKey] = useState(null)
+  const profileSessionKey = `${tokens?.access ?? ''}:${tokens?.refresh ?? ''}`
+  const didProfileFail =
+    Boolean(profileSessionKey) &&
+    failedProfileSessionKey === profileSessionKey &&
+    isAuthenticated &&
+    !user?.id
+  const profileStatus = didProfileFail
+    ? 'failed'
+    : isAuthenticated && !user?.id
+      ? 'loading'
+      : user?.id
+        ? 'ready'
+        : 'idle'
 
   const clearSession = useCallback(() => {
     const accessToken = tokens?.access
@@ -429,8 +476,8 @@ function App() {
   }, [hydrateTheme])
 
   useEffect(() => {
-    if (!isAuthenticated || user?.id) {
-      return
+    if (!isAuthenticated || user?.id || didProfileFail) {
+      return undefined
     }
 
     let ignore = false
@@ -443,7 +490,9 @@ function App() {
           setUser(profile)
         }
       } catch {
-        // The auth interceptor handles logout/redirect if the token is invalid.
+        if (!ignore) {
+          setFailedProfileSessionKey(profileSessionKey)
+        }
       }
     }
 
@@ -452,7 +501,7 @@ function App() {
     return () => {
       ignore = true
     }
-  }, [isAuthenticated, setUser, user?.id])
+  }, [didProfileFail, isAuthenticated, profileSessionKey, setUser, user?.id])
 
   return (
     <Routes>
@@ -472,7 +521,20 @@ function App() {
         <Route path="*" element={<NotFoundRoute />} />
       </Route>
 
-      <Route path="/app/*" element={<ProtectedRoute />}>
+      <Route
+        path="/app/*"
+        element={
+          <ProtectedRoute
+            isReady={Boolean(user?.id)}
+            fallback={
+              <WorkspaceGateFallback
+                status={profileStatus}
+                onSwitchUser={clearSession}
+              />
+            }
+          />
+        }
+      >
         <Route
           element={
             <WorkspaceLayout

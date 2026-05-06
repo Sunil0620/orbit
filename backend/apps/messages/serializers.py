@@ -213,7 +213,24 @@ class DirectConversationSerializer(serializers.ModelSerializer):
 
         return DirectConversationParticipantSerializer(participant).data
 
+    def _has_latest_message_annotation(self, obj):
+        return hasattr(obj, 'latest_message_created_at')
+
     def get_last_message_preview(self, obj):
+        if self._has_latest_message_annotation(obj):
+            content = str(getattr(obj, 'latest_message_content', '') or '').strip()
+            if content:
+                return content[:120]
+
+            file_name = str(getattr(obj, 'latest_message_file_name', '') or '').strip()
+            if file_name:
+                return file_name
+
+            if getattr(obj, 'latest_message_file_url', ''):
+                return 'Attachment'
+
+            return ''
+
         last_message = getattr(obj, '_last_message', None)
         if last_message is None:
             last_message = obj.messages.order_by('-created_at', '-id').first()
@@ -236,6 +253,9 @@ class DirectConversationSerializer(serializers.ModelSerializer):
         return f'{len(attachments)} attachments'
 
     def get_last_message_at(self, obj):
+        if self._has_latest_message_annotation(obj):
+            return getattr(obj, 'latest_message_created_at', None)
+
         last_message = getattr(obj, '_last_message', None)
         if last_message is None:
             last_message = obj.messages.order_by('-created_at', '-id').first()
@@ -272,16 +292,28 @@ class DirectConversationSerializer(serializers.ModelSerializer):
         return last_message
 
     def get_last_message_sender_id(self, obj):
+        if self._has_latest_message_annotation(obj):
+            return getattr(obj, 'latest_message_sender_id', None)
+
         last_message = self._get_last_message(obj)
         return getattr(last_message, 'sender_id', None)
 
     def get_last_message_sender_username(self, obj):
+        if self._has_latest_message_annotation(obj):
+            return getattr(obj, 'latest_message_sender_username', '') or ''
+
         last_message = self._get_last_message(obj)
         if last_message is None:
             return ''
         return getattr(last_message.sender, 'username', '')
 
     def get_last_message_has_attachments(self, obj):
+        if self._has_latest_message_annotation(obj):
+            return bool(
+                getattr(obj, 'latest_message_file_url', '')
+                or getattr(obj, 'latest_message_file_name', '')
+            )
+
         last_message = self._get_last_message(obj)
         if last_message is None:
             return False

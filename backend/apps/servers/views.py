@@ -4,6 +4,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from apps.channels_chat.models import Channel
 from apps.channels_chat.services import ensure_default_channel
 from apps.notifications.models import ChannelReadState
 from apps.notifications.services import ensure_channel_read_states
@@ -22,8 +23,23 @@ def get_server_queryset():
 
 def ensure_default_channels_for_servers(servers):
     server_list = list(servers)
+
+    if not server_list:
+        return server_list
+
+    server_ids = [server.id for server in server_list]
+    server_ids_with_channels = set(
+        Channel.objects.filter(server_id__in=server_ids)
+        .values_list('server_id', flat=True)
+        .distinct()
+    )
+
     for server in server_list:
+        if server.id in server_ids_with_channels:
+            continue
+
         ensure_default_channel(server)
+
     return server_list
 
 
@@ -39,7 +55,9 @@ class ServerListCreateView(generics.ListCreateAPIView):
         )
 
     def list(self, request, *args, **kwargs):
-        servers = ensure_default_channels_for_servers(self.filter_queryset(self.get_queryset()))
+        servers = ensure_default_channels_for_servers(
+            self.filter_queryset(self.get_queryset())
+        )
         serializer = self.get_serializer(servers, many=True)
         return Response(serializer.data)
 

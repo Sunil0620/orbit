@@ -14,7 +14,7 @@ function MemberList({
   const visibilityClass = isMobileVisible ? 'flex' : 'hidden'
   const panelTitle = homeMode ? 'People' : dmMode ? 'Conversation' : 'Members'
   const panelDescription = homeMode
-    ? 'Start a new direct message from here.'
+    ? ''
     : dmMode
       ? 'Profile for this direct message.'
       : `${server?.members?.length ?? 0} member${(server?.members?.length ?? 0) === 1 ? '' : 's'} in this server.`
@@ -125,9 +125,11 @@ function MemberList({
         <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--orbit-text-subtle)]">
           {panelTitle}
         </p>
-        <p className="mt-2 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
-          {panelDescription}
-        </p>
+        {panelDescription ? (
+          <p className="mt-2 text-[12px] leading-5 text-[var(--orbit-text-muted)]">
+            {panelDescription}
+          </p>
+        ) : null}
       </div>
 
       <div className="orbit-scrollbar flex-1 space-y-5 overflow-y-auto px-3 py-3">

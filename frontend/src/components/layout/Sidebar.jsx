@@ -1,5 +1,3 @@
-import BauhausEmptyState from '../ui/BauhausEmptyState'
-
 function getInitials(name) {
   if (!name) {
     return 'OR'
@@ -141,7 +139,7 @@ function Sidebar({
   emptyMessage = 'No servers yet.',
 }) {
   return (
-    <aside className="flex min-h-0 flex-row items-center gap-2 border-b border-[color:var(--orbit-border)] bg-[var(--orbit-sidebar-bg)] px-2 py-2.5 xl:h-full xl:flex-col xl:border-b-0 xl:border-r xl:px-2 xl:py-2 xl:overflow-hidden">
+    <aside className="flex min-h-0 w-full min-w-0 flex-row items-center gap-2 overflow-hidden border-b border-[color:var(--orbit-border)] bg-[var(--orbit-sidebar-bg)] px-2 py-2.5 xl:h-full xl:flex-col xl:border-b-0 xl:border-r xl:px-2 xl:py-2">
       <div className="flex min-h-0 min-w-0 flex-1 items-center gap-2 xl:w-full xl:flex-col xl:items-center xl:overflow-hidden">
         <div className="flex shrink-0 items-center gap-2 xl:w-full xl:flex-col xl:gap-2.5">
           <RailButton
@@ -157,11 +155,17 @@ function Sidebar({
 
         <div className="orbit-scrollbar flex min-w-0 flex-1 items-center gap-2 overflow-x-auto pb-1 xl:min-h-0 xl:w-full xl:flex-col xl:overflow-x-visible xl:overflow-y-auto xl:justify-start xl:gap-2.5 xl:pb-1">
           {isLoading ? (
-            <BauhausEmptyState message="Loading" className="p-2 text-xs" />
+            <div
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[1rem] border border-[color:var(--orbit-border)] bg-[var(--orbit-surface-soft)]"
+              aria-label="Loading servers"
+              title="Loading servers"
+            >
+              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-cyan-400" />
+            </div>
           ) : null}
 
           {!isLoading && servers.length === 0 ? (
-            <div className="max-w-[8rem] text-center text-[10px] leading-4 text-[var(--orbit-text-subtle)] xl:max-w-[4.5rem]">
+            <div className="hidden max-w-[4.5rem] text-center text-[10px] leading-4 text-[var(--orbit-text-subtle)] xl:block">
               {emptyMessage}
             </div>
           ) : null}
